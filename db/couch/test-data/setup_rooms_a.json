@@ -1,0 +1,34 @@
+{
+    "_id": "CCC-AAA", 
+    "name": "Chocolate Apples",
+    "description": "Chocolate Apples Charred in Apricot",
+    "tags": ["c-a"],
+    "designation": "development", 
+    "configuration": {
+       "_id": "ABC", 
+       "name": "ABC", 
+       "description": "apple, Bannana, Cherry",
+       "evaluators": [
+           {
+               "_id": "EVA", 
+               "code-key": "Default_A", 
+               "description": "Default A"
+           },
+           {
+               "_id": "EVB", 
+               "code-key": "Default_B", 
+               "description": "Default B"
+           },
+           {
+               "_id": "EVC", 
+               "code-key": "Default_C", 
+               "description": "Default C"
+           },
+           {
+               "_id": "EVD", 
+               "code-key": "Default_D", 
+               "description": "Default D"
+           }
+       ]
+   }
+}

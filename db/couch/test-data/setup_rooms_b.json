@@ -1,0 +1,34 @@
+{
+    "_id": "CCC-CCC", 
+    "name": "Chocolate Cpples",
+    "description": "Chocolate Cpples Charred in Cpricot",
+    "tags": ["c-a"],
+    "designation": "development", 
+    "configuration": {
+       "_id": "CCC", 
+       "name": "CCC", 
+       "description": "apple, Cannana, Cherry",
+       "evaluators": [
+           {
+               "_id": "EVC", 
+               "code-key": "Default_C", 
+               "description": "Default C"
+           },
+           {
+               "_id": "EVC", 
+               "code-key": "Default_C", 
+               "description": "Default C"
+           },
+           {
+               "_id": "EVC", 
+               "code-key": "Default_C", 
+               "description": "Default C"
+           },
+           {
+               "_id": "EVD", 
+               "code-key": "Default_D", 
+               "description": "Default D"
+           }
+       ]
+   }
+}
