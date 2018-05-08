@@ -12,7 +12,7 @@ import (
 
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
 
-func (c *CouchDB) GetRoomByID(id string) (structs.Room, error) {
+func (c *CouchDB) GetRoom(id string) (structs.Room, error) {
 	toReturn := structs.Room{}
 	err := MakeRequest("GET", fmt.Sprintf("rooms/%v", id), "", nil, &toReturn)
 	if err != nil {
@@ -24,6 +24,10 @@ func (c *CouchDB) GetRoomByID(id string) (structs.Room, error) {
 	// TODO we need to get devices
 
 	return toReturn, err
+}
+
+func (c *CouchDB) GetAllRooms() ([]structs.Room, error) {
+	return []structs.Room{}, nil
 }
 
 func (c *CouchDB) GetRoomsByBuilding(buildingID string) ([]structs.Room, error) {
@@ -81,7 +85,7 @@ func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
 	}
 	log.L.Debugf("RoomID and other information is valid, checking for valid buildingID: %v", vals[0][1])
 
-	_, err := c.GetBuildingByID(vals[0][1])
+	_, err := c.GetBuilding(vals[0][1])
 
 	if err != nil {
 		if nf, ok := err.(NotFound); ok {
@@ -161,7 +165,7 @@ func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
 	log.L.Debug("room created, retriving new room from database.")
 
 	//return the created room
-	room, err = c.GetRoomByID(room.ID)
+	room, err = c.GetRoom(room.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created room: %v", err.Error())
 		log.L.Warn(msg)
@@ -189,7 +193,7 @@ func (c *CouchDB) DeleteRoom(id string) error {
 	log.L.Infof("[%s] Deleting room", id)
 
 	// get the room
-	room, err := c.GetRoomByID(id)
+	room, err := c.GetRoom(id)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] error looking for room to delete: %s", id, err.Error())
 		log.L.Warn(msg)
@@ -222,4 +226,8 @@ func (c *CouchDB) DeleteRoom(id string) error {
 
 	log.L.Infof("[%s] Successfully deleted room", id)
 	return nil
+}
+
+func (c *CouchDB) UpdateRoom(id string, room structs.Room) (structs.Room, error) {
+	return structs.Room{}, nil
 }

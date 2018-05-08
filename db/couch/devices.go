@@ -51,7 +51,7 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	return toReturn, nil
 }
 
-func (c *CouchDB) GetDeviceByID(ID string) (structs.Device, error) {
+func (c *CouchDB) GetDevice(ID string) (structs.Device, error) {
 	toReturn := structs.Device{}
 	err := MakeRequest("GET", fmt.Sprintf("devices/%v", ID), "", nil, &toReturn)
 	if err != nil {
@@ -146,7 +146,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 
 	log.L.Debug("Device ID is well formed, checking for valid room.")
 
-	_, err := c.GetRoomByID(vals[0][1])
+	_, err := c.GetRoom(vals[0][1])
 
 	if err != nil {
 		if nf, ok := err.(NotFound); ok {
@@ -206,7 +206,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	log.L.Debug("device created, retriving new device from database.")
 
 	//return the created room
-	toAdd, err = c.GetDeviceByID(toAdd.ID)
+	toAdd, err = c.GetDevice(toAdd.ID)
 	if err != nil {
 		lde(fmt.Sprintf("There was a problem getting the newly created room: %v", err.Error()))
 	}
@@ -237,12 +237,12 @@ func (c *CouchDB) checkPort(p structs.Port) error {
 
 	//now we need to check the source and destination device
 	if len(p.SourceDevice) > 0 {
-		if _, err := c.GetDeviceByID(p.SourceDevice); err != nil {
+		if _, err := c.GetDevice(p.SourceDevice); err != nil {
 			return errors.New(fmt.Sprintf("Invalid port %v, source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice))
 		}
 	}
 	if len(p.DestinationDevice) > 0 {
-		if _, err := c.GetDeviceByID(p.DestinationDevice); err != nil {
+		if _, err := c.GetDevice(p.DestinationDevice); err != nil {
 			return errors.New(fmt.Sprintf("Invalid port %v, destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice))
 		}
 	}
@@ -293,7 +293,7 @@ func (c *CouchDB) GetDevicesByRoleAndType(role, dtype string) ([]structs.Device,
 func (c *CouchDB) DeleteDevice(id string) error {
 	log.L.Debugf("[%s] Deleting device", id)
 
-	device, err := c.GetDeviceByID(id)
+	device, err := c.GetDevice(id)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] error looking for device to delete: %s", id, err.Error())
 		log.L.Warn(msg)
@@ -311,4 +311,8 @@ func (c *CouchDB) DeleteDevice(id string) error {
 	log.L.Debug(device)
 
 	return nil
+}
+
+func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device, error) {
+	return structs.Device{}, nil
 }

@@ -36,6 +36,13 @@ type DB interface {
 	GetRoomConfiguration(id string) (structs.RoomConfiguration, error)
 	UpdateRoomConfiguration(id string, rc structs.RoomConfiguration) (structs.RoomConfiguration, error)
 	DeleteRoomConfiguration(id string) error
+
+	/* bulk functions */
+	GetAllBuildings() ([]structs.Building, error)
+	GetAllRooms() ([]structs.Room, error)
+	GetAllDevices() ([]structs.Device, error)
+	GetAllDeviceTypes() ([]structs.DeviceType, error)
+	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
 }
 
 func GetDB() DB {

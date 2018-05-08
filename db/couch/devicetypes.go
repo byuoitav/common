@@ -25,6 +25,10 @@ func (c *CouchDB) GetDeviceType(deviceTypeID string) (structs.DeviceType, error)
 	return toReturn, err
 }
 
+func (c *CouchDB) GetAllDeviceTypes() ([]structs.DeviceType, error) {
+	return []structs.DeviceType{}, nil
+}
+
 /*
 CreateDeviceType - now this may come as a shock - creates a device type.
 The device type must have the following attributes to be created:
@@ -118,6 +122,11 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 // TODO
 func (c *CouchDB) UpdateDeviceType(id string, dt structs.DeviceType) (structs.DeviceType, error) {
 	return structs.DeviceType{}, nil
+}
+
+// TODO
+func (c *CouchDB) DeleteDeviceType(id string) error {
+	return nil
 }
 
 func validatePort(p structs.Port) bool {
