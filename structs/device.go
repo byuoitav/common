@@ -6,52 +6,54 @@ type Device struct {
 	ID          string     `json:"_id"`
 	Rev         string     `json:"_rev,omitempty"`
 	Address     string     `json:"address"`
-	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	DisplayName string     `json:"display-name"`
 	Type        DeviceType `json:"type"`
 	Class       string     `json:"class"`
 	Roles       []Role     `json:"roles"`
 	Ports       []Port     `json:"ports"`
+	Tags        []string   `json:"tags"`
 }
 
 type DeviceType struct {
 	ID          string       `json:"_id"`
 	Rev         string       `json:"_rev,omitempty"`
-	Name        string       `json:"name"`
 	Class       string       `json:"class"`
 	Description string       `json:"description"`
 	Ports       []Port       `json:"ports"`
 	PowerStates []PowerState `json:"power-states"`
 	Commands    []Command    `json:"commands"`
+	Tags        []string     `json:"tags"`
 }
 
 type PowerState struct {
-	ID          string `json:"_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string   `json:"_id"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
 }
 
 type Port struct {
-	ID                string `json:"_id"`
-	FriendlyName      string `json:"friendly-name"`
-	Name              string `json:"name"`
-	SourceDevice      string `json:"source-device"`
-	DestinationDevice string `json:"destination-device"`
-	Description       string `json:"description"`
-	PortType          string `json:"port-type"`
+	ID                string   `json:"_id"`
+	FriendlyName      string   `json:"friendly-name"`
+	SourceDevice      string   `json:"source-device"`
+	DestinationDevice string   `json:"destination-device"`
+	Description       string   `json:"description"`
+	PortType          string   `json:"port-type"`
+	Tags              []string `json:"tags"`
 }
 
 type Role struct {
-	ID          string `json:"_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string   `json:"_id"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
 }
 
 type Command struct {
-	BaseInfo
+	ID           string       `json:"_id"`
+	Description  string       `json:"description"`
 	Microservice Microservice `json:"microservice"`
 	Endpoint     Endpoint     `json:"endpoint"`
+	Tags         []string     `json:"tags"`
 }
 
 type DeviceQueryResponse struct {
@@ -61,19 +63,17 @@ type DeviceQueryResponse struct {
 }
 
 type Microservice struct {
-	BaseInfo
-	Address string `json:"address"`
+	ID          string   `json:"_id"`
+	Description string   `json:"description"`
+	Address     string   `json:"address"`
+	Tags        []string `json:"tags"`
 }
 
 type Endpoint struct {
-	BaseInfo
-	Path string `json:"path"`
-}
-
-type BaseInfo struct {
-	ID          string `json:"_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string   `json:"_id"`
+	Description string   `json:"description"`
+	Path        string   `json:"path"`
+	Tags        []string `json:"tags"`
 }
 
 func HasRole(device Device, role string) bool {

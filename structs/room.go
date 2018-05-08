@@ -5,10 +5,10 @@ type Room struct {
 	Rev           string            `json:"_rev,omitempty"`
 	Name          string            `json:"name"`
 	Description   string            `json:"description"`
-	Tags          []string          `json:"tags"`
 	Configuration RoomConfiguration `json:"configuration"`
 	Designation   string            `json:"designation"`
 	Devices       []Device          `json:"devices"`
+	Tags          []string          `json:"tags"`
 }
 
 type RoomConfiguration struct {
@@ -17,13 +17,15 @@ type RoomConfiguration struct {
 	Name        string      `json:"name,omitempty"`
 	Evaluators  []Evaluator `json:"evaluators,omitempty"`
 	Description string      `json:"description,omitempty"`
+	Tags        []string    `json:"tags"`
 }
 
 type Evaluator struct {
-	ID          string `json:"_id"`
-	CodeKey     string `json:"code-key,omitempty"`
-	Description string `json:"description,omitempty"`
-	Priority    int    `json:"priority,omitempty"`
+	ID          string   `json:"_id"`
+	CodeKey     string   `json:"code-key,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Priority    int      `json:"priority,omitempty"`
+	Tags        []string `json:"tags"`
 }
 
 type RoomQueryResponse struct {
