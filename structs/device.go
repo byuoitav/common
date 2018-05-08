@@ -39,7 +39,6 @@ type Port struct {
 	SourceDevice      string   `json:"source-device"`
 	DestinationDevice string   `json:"destination-device"`
 	Description       string   `json:"description"`
-	PortType          string   `json:"port-type"`
 	Tags              []string `json:"tags"`
 }
 
