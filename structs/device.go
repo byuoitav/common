@@ -10,7 +10,6 @@ type Device struct {
 	Description string     `json:"description"`
 	DisplayName string     `json:"display-name"`
 	Type        DeviceType `json:"type"`
-	Class       string     `json:"class"`
 	Roles       []Role     `json:"roles"`
 	Ports       []Port     `json:"ports"`
 	Tags        []string   `json:"tags"`
