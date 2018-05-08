@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/configuration-database-microservice/log"
-	"github.com/byuoitav/configuration-database-microservice/structs"
 )
 
-func GetRoomConfigurationByID(id string) (structs.RoomConfiguration, error) {
-
+func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, error) {
 	log.L.Debugf("Getting room configuration: %v", id)
 
 	toReturn := structs.RoomConfiguration{}
@@ -35,18 +34,12 @@ CreatRoomConfiguraiton adds a room configuration. A valid room configuration mus
 Note that if the ID is a duplicate, assuming that the `rev` field is valid.
 The existing document will get overwritten.
 */
-func CreateRoomConfiguration(config structs.RoomConfiguration) (structs.RoomConfiguration, error) {
+func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (structs.RoomConfiguration, error) {
 	log.L.Debugf("Creating a room configuration: %v", config.ID)
 
 	if len(config.ID) == 0 {
 		log.L.Warn("Couldn't create configuration, ID is required.")
 		return config, errors.New("Couldn't create configuration, ID is required.")
-	}
-
-	if len(config.Name) == 0 {
-		msg := "Couldn't create configuration, name is required."
-		log.L.Warn(msg)
-		return config, errors.New(msg)
 	}
 
 	if len(config.Evaluators) == 0 {
@@ -99,7 +92,7 @@ func CreateRoomConfiguration(config structs.RoomConfiguration) (structs.RoomConf
 	log.L.Debug("Configuration created, retriving new configuration from database.")
 
 	//return the created config
-	config, err = GetRoomConfigurationByID(config.ID)
+	config, err = c.GetRoomConfiguration(config.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created configuration: %v", err.Error())
 		log.L.Warn(msg)

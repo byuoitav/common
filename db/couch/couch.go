@@ -123,9 +123,9 @@ func checkCouchErrors(ce CouchError) error {
 type IDPrefixQuery struct {
 	Selector struct {
 		ID struct {
-			GT string `json:"$gt"`
-			LT string `json:"$lt"`
-		} `json:"_id"`
+			GT string `json:"$gt,omitempty"`
+			LT string `json:"$lt,omitempty"`
+		} `json:"_id, omitempty"`
 	} `json:"selector"`
 	Limit int `json:"limit"`
 }

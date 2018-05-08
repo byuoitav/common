@@ -3,8 +3,9 @@ package structs
 import "strings"
 
 type Device struct {
-	ID          string     `json:"_id"`
-	Rev         string     `json:"_rev,omitempty"`
+	ID string `json:"_id"`
+	//	Rev         string     `json:"_rev,omitempty"`
+	Name        string     `json:"name"`
 	Address     string     `json:"address"`
 	Description string     `json:"description"`
 	DisplayName string     `json:"display-name"`
@@ -16,8 +17,8 @@ type Device struct {
 }
 
 type DeviceType struct {
-	ID          string       `json:"_id"`
-	Rev         string       `json:"_rev,omitempty"`
+	ID string `json:"_id"`
+	//	Rev         string       `json:"_rev,omitempty"`
 	Class       string       `json:"class"`
 	Description string       `json:"description"`
 	Ports       []Port       `json:"ports"`

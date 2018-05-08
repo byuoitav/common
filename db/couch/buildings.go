@@ -5,37 +5,45 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/configuration-database-microservice/log"
-	"github.com/byuoitav/configuration-database-microservice/structs"
 )
 
 //GetBuildingByID gets the company's building with the corresponding ID from the couch database
 func (c *CouchDB) GetBuildingByID(id string) (structs.Building, error) {
-
-	toReturn := structs.Building{}
+	toReturn := building{}
 	err := MakeRequest("GET", fmt.Sprintf("buildings/%v", id), "", nil, &toReturn)
 	if err != nil {
 		msg := fmt.Sprintf("[couch] Could not get building %v. %v", id, err.Error())
 		log.L.Warn(msg)
 	}
 
-	return toReturn, err
+	return toReturn.Building, err
 }
 
 //GetAllBuildings returns all buildings for the company specified
 func (c *CouchDB) GetAllBuildings() ([]structs.Building, error) {
 	var toReturn []structs.Building
-	var bulk structs.BulkBuildingResponse
+	var query IDPrefixQuery
 
-	err := MakeRequest("GET", fmt.Sprintf("buildings/_all_docs?limit=1000&include_docs=true"), "", nil, &bulk)
+	query.Limit = 1000
+	b, err := json.Marshal(query)
+	if err != nil {
+		log.L.Warnf("There was a problem marshalling the query: %v", err.Error())
+		return []structs.Building{}, err
+	}
+
+	var resp buildingQueryResponse
+
+	err = MakeRequest("POST", fmt.Sprintf("buildings/_find"), "application/json", b, &resp)
 	if err != nil {
 		msg := fmt.Sprintf("[couch] Could not get buildings. %v", err.Error())
 		log.L.Warn(msg)
-		return toReturn, errors.New(msg)
+		return []structs.Building{}, errors.New(msg)
 	}
 
-	for _, row := range bulk.Rows {
-		toReturn = append(toReturn, row.Doc)
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc.Building)
 	}
 
 	return toReturn, err
@@ -49,10 +57,10 @@ AddBuilding adds a building. The building must have at least:
 The function will also overwrite the existing building providing the _rev field is set properly
 */
 func (c *CouchDB) CreateBuilding(toAdd structs.Building) (structs.Building, error) {
-	log.L.Debugf("Starting adding a building: %v", toAdd.Name)
+	log.L.Debugf("Starting adding a building: %v", toAdd.ID)
 
-	if len(toAdd.ID) < 2 || len(toAdd.Name) < 2 {
-		msg := "Cannot create building, must have at least a name and an ID"
+	if len(toAdd.ID) < 2 {
+		msg := "Cannot create building, must have an ID"
 		log.L.Warn(msg)
 	}
 
@@ -123,12 +131,15 @@ func (c *CouchDB) DeleteBuilding(id string) error {
 
 	log.L.Debugf("No rooms found in building %v. Proceeding with deletion", id)
 
+	/* TODO have to get rev
 	err = MakeRequest("DELETE", fmt.Sprintf("buildings/%s?rev=%v", id, building.Rev), "", nil, nil)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem deleting the building: %v", err.Error())
 		log.L.Warn(msg)
 		return errors.New(msg)
 	}
+	*/
+	log.L.Debug(building)
 
 	log.L.Debugf("Building %v deleted successfully.", id)
 	return nil

@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/configuration-database-microservice/log"
-	"github.com/byuoitav/configuration-database-microservice/structs"
 )
 
 var DeviceValidationRegex *regexp.Regexp
@@ -87,7 +87,7 @@ func (c *CouchDB) GetDevicesByRoom(roomID string) ([]structs.Device, error) {
 	//we need to go through the devices and get their type information.
 	//TODO: Cache them so we're not making a thousand requests for duplicate types.
 	for i := range toReturn.Docs {
-		toReturn.Docs[i].Type, err = GetDeviceTypeByID(toReturn.Docs[i].Type.ID)
+		toReturn.Docs[i].Type, err = c.GetDeviceType(toReturn.Docs[i].Type.ID)
 		if err != nil {
 			msg := fmt.Sprintf("Problem getting the device type %v. Error: %v", toReturn.Docs[i].Type.ID, err.Error())
 			log.L.Warn(msg)
@@ -161,12 +161,12 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 		return lde("Couldn't create a device, a type ID must be included")
 	}
 
-	deviceType, err := GetDeviceTypeByID(toAdd.Type.ID)
+	deviceType, err := c.GetDeviceType(toAdd.Type.ID)
 	if err != nil {
 		if nf, ok := err.(NotFound); ok {
 			log.L.Debug("Device Type not found, attempting to create. Message: %v", nf.Error())
 
-			deviceType, err = CreateDeviceType(toAdd.Type)
+			deviceType, err = c.CreateDeviceType(toAdd.Type)
 			if err != nil {
 				return lde("Trying to create a device with a non-existant device type and not enough information to create the type. Check the included type ID")
 			}
@@ -224,7 +224,7 @@ func lde(msg string) (dev structs.Device, err error) {
 }
 
 func checkRole(r structs.Role) error {
-	if len(r.ID) < 3 || len(r.Name) < 3 {
+	if len(r.ID) < 3 {
 		return errors.New("Invalid role, check name and ID.")
 	}
 	return nil
@@ -300,12 +300,15 @@ func (c *CouchDB) DeleteDevice(id string) error {
 		return errors.New(msg)
 	}
 
+	/* TODO get rev
 	err = MakeRequest("DELETE", fmt.Sprintf("devices/%s?rev=%v", device.ID, device.Rev), "", nil, nil)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] error deleting device: %s", id, err.Error())
 		log.L.Warn(msg)
 		return errors.New(msg)
 	}
+	*/
+	log.L.Debug(device)
 
 	return nil
 }

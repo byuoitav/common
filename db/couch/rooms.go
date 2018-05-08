@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/configuration-database-microservice/log"
-	"github.com/byuoitav/configuration-database-microservice/structs"
 )
 
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
@@ -103,13 +103,13 @@ func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
 		return structs.Room{}, errors.New(msg)
 	}
 	//get the configuration and check to see if it's not there. If it isn't there, try to add it. If it can't be addedfor whatever reason (it doesn't meet the rquirements) error out.
-	config, err := GetRoomConfigurationByID(room.Configuration.ID)
+	config, err := c.GetRoomConfiguration(room.Configuration.ID)
 	if err != nil {
 		if _, ok := err.(*NotFound); ok {
 			log.L.Debugf("Room configuration %v not found, attempting to create.", room.Configuration.ID)
 
 			//this is where we try to create the configuration
-			config, err = CreateRoomConfiguration(room.Configuration)
+			config, err = c.CreateRoomConfiguration(room.Configuration)
 			if err != nil {
 
 				msg := "Trying to create a room with a non-existant room configuration and not enough information to create the configuration. Check the included configuration ID."
@@ -196,6 +196,7 @@ func (c *CouchDB) DeleteRoom(id string) error {
 		return errors.New(msg)
 	}
 
+	/* TODO get rev
 	// delete each of the devices from the room
 	log.L.Debugf("[%s] Deleting devices from room", id)
 	for _, d := range room.Devices {
@@ -216,6 +217,8 @@ func (c *CouchDB) DeleteRoom(id string) error {
 		log.L.Warn(msg)
 		return errors.New(msg)
 	}
+	*/
+	log.L.Debug(room)
 
 	log.L.Infof("[%s] Successfully deleted room", id)
 	return nil

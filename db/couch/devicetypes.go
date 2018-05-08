@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/byuoitav/common/structs"
 	"github.com/byuoitav/configuration-database-microservice/log"
-	"github.com/byuoitav/configuration-database-microservice/structs"
 )
 
-func GetDeviceTypeByID(deviceTypeID string) (structs.DeviceType, error) {
+func (c *CouchDB) GetDeviceType(deviceTypeID string) (structs.DeviceType, error) {
 
 	toReturn := structs.DeviceType{}
 
@@ -50,7 +50,7 @@ Command:
 
 If a device type is submitted with a valid 'rev' field, the device type will be overwritten.
 */
-func CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
+func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
 
 	log.L.Infof("Starting creation or udpate of device type %v", toAdd.ID)
 
@@ -105,7 +105,7 @@ func CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
 	log.L.Debug("Device Type created, retriving new record from database.")
 
 	//return the created device type
-	toAdd, err = GetDeviceTypeByID(toAdd.ID)
+	toAdd, err = c.GetDeviceType(toAdd.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created device type: %v", err.Error())
 		log.L.Warn(msg)
@@ -115,15 +115,20 @@ func CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
 	return toAdd, nil
 }
 
+// TODO
+func (c *CouchDB) UpdateDeviceType(id string, dt structs.DeviceType) (structs.DeviceType, error) {
+	return structs.DeviceType{}, nil
+}
+
 func validatePort(p structs.Port) bool {
-	if len(p.ID) < 3 || len(p.Name) < 3 || len(p.PortType) < 3 {
+	if len(p.ID) < 3 || len(p.PortType) < 3 {
 		return false
 	}
 	return true
 }
 
 func validateCommand(c structs.Command) error {
-	if len(c.ID) < 3 || len(c.Name) < 3 {
+	if len(c.ID) < 3 {
 		return errors.New("Invalid base information. Check Name, and ID")
 	}
 
@@ -136,7 +141,7 @@ func validateCommand(c structs.Command) error {
 }
 
 func checkMicroservice(m structs.Microservice) error {
-	if len(m.ID) < 3 || len(m.Name) < 3 {
+	if len(m.ID) < 3 {
 		return errors.New("Invalid Mircroservice. Check Name, and ID")
 	}
 
@@ -150,7 +155,7 @@ func checkMicroservice(m structs.Microservice) error {
 }
 
 func checkEndpoint(e structs.Endpoint) error {
-	if len(e.ID) < 3 || len(e.Name) < 3 {
+	if len(e.ID) < 3 {
 		return errors.New("Invalid endpoint. Check Name, and ID")
 	}
 
