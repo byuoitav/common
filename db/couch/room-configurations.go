@@ -6,18 +6,17 @@ import (
 	"fmt"
 
 	"github.com/byuoitav/common/structs"
-	"github.com/byuoitav/configuration-database-microservice/log"
 )
 
 func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, error) {
-	log.L.Debugf("Getting room configuration: %v", id)
+	c.log.Debugf("Getting room configuration: %v", id)
 
 	toReturn := structs.RoomConfiguration{}
-	err := MakeRequest("GET", fmt.Sprintf("room_configurations/%v", id), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("room_configurations/%v", id), "", nil, &toReturn)
 
 	if err != nil {
 		msg := fmt.Sprintf("Could not get room configuration %v. %v", id, err.Error())
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 	}
 
 	return toReturn, err
@@ -39,16 +38,16 @@ Note that if the ID is a duplicate, assuming that the `rev` field is valid.
 The existing document will get overwritten.
 */
 func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (structs.RoomConfiguration, error) {
-	log.L.Debugf("Creating a room configuration: %v", config.ID)
+	c.log.Debugf("Creating a room configuration: %v", config.ID)
 
 	if len(config.ID) == 0 {
-		log.L.Warn("Couldn't create configuration, ID is required.")
+		c.log.Warn("Couldn't create configuration, ID is required.")
 		return config, errors.New("Couldn't create configuration, ID is required.")
 	}
 
 	if len(config.Evaluators) == 0 {
 		msg := "Couldn't create configuration, at least on evaluator is required."
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return config, errors.New(msg)
 	}
 
@@ -58,7 +57,7 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 	for i := range config.Evaluators {
 		if len(config.Evaluators[i].ID) < 1 || len(config.Evaluators[i].CodeKey) < 1 {
 			msg := "Couldn't Create configuration. All evaluators must have an ID and a codeKey"
-			log.L.Warn(msg)
+			c.log.Warn(msg)
 			return config, errors.New(msg)
 		}
 		//check if priority is 0, if so, set it to 1000
@@ -68,7 +67,7 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 		}
 	}
 
-	log.L.Debugf("All checks passed. Creating configuration.")
+	c.log.Debugf("All checks passed. Creating configuration.")
 
 	resp := CouchUpsertResponse{}
 
@@ -76,34 +75,34 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 	if err != nil {
 
 		msg := fmt.Sprintf("Couldn't marshal configuration into JSON. Error: %v", err.Error())
-		log.L.Error(msg) // this is a slightly bigger deal
+		c.log.Error(msg) // this is a slightly bigger deal
 		return config, errors.New(msg)
 	}
 
-	err = MakeRequest("PUT", fmt.Sprintf("room_configurations/%v", config.ID), "", b, &resp)
+	err = c.MakeRequest("PUT", fmt.Sprintf("room_configurations/%v", config.ID), "", b, &resp)
 	if err != nil {
 		if nf, ok := err.(Confict); ok {
 			msg := fmt.Sprintf("There was a conflict updating the configuration: %v. Make changes on an updated version of the configuration.", nf.Error())
-			log.L.Warn(msg)
+			c.log.Warn(msg)
 			return config, errors.New(msg)
 		}
 		//ther was some other problem
 		msg := fmt.Sprintf("unknown problem creating the configuration: %v", err.Error())
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return config, errors.New(msg)
 	}
 
-	log.L.Debug("Configuration created, retriving new configuration from database.")
+	c.log.Debug("Configuration created, retriving new configuration from database.")
 
 	//return the created config
 	config, err = c.GetRoomConfiguration(config.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created configuration: %v", err.Error())
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return config, errors.New(msg)
 	}
 
-	log.L.Debug("Done.")
+	c.log.Debug("Done.")
 	return config, nil
 }
 

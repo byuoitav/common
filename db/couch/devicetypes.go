@@ -7,18 +7,17 @@ import (
 	"net/url"
 
 	"github.com/byuoitav/common/structs"
-	"github.com/byuoitav/configuration-database-microservice/log"
 )
 
 func (c *CouchDB) GetDeviceType(deviceTypeID string) (structs.DeviceType, error) {
 
 	toReturn := structs.DeviceType{}
 
-	err := MakeRequest("GET", fmt.Sprintf("device_type/%v", deviceTypeID), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("device_type/%v", deviceTypeID), "", nil, &toReturn)
 
 	if err != nil {
 		msg := fmt.Sprintf("Could not get deviceType %v. %v", deviceTypeID, err.Error())
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return toReturn, errors.New(msg)
 	}
 
@@ -56,63 +55,63 @@ If a device type is submitted with a valid 'rev' field, the device type will be 
 */
 func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
 
-	log.L.Infof("Starting creation or udpate of device type %v", toAdd.ID)
+	c.log.Infof("Starting creation or udpate of device type %v", toAdd.ID)
 
 	if len(toAdd.ID) < 2 || len(toAdd.Class) < 2 {
 		msg := fmt.Sprintf("Device types must have a valid ID, name, and class.")
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return toAdd, errors.New(msg)
 	}
 
-	log.L.Debug("Passed basic checks, checking ports.")
+	c.log.Debug("Passed basic checks, checking ports.")
 
 	for i := range toAdd.Ports {
 		if !validatePort(toAdd.Ports[i]) {
 			msg := "Port was malformed, check the name, id, and type fields"
-			log.L.Warn(msg)
+			c.log.Warn(msg)
 			return toAdd, errors.New(msg)
 		}
 	}
-	log.L.Debug("Passed port checks, checking Commands")
+	c.log.Debug("Passed port checks, checking Commands")
 
 	for i := range toAdd.Commands {
 		if err := validateCommand(toAdd.Commands[i]); err != nil {
-			log.L.Warn(err.Error())
+			c.log.Warn(err.Error())
 			return toAdd, err
 		}
 	}
 
-	log.L.Debug("Passed command checking. Adding the deviceType")
+	c.log.Debug("Passed command checking. Adding the deviceType")
 
 	b, err := json.Marshal(toAdd)
 	if err != nil {
 		msg := fmt.Sprintf("Couldn't marshal device type into JSON. Error: %v", err.Error())
-		log.L.Error(msg)
+		c.log.Error(msg)
 		return toAdd, errors.New(msg)
 	}
 
 	resp := CouchUpsertResponse{}
 
-	err = MakeRequest("PUT", fmt.Sprintf("device_types/%v", toAdd.ID), "", b, &resp)
+	err = c.MakeRequest("PUT", fmt.Sprintf("device_types/%v", toAdd.ID), "", b, &resp)
 	if err != nil {
 		if nf, ok := err.(Confict); ok {
 			msg := fmt.Sprintf("There was a conflict updating the device type: %v. Make changes on an updated version of the configuration.", nf.Error())
-			log.L.Warn(msg)
+			c.log.Warn(msg)
 			return structs.DeviceType{}, errors.New(msg)
 		}
 		//ther was some other problem
 		msg := fmt.Sprintf("unknown problem creating the device type: %v", err.Error())
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return structs.DeviceType{}, errors.New(msg)
 	}
 
-	log.L.Debug("Device Type created, retriving new record from database.")
+	c.log.Debug("Device Type created, retriving new record from database.")
 
 	//return the created device type
 	toAdd, err = c.GetDeviceType(toAdd.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created device type: %v", err.Error())
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return toAdd, errors.New(msg)
 	}
 

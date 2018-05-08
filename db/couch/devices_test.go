@@ -1,11 +1,6 @@
 package couch
 
-import (
-	"testing"
-
-	"github.com/byuoitav/configuration-database-microservice/structs"
-)
-
+/*
 func TestDevice(t *testing.T) {
 	defer setupDatabase(t)(t)
 
@@ -27,3 +22,4 @@ func testDeviceCreate(t *testing.T) {
 		t.Logf("Error creating device %v: %v", file, err.Error())
 	}
 }
+*/

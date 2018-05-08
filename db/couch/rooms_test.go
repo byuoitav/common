@@ -1,11 +1,6 @@
 package couch
 
-import (
-	"testing"
-
-	"github.com/byuoitav/configuration-database-microservice/structs"
-)
-
+/*
 func TestRoom(t *testing.T) {
 	defer setupDatabase(t)(t)
 }
@@ -20,3 +15,4 @@ func testRoomCreateWithNewConfiguration(t *testing.T) {
 
 	_, err = CreateRoom(room)
 }
+*/

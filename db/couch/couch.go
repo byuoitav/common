@@ -6,18 +6,27 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/byuoitav/configuration-database-microservice/log"
+	"go.uber.org/zap"
 )
 
 var COUCH_ADDRESS string
 var COUCH_USERNAME string
 var COUCH_PASSWORD string
 
-type CouchDB struct{}
+type CouchDB struct {
+	log *zap.SugaredLogger
+}
+
+func NewCouchDB(logger *zap.SugaredLogger) *CouchDB {
+	return &CouchDB{
+		log: logger,
+	}
+}
 
 func init() {
 	COUCH_ADDRESS = os.Getenv("COUCH_ADDRESS")
@@ -25,13 +34,13 @@ func init() {
 	COUCH_PASSWORD = os.Getenv("COUCH_PASSWORD")
 
 	if len(COUCH_ADDRESS) == 0 {
-		log.L.Fatalf("COUCH_ADDRESS is not set.")
+		log.Fatalf("COUCH_ADDRESS is not set.")
 	}
 }
 
-func MakeRequest(method, endpoint, contentType string, body []byte, toFill interface{}) error {
+func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte, toFill interface{}) error {
 	url := fmt.Sprintf("%v/%v", COUCH_ADDRESS, endpoint)
-	log.L.Debugf("Making %s request to %v", method, url)
+	c.log.Debugf("Making %s request to %v", method, url)
 
 	// start building the request
 	req, err := http.NewRequest(method, url, bytes.NewReader(body))
@@ -65,16 +74,16 @@ func MakeRequest(method, endpoint, contentType string, body []byte, toFill inter
 
 	if resp.StatusCode/100 != 2 {
 
-		log.L.Infof("Got a non-200 response from: %v. Code: %v", endpoint, resp.StatusCode)
+		c.log.Infof("Got a non-200 response from: %v. Code: %v", endpoint, resp.StatusCode)
 
 		ce := CouchError{}
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
 			msg := fmt.Sprintf("Received a non-200 response from %v. Body: %s", url, b)
-			log.L.Warn(msg)
+			c.log.Warn(msg)
 			return errors.New(msg)
 		}
-		return checkCouchErrors(ce)
+		return c.checkCouchErrors(ce)
 	}
 
 	if toFill == nil {
@@ -84,38 +93,38 @@ func MakeRequest(method, endpoint, contentType string, body []byte, toFill inter
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, toFill)
 	if err != nil {
-		log.L.Infof("Couldn't umarshal response into the provided struct: %v", err.Error())
+		c.log.Infof("Couldn't umarshal response into the provided struct: %v", err.Error())
 
 		//check to see if it was a known error from couch
 		ce := CouchError{}
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
 			msg := fmt.Sprintf("Unknown response from couch: %s", b)
-			log.L.Warn(msg)
+			c.log.Warn(msg)
 			return errors.New(msg)
 		}
 		//it was an error, we can check on error types
-		return checkCouchErrors(ce)
+		return c.checkCouchErrors(ce)
 	}
 
 	return nil
 }
 
-func checkCouchErrors(ce CouchError) error {
-	log.L.Debugf("Checking for couch error type: %v", ce.Error)
+func (c *CouchDB) checkCouchErrors(ce CouchError) error {
+	c.log.Debugf("Checking for couch error type: %v", ce.Error)
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
-		log.L.Debug("Error type found: Not Found.")
+		c.log.Debug("Error type found: Not Found.")
 		return &NotFound{fmt.Sprintf("The ID requested was unknown. Message: %v.", ce.Reason)}
 	case "conflict":
-		log.L.Debug("Error type found: Conflict.")
+		c.log.Debug("Error type found: Conflict.")
 		return &Confict{fmt.Sprintf("There was a conflict updating/creating the document: %v", ce.Reason)}
 	case "bad_request":
-		log.L.Debug("Error type found: Bad Request.")
+		c.log.Debug("Error type found: Bad Request.")
 		return &BadRequest{fmt.Sprintf("The request was bad: %v", ce.Reason)}
 	default:
 		msg := fmt.Sprintf("Unknown error type: %v. Message: %v", ce.Error, ce.Reason)
-		log.L.Warn(msg)
+		c.log.Warn(msg)
 		return errors.New(msg)
 	}
 }
@@ -125,7 +134,7 @@ type IDPrefixQuery struct {
 		ID struct {
 			GT string `json:"$gt,omitempty"`
 			LT string `json:"$lt,omitempty"`
-		} `json:"_id, omitempty"`
+		} `json:"_id"`
 	} `json:"selector"`
 	Limit int `json:"limit"`
 }

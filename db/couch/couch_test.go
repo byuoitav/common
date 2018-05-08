@@ -1,16 +1,60 @@
 package couch
 
 import (
-	"fmt"
+	"encoding/json"
 	"io/ioutil"
-	"os"
-	"regexp"
-	"testing"
+	"log"
 
-	"github.com/byuoitav/configuration-database-microservice/structs"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
+var db = CouchDB{}
 var testDir = `./test-data`
+
+func init() {
+	CFG := zap.NewDevelopmentConfig()
+	CFG.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	CFG.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+	l, err := CFG.Build()
+	if err != nil {
+		log.Panicf("failed to build config for zap logger: %v", err.Error())
+	}
+	logger := l.Sugar()
+
+	db.log = logger
+}
+
+func unmarshalFromFile(filename string, toFill interface{}) error {
+	b, err := ioutil.ReadFile(testDir + "/" + filename)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(b, toFill)
+	return err
+}
+
+func wipeDatabases() {
+	db.MakeRequest("DELETE", "buildings", "", nil, nil)
+	db.MakeRequest("DELETE", "rooms", "", nil, nil)
+	db.MakeRequest("DELETE", "room_configurations", "", nil, nil)
+	db.MakeRequest("DELETE", "devices", "", nil, nil)
+	db.MakeRequest("DELETE", "device_types", "", nil, nil)
+
+	db.MakeRequest("PUT", "buildings", "", nil, nil)
+	db.MakeRequest("PUT", "rooms", "", nil, nil)
+	db.MakeRequest("PUT", "room_configurations", "", nil, nil)
+	db.MakeRequest("PUT", "devices", "", nil, nil)
+	db.MakeRequest("PUT", "device_types", "", nil, nil)
+}
+
+func wipeDatabase(name string) {
+	db.MakeRequest("DELETE", name, "", nil, nil)
+	db.MakeRequest("PUT", name, "", nil, nil)
+}
+
+/*
 
 func setupDatabase(t *testing.T) func(t *testing.T) {
 	//log.CFG.OutputPaths = []string{}
@@ -153,3 +197,4 @@ func wipeDatabases() {
 	MakeRequest("PUT", "devices", "", nil, nil)
 	MakeRequest("PUT", "device_types", "", nil, nil)
 }
+*/

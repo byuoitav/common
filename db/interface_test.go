@@ -5,10 +5,11 @@ import "testing"
 func TestStuff(t *testing.T) {
 	db := GetDB()
 
-	buildings, err := db.GetAllBuildings()
+	rooms, err := db.GetAllRooms()
 	if err != nil {
 		t.Logf("error: %s", err)
 	}
 
-	t.Logf("buildings: %s", buildings)
+	t.Logf("rooms: %v", rooms)
+	t.Fail()
 }

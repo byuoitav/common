@@ -3,10 +3,101 @@ package couch
 import (
 	"testing"
 
-	"github.com/byuoitav/configuration-database-microservice/structs"
-	"github.com/stretchr/testify/assert"
+	"github.com/byuoitav/common/structs"
 )
 
+func TestBuilding(t *testing.T) {
+	wipeDatabase("buildings")
+
+	t.Run("CreateBuilding", testCreateBuilding)
+	wipeDatabase("buildings")
+
+	t.Run("GetBuilding", testGetBuilding)
+	wipeDatabase("buildings")
+
+	//	t.Run("UpdateBuilding", testBuildingUpdate)
+
+	t.Run("DeleteBuilding", testDeleteBuilding)
+
+	wipeDatabase("buildings")
+}
+
+func testCreateBuilding(t *testing.T) {
+	var building structs.Building
+	err := unmarshalFromFile("new_building.json", &building)
+	if err != nil {
+		t.Fatalf("failed to unmarshal %s: %s", "new_building.json", err)
+	}
+
+	_, err = db.CreateBuilding(building)
+	if err != nil {
+		t.Fatalf("failed to create building: %s", err)
+	}
+}
+
+func testGetBuilding(t *testing.T) {
+	// create a building to get
+	testCreateBuilding(t)
+
+	// try to get that building
+	var building structs.Building
+	err := unmarshalFromFile("new_building.json", &building)
+	if err != nil {
+		t.Fatalf("failed to unmarshal %s: %s", "new_building.json", err)
+	}
+
+	// get the building
+	b, err := db.GetBuilding(building.ID)
+	if err != nil {
+		t.Fatalf("failed to get building %s: %s", building.ID, err)
+	}
+
+	if !isEqual(building, b) {
+		t.Fatalf("got a different building than expected... \nexpected: %s\ngot: %s", building, b)
+	}
+}
+
+func testDeleteBuilding(t *testing.T) {
+	// create the building and then get it's id
+	testGetBuilding(t)
+
+	// try to delete that building
+	var building structs.Building
+	err := unmarshalFromFile("new_building.json", &building)
+	if err != nil {
+		t.Fatalf("failed to unmarshal %s: %s", "new_building.json", err)
+	}
+
+	err = db.DeleteBuilding(building.ID)
+	if err != nil {
+		t.Fatalf("failed to delete building %s: %s", building.ID, err)
+	}
+
+	// try getting the deleted building. that should give an error.
+	_, err = db.GetBuilding(building.ID)
+	if err == nil {
+		t.Fatalf("building %s didn't really get deleted, but the function acted like it did.", building.ID)
+	}
+}
+
+func isEqual(b1 structs.Building, b2 structs.Building) bool {
+	if b1.ID != b2.ID ||
+		b1.Name != b2.Name ||
+		b1.Description != b2.Description ||
+		len(b1.Tags) != len(b2.Tags) {
+		return false
+	}
+
+	for i := range b1.Tags {
+		if b1.Tags[i] != b2.Tags[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+/*
 func TestBuilding(t *testing.T) {
 	defer setupDatabase(t)(t)
 
@@ -50,7 +141,6 @@ func testBuildingCreateDuplicate(t *testing.T) {
 }
 
 func testBuildingUpdate(t *testing.T) {
-
 	building, err := GetBuildingByID("AAA")
 	if err != nil {
 		t.Logf("Couldn't get building: %v", err.Error())
@@ -96,3 +186,4 @@ func testBuildingDelete(t *testing.T) {
 	err = DeleteBuilding("CCC")
 	assert.NotNil(t, err)
 }
+*/
