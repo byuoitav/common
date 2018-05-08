@@ -9,9 +9,9 @@ import (
 	"github.com/byuoitav/configuration-database-microservice/log"
 )
 
-//GetBuildingByID gets the company's building with the corresponding ID from the couch database
-func (c *CouchDB) GetBuildingByID(id string) (structs.Building, error) {
-	toReturn := building{}
+//GetBuilding gets the company's building with the corresponding ID from the couch database
+func (c *CouchDB) GetBuilding(id string) (structs.Building, error) {
+	var toReturn building
 	err := MakeRequest("GET", fmt.Sprintf("buildings/%v", id), "", nil, &toReturn)
 	if err != nil {
 		msg := fmt.Sprintf("[couch] Could not get building %v. %v", id, err.Error())
@@ -95,7 +95,7 @@ func (c *CouchDB) CreateBuilding(toAdd structs.Building) (structs.Building, erro
 	log.L.Debug("Building created, retriving new configuration from database.")
 
 	//return the created config
-	toAdd, err = c.GetBuildingByID(toAdd.ID)
+	toAdd, err = c.GetBuilding(toAdd.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created building: %v", err.Error())
 		log.L.Warn(msg)
@@ -108,7 +108,7 @@ func (c *CouchDB) CreateBuilding(toAdd structs.Building) (structs.Building, erro
 
 func (c *CouchDB) DeleteBuilding(id string) error {
 	log.L.Infof("Starting delete for building: %v", id)
-	building, err := c.GetBuildingByID(id)
+	building, err := c.GetBuilding(id)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem deleting the building: %v", err.Error())
 		log.L.Warn(msg)
@@ -143,4 +143,8 @@ func (c *CouchDB) DeleteBuilding(id string) error {
 
 	log.L.Debugf("Building %v deleted successfully.", id)
 	return nil
+}
+
+func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.Building, error) {
+	return structs.Building{}, nil
 }

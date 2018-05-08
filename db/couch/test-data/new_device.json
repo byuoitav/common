@@ -11,17 +11,14 @@
 	"roles": [
         {
         "_id": "role1",
-		"name": "role1?",
         "description": "test role"
         },
         {
         "_id": "role2",
-		"name": "role2?",
         "description": "test role"
         },
         {
         "_id": "role3",
-		"name": "role3?",
         "description": "test role"
         }
 	],

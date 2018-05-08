@@ -23,6 +23,10 @@ func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, er
 	return toReturn, err
 }
 
+func (c *CouchDB) GetAllRoomConfigurations() ([]structs.RoomConfiguration, error) {
+	return []structs.RoomConfiguration{}, nil
+}
+
 /*
 CreatRoomConfiguraiton adds a room configuration. A valid room configuration must have:
 1) an ID
@@ -101,4 +105,12 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 
 	log.L.Debug("Done.")
 	return config, nil
+}
+
+func (c *CouchDB) DeleteRoomConfiguration(id string) error {
+	return nil
+}
+
+func (c *CouchDB) UpdateRoomConfiguration(id string, rc structs.RoomConfiguration) (structs.RoomConfiguration, error) {
+	return structs.RoomConfiguration{}, nil
 }
