@@ -18,10 +18,10 @@ type Device struct {
 type DeviceType struct {
 	ID string `json:"_id"`
 	//	Rev         string       `json:"_rev,omitempty"`
-	Description string       `json:"description"`
-	Ports       []Port       `json:"ports"`
-	PowerStates []PowerState `json:"power-states"`
-	Commands    []Command    `json:"commands"`
+	Description string       `json:"description,omitempty"`
+	Ports       []Port       `json:"ports,omitempty"`
+	PowerStates []PowerState `json:"power-states,omitempty"`
+	Commands    []Command    `json:"commands,omitempty"`
 	Tags        []string     `json:"tags"`
 }
 
@@ -33,10 +33,10 @@ type PowerState struct {
 
 type Port struct {
 	ID                string   `json:"_id"`
-	FriendlyName      string   `json:"friendly-name"`
-	SourceDevice      string   `json:"source-device"`
-	DestinationDevice string   `json:"destination-device"`
-	Description       string   `json:"description"`
+	FriendlyName      string   `json:"friendly-name,omitempty"`
+	SourceDevice      string   `json:"source-device,omitempty"`
+	DestinationDevice string   `json:"destination-device,omitempty"`
+	Description       string   `json:"description,omitempty"`
 	Tags              []string `json:"tags"`
 }
 

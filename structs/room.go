@@ -7,7 +7,7 @@ type Room struct {
 	Description   string            `json:"description"`
 	Configuration RoomConfiguration `json:"configuration"`
 	Designation   string            `json:"designation"`
-	Devices       []Device          `json:"devices"`
+	Devices       []Device          `json:"devices,omitempty"`
 	Tags          []string          `json:"tags"`
 }
 
