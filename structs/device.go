@@ -10,7 +10,6 @@ type Device struct {
 	Description string     `json:"description"`
 	DisplayName string     `json:"display-name"`
 	Type        DeviceType `json:"type"`
-	Class       string     `json:"class"`
 	Roles       []Role     `json:"roles"`
 	Ports       []Port     `json:"ports"`
 	Tags        []string   `json:"tags"`
@@ -19,7 +18,6 @@ type Device struct {
 type DeviceType struct {
 	ID string `json:"_id"`
 	//	Rev         string       `json:"_rev,omitempty"`
-	Class       string       `json:"class"`
 	Description string       `json:"description"`
 	Ports       []Port       `json:"ports"`
 	PowerStates []PowerState `json:"power-states"`
@@ -39,7 +37,6 @@ type Port struct {
 	SourceDevice      string   `json:"source-device"`
 	DestinationDevice string   `json:"destination-device"`
 	Description       string   `json:"description"`
-	PortType          string   `json:"port-type"`
 	Tags              []string `json:"tags"`
 }
 
