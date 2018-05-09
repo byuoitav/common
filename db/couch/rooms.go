@@ -90,16 +90,15 @@ CreateRoom creates a room. Required information:
 */
 
 func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
-
-	c.log.Debug("Starting room creation for %v", room.ID)
+	c.log.Debugf("Starting room creation for %v", room.ID)
 
 	vals := roomValidationRegex.FindAllStringSubmatch(room.ID, 1)
 	if len(vals) == 0 {
 		msg := fmt.Sprintf("Couldn't create room. Invalid roomID format %v. Must match `(A-z,0-9]{2,}-[A-z,0-9]+`", room.ID)
-
 		c.log.Warn(msg)
 		return structs.Room{}, errors.New(msg)
 	}
+
 	//we really should check all the other information here, too
 	if len(room.Name) < 1 || len(room.Designation) < 1 {
 		msg := "Couldn't create room. The room must include a name and a designation."
@@ -111,7 +110,7 @@ func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
 	_, err := c.GetBuilding(vals[0][1])
 
 	if err != nil {
-		if nf, ok := err.(NotFound); ok {
+		if nf, ok := err.(*NotFound); ok {
 			msg := fmt.Sprintf("Trying to create a room in a non-existant building: %v. Create the building before adding the room. message: %v", vals[0][1], nf.Error())
 			c.log.Warn(msg)
 			return structs.Room{}, errors.New(msg)
@@ -174,7 +173,7 @@ func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
 
 	err = c.MakeRequest("PUT", fmt.Sprintf("rooms/%v", room.ID), "", b, &resp)
 	if err != nil {
-		if nf, ok := err.(Confict); ok {
+		if nf, ok := err.(*Conflict); ok {
 			msg := fmt.Sprintf("There was a conflict updating the room: %v. Make changes on an updated version of the configuration.", nf.Error())
 			c.log.Warn(msg)
 			return structs.Room{}, errors.New(msg)

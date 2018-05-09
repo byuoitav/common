@@ -134,8 +134,8 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	c.log.Infof("Starting add of Device: %v", toAdd.ID)
 
 	c.log.Debug("Starting checks. Checking name and class.")
-	if len(toAdd.Name) < 3 || len(toAdd.Class) < 3 {
-		return c.lde(fmt.Sprintf("Couldn't create device - invalid name or Class"))
+	if len(toAdd.Name) < 3 {
+		return c.lde(fmt.Sprintf("Couldn't create device - invalid name"))
 	}
 
 	c.log.Debug("Name and class are good. Checking Roles")
@@ -207,7 +207,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 
 	err = c.MakeRequest("PUT", fmt.Sprintf("devices/%v", toAdd.ID), "", b, &resp)
 	if err != nil {
-		if nf, ok := err.(Confict); ok {
+		if nf, ok := err.(Conflict); ok {
 			return c.lde(fmt.Sprintf("There was a conflict updating the device: %v. Make changes on an updated version of the configuration.", nf.Error()))
 		}
 		//ther was some other problem

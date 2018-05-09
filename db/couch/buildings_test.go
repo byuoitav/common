@@ -6,6 +6,8 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
+var testBuilding = "new_building.json"
+
 func TestBuilding(t *testing.T) {
 	wipeDatabase("buildings")
 
@@ -15,21 +17,18 @@ func TestBuilding(t *testing.T) {
 	t.Run("GetBuilding", testGetBuilding)
 	wipeDatabase("buildings")
 
-	//	t.Run("UpdateBuilding", testBuildingUpdate)
+	//t.Run("UpdateBuilding", testBuildingUpdate)
+	//wipeDatabase("buildings")
 
 	t.Run("DeleteBuilding", testDeleteBuilding)
 
-	wipeDatabase("buildings")
+	wipeDatabases()
 }
 
 func testCreateBuilding(t *testing.T) {
-	var building structs.Building
-	err := unmarshalFromFile("new_building.json", &building)
-	if err != nil {
-		t.Fatalf("failed to unmarshal %s: %s", "new_building.json", err)
-	}
+	building := getTestBuilding(t)
 
-	_, err = db.CreateBuilding(building)
+	_, err := couch.CreateBuilding(building)
 	if err != nil {
 		t.Fatalf("failed to create building: %s", err)
 	}
@@ -40,20 +39,16 @@ func testGetBuilding(t *testing.T) {
 	testCreateBuilding(t)
 
 	// try to get that building
-	var building structs.Building
-	err := unmarshalFromFile("new_building.json", &building)
-	if err != nil {
-		t.Fatalf("failed to unmarshal %s: %s", "new_building.json", err)
-	}
+	building := getTestBuilding(t)
 
 	// get the building
-	b, err := db.GetBuilding(building.ID)
+	b, err := couch.GetBuilding(building.ID)
 	if err != nil {
 		t.Fatalf("failed to get building %s: %s", building.ID, err)
 	}
 
 	if !isEqual(building, b) {
-		t.Fatalf("got a different building than expected... \nexpected: %s\ngot: %s", building, b)
+		t.Fatalf("got a different building than expected... \ngot: %s\nexpected: %s", b, building)
 	}
 }
 
@@ -62,21 +57,49 @@ func testDeleteBuilding(t *testing.T) {
 	testGetBuilding(t)
 
 	// try to delete that building
-	var building structs.Building
-	err := unmarshalFromFile("new_building.json", &building)
-	if err != nil {
-		t.Fatalf("failed to unmarshal %s: %s", "new_building.json", err)
-	}
+	building := getTestBuilding(t)
 
-	err = db.DeleteBuilding(building.ID)
+	err := couch.DeleteBuilding(building.ID)
 	if err != nil {
 		t.Fatalf("failed to delete building %s: %s", building.ID, err)
 	}
 
 	// try getting the deleted building. that should give an error.
-	_, err = db.GetBuilding(building.ID)
+	_, err = couch.GetBuilding(building.ID)
 	if err == nil {
-		t.Fatalf("building %s didn't really get deleted, but the function acted like it did.", building.ID)
+		//	t.Fatalf("get building failed (on id=%s): %s", building.ID, err)
+
+		t.Fatalf("building %s didn't really get deleted, but the DeleteBuilding() acted like it did.", building.ID)
+	}
+}
+
+func testBuildingUpdate(t *testing.T) {
+	testCreateBuilding(t)
+
+	building := getTestBuilding(t)
+
+	// save the oldID to update
+	oldID := building.ID
+
+	// modify the building
+	building.Name = "updated building name"
+	building.ID = "NEWID"
+	building.Description = "updated building description"
+	building.Tags = []string{"blue", "red", "purple"}
+
+	// update the building
+	_, err := couch.UpdateBuilding(oldID, building)
+	if err != nil {
+		t.Fatalf("failed to update building %s: %s", oldID, err)
+	}
+
+	b, err := couch.GetBuilding(building.ID)
+	if err != nil {
+		t.Fatalf("failed to get updated building %s: %s", building.ID, err)
+	}
+
+	if !isEqual(b, building) {
+		t.Fatalf("updated building doesn't match expected building.\ngot: %s\nexpected: %s", b, building)
 	}
 }
 
@@ -97,32 +120,18 @@ func isEqual(b1 structs.Building, b2 structs.Building) bool {
 	return true
 }
 
+func getTestBuilding(t *testing.T) structs.Building {
+	var building structs.Building
+
+	err := unmarshalFromFile(testBuilding, &building)
+	if err != nil {
+		t.Fatalf("failed to unmarshal %s: %s", testBuilding, err)
+	}
+
+	return building
+}
+
 /*
-func TestBuilding(t *testing.T) {
-	defer setupDatabase(t)(t)
-
-	t.Run("Building Create", testBuildingCreate)
-	t.Run("Building Create Duplicate", testBuildingCreateDuplicate)
-	t.Run("Building Update", testBuildingUpdate)
-	t.Run("Building Delete", testBuildingDelete)
-}
-
-func testBuildingCreate(t *testing.T) {
-	building := structs.Building{}
-	//add a building
-	err := structs.UnmarshalFromFile(testDir+"/new_building.json", &building)
-	if err != nil {
-		t.Logf("Error reading in %v: %v", "new_building.json", err.Error())
-		t.Fail()
-	}
-
-	_, err = CreateBuilding(building)
-	if err != nil {
-		t.Logf("Error creating building %v: %v", "new_building.json", err.Error())
-		t.Fail()
-	}
-}
-
 func testBuildingCreateDuplicate(t *testing.T) {
 
 	building := structs.Building{}
@@ -138,52 +147,5 @@ func testBuildingCreateDuplicate(t *testing.T) {
 		t.Logf("Creation succeeded when should have failed.")
 		t.Fail()
 	}
-}
-
-func testBuildingUpdate(t *testing.T) {
-	building, err := GetBuildingByID("AAA")
-	if err != nil {
-		t.Logf("Couldn't get building: %v", err.Error())
-		t.Fail()
-	}
-
-	currentlen := len(building.Tags)
-	building.Tags = append(building.Tags, "pootingmonsterpenguins")
-	newDescription := "No! Your great grandaughter had to be a CROSS DRESSER!"
-	building.Description = newDescription
-	rev := building.Rev
-
-	building.Rev = ""
-
-	//try to fail without rev
-	_, err = CreateBuilding(building)
-	if err == nil {
-		t.Log("Succeeded when it shouldn't have. Failed on rev being null")
-		t.FailNow()
-	}
-
-	building.Rev = rev
-
-	b, err := CreateBuilding(building)
-	if err != nil {
-		t.Logf("Failed update: %v", err.Error())
-		t.FailNow()
-	}
-	assert.Equal(t, b.Description, newDescription)
-	assert.Equal(t, len(building.Tags), (currentlen + 1))
-
-}
-
-func testBuildingDelete(t *testing.T) {
-	err := DeleteBuilding("BBB")
-	assert.Nil(t, err)
-
-	err = DeleteBuilding("ZZZ")
-	assert.NotNil(t, err)
-
-	//try deleting a building that has a room associated with it
-
-	err = DeleteBuilding("CCC")
-	assert.NotNil(t, err)
 }
 */

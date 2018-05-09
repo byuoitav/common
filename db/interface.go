@@ -2,6 +2,7 @@ package db
 
 import (
 	"log"
+	"os"
 	"sync"
 
 	"github.com/byuoitav/common/db/couch"
@@ -13,13 +14,10 @@ import (
 type DB interface {
 	/* crud functions */
 	// building
-	//TODO
 	CreateBuilding(building structs.Building) (structs.Building, error)
-	//TODO
 	GetBuilding(id string) (structs.Building, error)
 	//TODO
 	UpdateBuilding(id string, building structs.Building) (structs.Building, error)
-	//TODO
 	DeleteBuilding(id string) error
 
 	// room
@@ -75,8 +73,22 @@ type DB interface {
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
 }
 
+var address string
+var username string
+var password string
+
+func init() {
+	address = os.Getenv("DB_ADDRESS")
+	username = os.Getenv("DB_USERNAME")
+	password = os.Getenv("DB_PASSWORD")
+
+	if len(address) == 0 {
+		log.Fatalf("DB_ADDRESS is not set. Failing...")
+	}
+}
+
 func GetDB(logger *zap.SugaredLogger) DB {
-	return couch.NewCouchDB(logger)
+	return couch.NewDB(address, username, password, logger)
 }
 
 var logger *zap.SugaredLogger

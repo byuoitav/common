@@ -81,7 +81,7 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 
 	err = c.MakeRequest("PUT", fmt.Sprintf("room_configurations/%v", config.ID), "", b, &resp)
 	if err != nil {
-		if nf, ok := err.(Confict); ok {
+		if nf, ok := err.(*Conflict); ok {
 			msg := fmt.Sprintf("There was a conflict updating the configuration: %v. Make changes on an updated version of the configuration.", nf.Error())
 			c.log.Warn(msg)
 			return config, errors.New(msg)

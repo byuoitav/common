@@ -57,8 +57,8 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 
 	c.log.Infof("Starting creation or udpate of device type %v", toAdd.ID)
 
-	if len(toAdd.ID) < 2 || len(toAdd.Class) < 2 {
-		msg := fmt.Sprintf("Device types must have a valid ID, name, and class.")
+	if len(toAdd.ID) < 2 {
+		msg := fmt.Sprintf("Device types must have a valid ID and name")
 		c.log.Warn(msg)
 		return toAdd, errors.New(msg)
 	}
@@ -94,7 +94,7 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 
 	err = c.MakeRequest("PUT", fmt.Sprintf("device_types/%v", toAdd.ID), "", b, &resp)
 	if err != nil {
-		if nf, ok := err.(Confict); ok {
+		if nf, ok := err.(Conflict); ok {
 			msg := fmt.Sprintf("There was a conflict updating the device type: %v. Make changes on an updated version of the configuration.", nf.Error())
 			c.log.Warn(msg)
 			return structs.DeviceType{}, errors.New(msg)
@@ -129,7 +129,7 @@ func (c *CouchDB) DeleteDeviceType(id string) error {
 }
 
 func validatePort(p structs.Port) bool {
-	if len(p.ID) < 3 || len(p.PortType) < 3 {
+	if len(p.ID) < 3 {
 		return false
 	}
 	return true

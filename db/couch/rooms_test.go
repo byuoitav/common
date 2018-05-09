@@ -1,18 +1,72 @@
 package couch
 
-/*
-func TestRoom(t *testing.T) {
-	defer setupDatabase(t)(t)
-}
+import (
+	"testing"
 
-func testRoomCreateWithNewConfiguration(t *testing.T) {
-	room := structs.Room{}
-	err := structs.UnmarshalFromFile(testDir+"/new_room_a.json", &room)
+	"github.com/byuoitav/common/structs"
+)
+
+var testRoom = "new_room_a.json"
+
+func TestRoom(t *testing.T) {
+	// should fail
+	wipeDatabases()
+	t.Run("CreateRoomWithoutBuilding", testCreateRoomWithoutBuilding)
+
+	// setup an initial building to test with
+	building := getTestBuilding(t)
+	building.ID = "AAA"
+
+	_, err := couch.CreateBuilding(building)
 	if err != nil {
-		t.Logf("Error reading in %v: %v", "new_room_a.json", err.Error())
-		t.Fail()
+		t.Fatalf("failed to create building: %s", err)
 	}
 
-	_, err = CreateRoom(room)
+	t.Run("CreateRoom", testCreateBuilding)
+	wipeDatabase("rooms")
+
+	//t.Run("GetRoom", testGetBuilding)
+	//wipeDatabase("rooms")
+
+	//t.Run("UpdateRoom", testBuildingUpdate)
+	//wipeDatabase("rooms")
+
+	//t.Run("DeleteBuilding", testDeleteBuilding)
+
+	wipeDatabases()
 }
-*/
+
+func testCreateRoomWithoutBuilding(t *testing.T) {
+	room := getTestRoom(t)
+
+	_, err := couch.CreateRoom(room)
+	if err == nil {
+		t.Fatalf("successfully created room when I shouldn't have (there was no building matching the room)")
+	}
+}
+
+func testCreateRoom(t *testing.T) {
+	room := getTestRoom(t)
+
+	_, err := couch.CreateRoom(room)
+	if err != nil {
+		t.Fatalf("failed to create building: %s", err)
+	}
+}
+
+func testGetRoom(t *testing.T) {
+}
+
+func createTestRoom(room structs.Room) {
+}
+
+func getTestRoom(t *testing.T) structs.Room {
+	var room structs.Room
+
+	err := unmarshalFromFile(testRoom, &room)
+	if err != nil {
+		t.Fatalf("failed to unmarshal %s: %s", testRoom, err)
+	}
+
+	return room
+}

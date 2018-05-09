@@ -6,40 +6,30 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"go.uber.org/zap"
 )
 
-var COUCH_ADDRESS string
-var COUCH_USERNAME string
-var COUCH_PASSWORD string
-
 type CouchDB struct {
-	log *zap.SugaredLogger
+	address  string
+	username string
+	password string
+	log      *zap.SugaredLogger
 }
 
-func NewCouchDB(logger *zap.SugaredLogger) *CouchDB {
+func NewDB(address, username, password string, logger *zap.SugaredLogger) *CouchDB {
 	return &CouchDB{
-		log: logger,
-	}
-}
-
-func init() {
-	COUCH_ADDRESS = os.Getenv("COUCH_ADDRESS")
-	COUCH_USERNAME = os.Getenv("COUCH_USERNAME")
-	COUCH_PASSWORD = os.Getenv("COUCH_PASSWORD")
-
-	if len(COUCH_ADDRESS) == 0 {
-		log.Fatalf("COUCH_ADDRESS is not set.")
+		address:  address,
+		username: username,
+		password: password,
+		log:      logger,
 	}
 }
 
 func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte, toFill interface{}) error {
-	url := fmt.Sprintf("%v/%v", COUCH_ADDRESS, endpoint)
+	url := fmt.Sprintf("%v/%v", c.address, endpoint)
 	c.log.Debugf("Making %s request to %v", method, url)
 
 	// start building the request
@@ -49,8 +39,8 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 
 	// add auth
-	if len(COUCH_USERNAME) > 0 && len(COUCH_PASSWORD) > 0 {
-		req.SetBasicAuth(COUCH_USERNAME, COUCH_PASSWORD)
+	if len(c.username) > 0 && len(c.password) > 0 {
+		req.SetBasicAuth(c.username, c.password)
 	}
 
 	// add headers
@@ -118,7 +108,7 @@ func (c *CouchDB) checkCouchErrors(ce CouchError) error {
 		return &NotFound{fmt.Sprintf("The ID requested was unknown. Message: %v.", ce.Reason)}
 	case "conflict":
 		c.log.Debug("Error type found: Conflict.")
-		return &Confict{fmt.Sprintf("There was a conflict updating/creating the document: %v", ce.Reason)}
+		return &Conflict{fmt.Sprintf("There was a conflict updating/creating the document: %v", ce.Reason)}
 	case "bad_request":
 		c.log.Debug("Error type found: Bad Request.")
 		return &BadRequest{fmt.Sprintf("The request was bad: %v", ce.Reason)}
@@ -158,11 +148,11 @@ func (n NotFound) Error() string {
 	return n.msg
 }
 
-type Confict struct {
+type Conflict struct {
 	msg string
 }
 
-func (c Confict) Error() string {
+func (c Conflict) Error() string {
 	return c.msg
 }
 

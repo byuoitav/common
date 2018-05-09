@@ -4,25 +4,32 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var db = CouchDB{}
+var couch *CouchDB
 var testDir = `./test-data`
 
 func init() {
 	CFG := zap.NewDevelopmentConfig()
 	CFG.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	CFG.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+	CFG.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
 	l, err := CFG.Build()
 	if err != nil {
 		log.Panicf("failed to build config for zap logger: %v", err.Error())
 	}
 	logger := l.Sugar()
 
-	db.log = logger
+	couch = &CouchDB{
+		log: logger,
+		// these could be test env vars
+		address:  os.Getenv("TEST_DB_ADDRESS"),
+		username: os.Getenv("TEST_DB_USERNAME"),
+		password: os.Getenv("TEST_DB_PASSWORD"),
+	}
 }
 
 func unmarshalFromFile(filename string, toFill interface{}) error {
@@ -36,22 +43,22 @@ func unmarshalFromFile(filename string, toFill interface{}) error {
 }
 
 func wipeDatabases() {
-	db.MakeRequest("DELETE", "buildings", "", nil, nil)
-	db.MakeRequest("DELETE", "rooms", "", nil, nil)
-	db.MakeRequest("DELETE", "room_configurations", "", nil, nil)
-	db.MakeRequest("DELETE", "devices", "", nil, nil)
-	db.MakeRequest("DELETE", "device_types", "", nil, nil)
+	couch.MakeRequest("DELETE", "buildings", "", nil, nil)
+	couch.MakeRequest("DELETE", "rooms", "", nil, nil)
+	couch.MakeRequest("DELETE", "room_configurations", "", nil, nil)
+	couch.MakeRequest("DELETE", "devices", "", nil, nil)
+	couch.MakeRequest("DELETE", "device_types", "", nil, nil)
 
-	db.MakeRequest("PUT", "buildings", "", nil, nil)
-	db.MakeRequest("PUT", "rooms", "", nil, nil)
-	db.MakeRequest("PUT", "room_configurations", "", nil, nil)
-	db.MakeRequest("PUT", "devices", "", nil, nil)
-	db.MakeRequest("PUT", "device_types", "", nil, nil)
+	couch.MakeRequest("PUT", "buildings", "", nil, nil)
+	couch.MakeRequest("PUT", "rooms", "", nil, nil)
+	couch.MakeRequest("PUT", "room_configurations", "", nil, nil)
+	couch.MakeRequest("PUT", "devices", "", nil, nil)
+	couch.MakeRequest("PUT", "device_types", "", nil, nil)
 }
 
 func wipeDatabase(name string) {
-	db.MakeRequest("DELETE", name, "", nil, nil)
-	db.MakeRequest("PUT", name, "", nil, nil)
+	couch.MakeRequest("DELETE", name, "", nil, nil)
+	couch.MakeRequest("PUT", name, "", nil, nil)
 }
 
 /*
