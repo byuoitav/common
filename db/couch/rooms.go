@@ -190,7 +190,6 @@ func (c *CouchDB) CreateRoom(toAdd structs.Room) (structs.Room, error) {
 			if err == nil {
 				toReturn.Devices = append(toReturn.Devices, d)
 			}
-
 			wg.Done()
 		}()
 	}
@@ -201,43 +200,96 @@ func (c *CouchDB) CreateRoom(toAdd structs.Room) (structs.Room, error) {
 }
 
 func (c *CouchDB) DeleteRoom(id string) error {
-	c.log.Infof("[%s] Deleting room", id)
-
-	// get the room
+	// get the room to delete
 	room, err := c.getRoom(id)
 	if err != nil {
-		msg := fmt.Sprintf("[%s] error looking for room to delete: %s", id, err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to get room %s to delete: %s", id, err))
 	}
 
 	// delete each of the devices from the room
-	/* TODO write function to get devices (with rev) of room
-	c.log.Debugf("[%s] Deleting devices from room", id)
-	for _, d := range room.Devices {
-		c.log.Debugf("[%s] Deleting device %s", id, d.ID)
-		err = c.MakeRequest("DELETE", fmt.Sprintf("devices/%s?rev=%v", d.ID, d.Rev), "", nil, nil)
-		if err != nil {
-			msg := fmt.Sprintf("[%s] error deleting device %s: %s", id, d.ID, err.Error())
-			c.log.Warn(msg)
-			return errors.New(msg)
-		}
+	var wg sync.WaitGroup
+	for _, device := range room.Devices {
+		wg.Add(1)
+		go func() {
+			c.DeleteDevice(device.ID)
+			wg.Done()
+		}()
 	}
-	*/
+	wg.Wait()
 
 	// delete the room
-	c.log.Debugf("[%s] Successfully deleted devices from room. Deleting room...", id)
-	err = c.MakeRequest("DELETE", fmt.Sprintf("rooms/%s?rev=%v", room.ID, room.Rev), "", nil, nil)
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%v/%v?rev=%v", ROOMS, room.ID, room.Rev), "", nil, nil)
 	if err != nil {
-		msg := fmt.Sprintf("[%s] error deleting room: %s", id, err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to delete room %s: %s", id, err))
 	}
 
-	c.log.Infof("[%s] Successfully deleted room", id)
 	return nil
 }
 
 func (c *CouchDB) UpdateRoom(id string, room structs.Room) (structs.Room, error) {
-	return structs.Room{}, nil
+	var toReturn structs.Room
+
+	// validate the room
+	err := room.Validate()
+	if err != nil {
+		return toReturn, err
+	}
+
+	// verify the room configuration is real, if it isn't, then create it
+	config, err := c.GetRoomConfiguration(room.Configuration.ID)
+	if err != nil {
+		if _, ok := err.(*NotFound); ok { // room config wasn't found
+			// create new room configuration for this room
+			config, err = c.CreateRoomConfiguration(room.Configuration)
+			if err != nil {
+				return toReturn, errors.New(fmt.Sprintf("unable to create room %s: %s", room.ID, err))
+			}
+		} else { // some other error looking for room config
+			return toReturn, errors.New(fmt.Sprintf("unable to validate if room configuration %s exists or not: %s", room.Configuration.ID, err))
+		}
+	}
+
+	// strip off devices and extra room configuration information
+	room.Devices = nil
+	room.Configuration = structs.RoomConfiguration{ID: config.ID}
+
+	// get the current room
+	r, err := c.getRoom(id)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("unable to get room %s to update: %s'", id, err))
+	}
+
+	if id == room.ID { // the room ID isn't changing
+		// marshal the updated room
+		b, err := json.Marshal(room)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to unmarshal new room %s: %s", id, err))
+		}
+
+		// update the room
+		err = c.MakeRequest("PUT", fmt.Sprintf("%v/%s?rev=%v", ROOMS, id, r.Rev), "application/json", b, &toReturn)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to update room %s: %s", id, err))
+		}
+	} else { // the room ID is changing
+		// delete the old room
+		err = c.DeleteRoom(id)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to delete old room %s: %s", id, err))
+		}
+
+		// move the old room's devices into the new room's devices, and edit their ID's
+		for _, device := range room.Devices {
+			device.ID = strings.Replace(device.ID, id, room.ID, 1)
+			room.Devices = append(room.Devices, device)
+		}
+
+		// create new room
+		toReturn, err = c.CreateRoom(room)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to update room %s: %s", id, err))
+		}
+	}
+
+	return toReturn, nil
 }
