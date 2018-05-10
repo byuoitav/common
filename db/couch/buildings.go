@@ -182,6 +182,7 @@ func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.
 		return toReturn, err
 	}
 
+	// TODO reorder this so it is after the PUT request
 	// we need to 'change' the id for the new document
 	if id != building.ID {
 		// delete the old building

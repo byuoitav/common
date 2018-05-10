@@ -15,6 +15,14 @@ type Device struct {
 	Tags        []string   `json:"tags"`
 }
 
+func (d *Device) Building() string {
+	return strings.Split(d.ID, "-")[0]
+}
+
+func (d *Device) Room() string {
+	return strings.Split(d.ID, "-")[1]
+}
+
 type DeviceType struct {
 	ID string `json:"_id"`
 	//	Rev         string       `json:"_rev,omitempty"`
@@ -54,11 +62,13 @@ type Command struct {
 	Tags         []string     `json:"tags"`
 }
 
+/*
 type DeviceQueryResponse struct {
 	Docs     []Device `json:"docs"`
 	Bookmark string   `json:"bookmark"`
 	Warning  string   `json:"warning"`
 }
+*/
 
 type Microservice struct {
 	ID          string   `json:"_id"`

@@ -10,7 +10,6 @@ import (
 )
 
 func (c *CouchDB) GetDeviceType(deviceTypeID string) (structs.DeviceType, error) {
-
 	toReturn := structs.DeviceType{}
 
 	err := c.MakeRequest("GET", fmt.Sprintf("device_type/%v", deviceTypeID), "", nil, &toReturn)

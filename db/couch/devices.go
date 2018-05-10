@@ -4,17 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
 	"github.com/byuoitav/common/structs"
 )
 
-var DeviceValidationRegex *regexp.Regexp
-
-func init() {
-	DeviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
-}
+var DeviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
 
 func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	var toReturn []structs.Device
@@ -62,11 +59,16 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	return toReturn, nil
 }
 
-func (c *CouchDB) GetDevice(ID string) (structs.Device, error) {
-	toReturn := structs.Device{}
-	err := c.MakeRequest("GET", fmt.Sprintf("devices/%v", ID), "", nil, &toReturn)
+func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
+	device, err := c.getDevice(id)
+	return device.Device, err
+}
+
+func (c *CouchDB) getDevice(id string) (device, error) {
+	var toReturn device
+	err := c.MakeRequest("GET", fmt.Sprintf("devices/%v", id), "", nil, &toReturn)
 	if err != nil {
-		msg := fmt.Sprintf("[couch] Could not get Device %v. %v", ID, err.Error())
+		msg := fmt.Sprintf("failed to get device %v. %v", id, err.Error())
 		c.log.Warn(msg)
 	}
 
@@ -74,40 +76,54 @@ func (c *CouchDB) GetDevice(ID string) (structs.Device, error) {
 }
 
 func (c *CouchDB) GetDevicesByRoom(roomID string) ([]structs.Device, error) {
-	//we query from the - to . (the character after - to get all the elements in the room
-	query := IDPrefixQuery{}
+	var toReturn []structs.Device
+
+	devices, err := c.getDevicesByRoom(roomID)
+	if err != nil {
+		return toReturn, err
+	}
+
+	for _, device := range devices {
+		toReturn = append(toReturn, device.Device)
+	}
+
+	return toReturn, nil
+}
+
+func (c *CouchDB) getDevicesByRoom(roomID string) ([]device, error) {
+	var query IDPrefixQuery
 	query.Selector.ID.GT = fmt.Sprintf("%v-", roomID)
 	query.Selector.ID.LT = fmt.Sprintf("%v.", roomID)
 	query.Limit = 1000 //some arbitrarily large number for now.
 
 	b, err := json.Marshal(query)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem marshalling the query: %v", err.Error())
+		msg := fmt.Sprintf("There was a problem marshalling the query: %s", err)
 		c.log.Warn(msg)
-		return []structs.Device{}, errors.New(msg)
+		return []device{}, errors.New(msg)
 	}
 
-	toReturn := structs.DeviceQueryResponse{}
-	err = c.MakeRequest("POST", fmt.Sprintf("devices/_find"), "application/json", b, &toReturn)
+	var resp deviceQueryResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("devices/_find"), "application/json", b, &resp)
 
 	if err != nil {
-		msg := fmt.Sprintf("[couch] Could not get room %v. %v", roomID, err.Error())
+		msg := fmt.Sprintf("[couch] failed to get room %s. %s", roomID, err)
 		c.log.Warn(msg)
 	}
 
-	//we need to go through the devices and get their type information.
 	//TODO: Cache them so we're not making a thousand requests for duplicate types.
-	for i := range toReturn.Docs {
-		toReturn.Docs[i].Type, err = c.GetDeviceType(toReturn.Docs[i].Type.ID)
+	// fill in device type information
+	for _, d := range resp.Docs {
+		// TODO should be the lowercase-verison of GetDeviceType
+		d.Type, err = c.GetDeviceType(d.Type.ID)
 		if err != nil {
-			msg := fmt.Sprintf("Problem getting the device type %v. Error: %v", toReturn.Docs[i].Type.ID, err.Error())
+			msg := fmt.Sprintf("problem getting the device type %s. Error: %s", d.Type.ID, err)
 			c.log.Warn(msg)
-			return toReturn.Docs, errors.New(msg)
-
+			return []device{}, errors.New(msg)
 		}
 	}
 
-	return toReturn.Docs, err
+	return resp.Docs, err
 }
 
 /*
@@ -172,9 +188,10 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 		return c.lde("Couldn't create a device, a type ID must be included")
 	}
 
+	log.Printf("getting device type (%s)", toAdd.Type.ID)
 	deviceType, err := c.GetDeviceType(toAdd.Type.ID)
 	if err != nil {
-		if nf, ok := err.(NotFound); ok {
+		if nf, ok := err.(*NotFound); ok {
 			c.log.Debug("Device Type not found, attempting to create. Message: %v", nf.Error())
 
 			deviceType, err = c.CreateDeviceType(toAdd.Type)
@@ -304,26 +321,48 @@ func (c *CouchDB) GetDevicesByRoleAndType(role, dtype string) ([]structs.Device,
 func (c *CouchDB) DeleteDevice(id string) error {
 	c.log.Debugf("[%s] Deleting device", id)
 
-	device, err := c.GetDevice(id)
+	device, err := c.getDevice(id)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] error looking for device to delete: %s", id, err.Error())
 		c.log.Warn(msg)
 		return errors.New(msg)
 	}
 
-	/* TODO get rev
 	err = c.MakeRequest("DELETE", fmt.Sprintf("devices/%s?rev=%v", device.ID, device.Rev), "", nil, nil)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] error deleting device: %s", id, err.Error())
 		c.log.Warn(msg)
 		return errors.New(msg)
 	}
-	*/
-	c.log.Debug(device)
 
 	return nil
 }
 
 func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device, error) {
-	return structs.Device{}, nil
+	var toReturn structs.Device
+
+	b, err := json.Marshal(device)
+	if err != nil {
+		c.log.Warnf("there was a problem marshalling the query: %s", err)
+		return toReturn, err
+	}
+
+	err = c.MakeRequest("PUT", fmt.Sprintf("device/%s", device.ID), "application/json", b, &toReturn)
+	if err != nil {
+		msg := fmt.Sprintf("error updating the device %s: %s", device.ID, err)
+		c.log.Warn(msg)
+		return toReturn, err
+	}
+
+	if id != device.ID {
+		// delete the old document
+		err = c.DeleteDevice(id)
+		if err != nil {
+			msg := fmt.Sprintf("error deleting the old device %s: %s", id, err)
+			c.log.Warn(msg)
+			return toReturn, err
+		}
+	}
+
+	return toReturn, nil
 }

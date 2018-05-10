@@ -3,8 +3,8 @@ package couch
 import "github.com/byuoitav/common/structs"
 
 type building struct {
-	structs.Building
 	Rev string `json:"_rev,omitempty"`
+	structs.Building
 }
 
 type buildingQueryResponse struct {
@@ -14,8 +14,9 @@ type buildingQueryResponse struct {
 }
 
 type room struct {
+	devices []device `json:"devices"`
+	Rev     string   `json:"_rev,omitempty"`
 	structs.Room
-	Rev string `json:"_rev,omitempty"`
 }
 
 type roomQueryResponse struct {

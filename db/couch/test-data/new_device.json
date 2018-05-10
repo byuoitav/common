@@ -1,5 +1,5 @@
 {
-	"_id": "test_device_1",
+	"_id": "AAA-ZZZ-D1",
 	"address": "0.0.0.0",
 	"name": "projector",
 	"description": "test device 1",
@@ -27,8 +27,8 @@
             "_id": "test_port1",
             "friendly-name": "tport1",
 			"name": "test port 1",
-			"source-device": "null",
-			"destination-device": "null",
+			"source-device": null,
+			"destination-device": null,
 			"description": "test port",
 			"port-type": "what's this" 
 		}

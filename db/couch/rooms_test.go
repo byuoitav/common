@@ -9,7 +9,7 @@ import (
 var testRoom = "new_room_a.json"
 
 func TestRoom(t *testing.T) {
-	// should fail
+	/* should fail
 	wipeDatabases()
 	t.Run("CreateRoomWithoutBuilding", testCreateRoomWithoutBuilding)
 
@@ -24,7 +24,9 @@ func TestRoom(t *testing.T) {
 
 	t.Run("CreateRoom", testCreateBuilding)
 	wipeDatabase("rooms")
+	*/
 
+	t.Run("TestGettingRoom", testGettingRoom)
 	//t.Run("GetRoom", testGetBuilding)
 	//wipeDatabase("rooms")
 
@@ -33,7 +35,16 @@ func TestRoom(t *testing.T) {
 
 	//t.Run("DeleteBuilding", testDeleteBuilding)
 
-	wipeDatabases()
+	//	wipeDatabases()
+}
+
+func testGettingRoom(t *testing.T) {
+	room, err := couch.getRoom("ITB-1108")
+	if err != nil {
+		t.Fatalf("error geting test room: %s", err)
+	}
+
+	t.Logf("room: %v", room)
 }
 
 func testCreateRoomWithoutBuilding(t *testing.T) {
@@ -55,9 +66,6 @@ func testCreateRoom(t *testing.T) {
 }
 
 func testGetRoom(t *testing.T) {
-}
-
-func createTestRoom(room structs.Room) {
 }
 
 func getTestRoom(t *testing.T) structs.Room {

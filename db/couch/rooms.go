@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 
 	"github.com/byuoitav/common/structs"
@@ -12,17 +13,37 @@ import (
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
 
 func (c *CouchDB) GetRoom(id string) (structs.Room, error) {
-	toReturn := structs.Room{}
+	room, err := c.getRoom(id)
+	return room.Room, err
+}
+
+func (c *CouchDB) getRoom(id string) (room, error) {
+	var toReturn room
+
+	log.Printf("getting room, making request")
 	err := c.MakeRequest("GET", fmt.Sprintf("rooms/%v", id), "", nil, &toReturn)
 	if err != nil {
-		msg := fmt.Sprintf("[couch] Could not get room %v. %v", id, err.Error())
+		msg := fmt.Sprintf("[couch] failed to get room %s. %s", id, err)
 		c.log.Warn(msg)
+		log.Printf("msg: %s", msg)
+		return toReturn, errors.New(msg)
+	}
+	log.Printf("made request successfully")
+
+	devices, err := c.getDevicesByRoom(id)
+	if err != nil {
+		msg := fmt.Sprintf("[couch] failed to get devices in room %s. %s", id, err)
+		c.log.Warn(msg)
+		return toReturn, errors.New(msg)
+	}
+
+	for _, device := range devices {
+		toReturn.devices = append(toReturn.devices, device)
 	}
 
 	// TODO we need to get the room configuration information
-	// TODO we need to get devices
 
-	return toReturn, err
+	return toReturn, nil
 }
 
 func (c *CouchDB) GetAllRooms() ([]structs.Room, error) {
@@ -215,15 +236,15 @@ func (c *CouchDB) DeleteRoom(id string) error {
 	c.log.Infof("[%s] Deleting room", id)
 
 	// get the room
-	room, err := c.GetRoom(id)
+	room, err := c.getRoom(id)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] error looking for room to delete: %s", id, err.Error())
 		c.log.Warn(msg)
 		return errors.New(msg)
 	}
 
-	/* TODO get rev
 	// delete each of the devices from the room
+	/* TODO write function to get devices (with rev) of room
 	c.log.Debugf("[%s] Deleting devices from room", id)
 	for _, d := range room.Devices {
 		c.log.Debugf("[%s] Deleting device %s", id, d.ID)
@@ -234,6 +255,7 @@ func (c *CouchDB) DeleteRoom(id string) error {
 			return errors.New(msg)
 		}
 	}
+	*/
 
 	// delete the room
 	c.log.Debugf("[%s] Successfully deleted devices from room. Deleting room...", id)
@@ -243,8 +265,6 @@ func (c *CouchDB) DeleteRoom(id string) error {
 		c.log.Warn(msg)
 		return errors.New(msg)
 	}
-	*/
-	c.log.Debug(room)
 
 	c.log.Infof("[%s] Successfully deleted room", id)
 	return nil
