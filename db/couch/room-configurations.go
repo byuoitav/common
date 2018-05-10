@@ -4,18 +4,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/byuoitav/common/structs"
 )
 
 func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, error) {
+	rc, err := c.getRoomConfiguration(id)
+	return rc.RoomConfiguration, err
+}
+
+func (c *CouchDB) getRoomConfiguration(id string) (roomConfiguration, error) {
+	var toReturn roomConfiguration
 	c.log.Debugf("Getting room configuration: %v", id)
 
-	toReturn := structs.RoomConfiguration{}
 	err := c.MakeRequest("GET", fmt.Sprintf("room_configurations/%v", id), "", nil, &toReturn)
 
 	if err != nil {
-		msg := fmt.Sprintf("Could not get room configuration %v. %v", id, err.Error())
+		msg := fmt.Sprintf("could not get room configuration %v. %s", id, err)
 		c.log.Warn(msg)
 	}
 
@@ -86,7 +92,7 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 			c.log.Warn(msg)
 			return config, errors.New(msg)
 		}
-		//ther was some other problem
+		// there was some other problem
 		msg := fmt.Sprintf("unknown problem creating the configuration: %v", err.Error())
 		c.log.Warn(msg)
 		return config, errors.New(msg)
@@ -107,6 +113,32 @@ func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (str
 }
 
 func (c *CouchDB) DeleteRoomConfiguration(id string) error {
+	c.log.Debugf("[%s] Deleting room configuration", id)
+
+	// make sure the room configuration isn't being used anywhere
+	rooms, err := c.GetAllRooms()
+	if err != nil {
+		return err
+	}
+
+	for _, room := range rooms {
+		if strings.EqualFold(room.Configuration.ID, id) {
+			return errors.New(fmt.Sprintf("can't delete room configuration %s. room %s still uses it.", id, room.ID))
+		}
+	}
+
+	// get room configuration to delete
+	rc, err := c.getRoomConfiguration(id)
+	if err != nil {
+		return err
+	}
+
+	// delete the room configuration
+	err = c.MakeRequest("DELETE", fmt.Sprintf("room_configurations/%s?rev=%s", id, rc.Rev), "", nil, nil)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

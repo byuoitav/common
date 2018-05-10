@@ -19,8 +19,15 @@ func TestDevice(t *testing.T) {
 	t.Run("CreateTestRoom", testCreateRoom)
 
 	t.Run("CreateDevice", testCreateDevice)
+	wipeDatabase("devices")
+
 	t.Run("GetDevice", testGetDevice)
+	wipeDatabase("devices")
+
 	t.Run("DeleteDevice", testDeleteDevice)
+	wipeDatabase("devices")
+
+	t.Run("UpdateDevice", testUpdateDevice)
 	wipeDatabase("devices")
 
 	wipeDatabases()
@@ -69,6 +76,30 @@ func testDeleteDevice(t *testing.T) {
 	_, err = couch.GetDevice(device.ID)
 	if err == nil {
 		t.Fatalf("DeleteDevice() claimed to work, but the device (%s) didn't really get deleted.", device.ID)
+	}
+}
+
+func testUpdateDevice(t *testing.T) {
+	testGetDevice(t)
+
+	device := getTestDevice(t)
+	// modify device
+	device.Address = "updated"
+	device.Name = "updated_name"
+
+	// update
+	_, err := couch.UpdateDevice(device.ID, device)
+	if err != nil {
+		t.Fatalf("failed to update device: %s", err)
+	}
+
+	d, err := couch.GetDevice(device.ID)
+	if err != nil {
+		t.Fatalf("failed to get device after update: %s", err)
+	}
+
+	if d.Address != device.Address || d.Name != device.Name {
+		t.Fatalf("updated device is incorrect. \ngot: %s\nexpected: %s", d, device)
 	}
 }
 

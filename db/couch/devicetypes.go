@@ -5,17 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/byuoitav/common/structs"
 )
 
-func (c *CouchDB) GetDeviceType(deviceTypeID string) (structs.DeviceType, error) {
-	toReturn := structs.DeviceType{}
+func (c *CouchDB) GetDeviceType(id string) (structs.DeviceType, error) {
+	dt, err := c.getDeviceType(id)
+	return dt.DeviceType, err
+}
 
-	err := c.MakeRequest("GET", fmt.Sprintf("device_type/%v", deviceTypeID), "", nil, &toReturn)
+func (c *CouchDB) getDeviceType(id string) (deviceType, error) {
+	var toReturn deviceType
 
+	err := c.MakeRequest("GET", fmt.Sprintf("device_type/%v", id), "", nil, &toReturn)
 	if err != nil {
-		msg := fmt.Sprintf("Could not get deviceType %v. %v", deviceTypeID, err.Error())
+		msg := fmt.Sprintf("Could not get deviceType %v. %v", id, err)
 		c.log.Warn(msg)
 		return toReturn, errors.New(msg)
 	}
@@ -24,7 +29,7 @@ func (c *CouchDB) GetDeviceType(deviceTypeID string) (structs.DeviceType, error)
 }
 
 func (c *CouchDB) GetAllDeviceTypes() ([]structs.DeviceType, error) {
-	return []structs.DeviceType{}, nil
+	return []structs.DeviceType{}, errors.New("not implmented")
 }
 
 /*
@@ -98,7 +103,7 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 			c.log.Warn(msg)
 			return structs.DeviceType{}, errors.New(msg)
 		}
-		//ther was some other problem
+		// there was some other problem
 		msg := fmt.Sprintf("unknown problem creating the device type: %v", err.Error())
 		c.log.Warn(msg)
 		return structs.DeviceType{}, errors.New(msg)
@@ -106,7 +111,7 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 
 	c.log.Debug("Device Type created, retriving new record from database.")
 
-	//return the created device type
+	// return the created device type
 	toAdd, err = c.GetDeviceType(toAdd.ID)
 	if err != nil {
 		msg := fmt.Sprintf("There was a problem getting the newly created device type: %v", err.Error())
@@ -122,9 +127,30 @@ func (c *CouchDB) UpdateDeviceType(id string, dt structs.DeviceType) (structs.De
 	return structs.DeviceType{}, nil
 }
 
-// TODO
 func (c *CouchDB) DeleteDeviceType(id string) error {
-	return nil
+	c.log.Debugf("[%s] Deleting device type", id)
+
+	// validate no devices depend on device type
+	devices, err := c.GetAllDevices()
+	if err != nil {
+		return err
+	}
+
+	for _, device := range devices {
+		if strings.EqualFold(device.Type.ID, id) {
+			return errors.New(fmt.Sprintf("can't delete device type %s. device %s still depends on it.", id, device.ID))
+		}
+	}
+
+	// get device type to delete
+	dt, err := c.getDeviceType(id)
+	if err != nil {
+		return err
+	}
+
+	// delete device type
+	err = c.MakeRequest("DELETE", fmt.Sprintf("device_types/%s?rev=%s", dt.ID, dt.Rev), "", nil, nil)
+	return err
 }
 
 func validatePort(p structs.Port) bool {

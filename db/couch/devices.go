@@ -343,15 +343,23 @@ func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device
 
 	b, err := json.Marshal(device)
 	if err != nil {
-		c.log.Warnf("there was a problem marshalling the query: %s", err)
-		return toReturn, err
+		msg := fmt.Sprintf("there was a problem marshalling the query: %s", err)
+		c.log.Warnf(msg)
+		return toReturn, errors.New(msg)
 	}
 
-	err = c.MakeRequest("PUT", fmt.Sprintf("device/%s", device.ID), "application/json", b, &toReturn)
+	dev, err := c.getDevice(id)
+	if err != nil {
+		msg := fmt.Sprintf("error getting the device to delete: %s", err)
+		c.log.Warnf(msg)
+		return toReturn, errors.New(msg)
+	}
+
+	err = c.MakeRequest("PUT", fmt.Sprintf("devices/%s?rev=%v", device.ID, dev.Rev), "application/json", b, &toReturn)
 	if err != nil {
 		msg := fmt.Sprintf("error updating the device %s: %s", device.ID, err)
 		c.log.Warn(msg)
-		return toReturn, err
+		return toReturn, errors.New(msg)
 	}
 
 	if id != device.ID {
@@ -360,7 +368,7 @@ func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device
 		if err != nil {
 			msg := fmt.Sprintf("error deleting the old device %s: %s", id, err)
 			c.log.Warn(msg)
-			return toReturn, err
+			return toReturn, errors.New(msg)
 		}
 	}
 
