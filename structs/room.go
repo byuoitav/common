@@ -19,7 +19,7 @@ type Room struct {
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
 
 func (r *Room) Validate() error {
-	vals := roomValidationRegex.FindAllStringSubmatch(r.ID, 1)
+	vals := roomValidationRegex.FindStringSubmatch(r.ID)
 	if len(vals) == 0 {
 		return errors.New("invalid room: _id must match `([A-z,0-9]{2,})-[A-z,0-9]+`")
 	}

@@ -9,28 +9,22 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
-//GetBuilding gets the company's building with the corresponding ID from the couch database
 func (c *CouchDB) GetBuilding(id string) (structs.Building, error) {
 	resp, err := c.getBuilding(id)
-	return resp.Building, err
+	return *resp.Building, err
 }
 
 func (c *CouchDB) getBuilding(id string) (building, error) {
 	var toReturn building
 
-	err := c.MakeRequest("GET", fmt.Sprintf("buildings/%v", id), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", BUILDINGS, id), "", nil, &toReturn)
 	if err != nil {
-		err = &NotFound{
-			msg: fmt.Sprintf("failed to get building %v. %s", id, err),
-		}
-
-		c.log.Warn(err)
+		err = &NotFound{msg: fmt.Sprintf("failed to get building %v: %s", id, err)}
 	}
 
 	return toReturn, err
 }
 
-//GetAllBuildings returns all buildings for the company specified
 func (c *CouchDB) GetAllBuildings() ([]structs.Building, error) {
 	var toReturn []structs.Building
 	var query IDPrefixQuery
@@ -39,21 +33,18 @@ func (c *CouchDB) GetAllBuildings() ([]structs.Building, error) {
 
 	b, err := json.Marshal(query)
 	if err != nil {
-		c.log.Warnf("There was a problem marshalling the query: %v", err.Error())
-		return toReturn, err
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal query to get all buildings: %s", err))
 	}
 
 	var resp buildingQueryResponse
 
-	err = c.MakeRequest("POST", fmt.Sprintf("buildings/_find"), "application/json", b, &resp)
+	err = c.MakeRequest("POST", fmt.Sprintf("%v/_find", BUILDINGS), "application/json", b, &resp)
 	if err != nil {
-		msg := fmt.Sprintf("[couch] Could not get buildings. %v", err.Error())
-		c.log.Warn(msg)
-		return toReturn, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get all buildings: %s", err))
 	}
 
 	for _, doc := range resp.Docs {
-		toReturn = append(toReturn, doc.Building)
+		toReturn = append(toReturn, *doc.Building)
 	}
 
 	return toReturn, err
@@ -67,106 +58,77 @@ AddBuilding adds a building. The building must have at least:
 The function will also overwrite the existing building providing the _rev field is set properly
 */
 func (c *CouchDB) CreateBuilding(toAdd structs.Building) (structs.Building, error) {
-	c.log.Debugf("Starting adding a building: %v", toAdd.ID)
+	var toReturn structs.Building
 
-	if len(toAdd.ID) < 2 {
-		msg := "Cannot create building, must have an ID"
-		c.log.Warn(msg)
+	// validate building
+	err := toAdd.Validate()
+	if err != nil {
+		return toReturn, err
 	}
-
-	//there's not a lot to buildings, so we can just add
-
-	c.log.Debug("Checks passed, creating building.")
 
 	b, err := json.Marshal(toAdd)
 	if err != nil {
-
-		msg := fmt.Sprintf("Couldn't marshal building into JSON. Error: %v", err.Error())
-		c.log.Error(msg) // this is a slightly bigger deal
-		return toAdd, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal building %s: %s", toAdd.ID, err))
 	}
 
-	resp := CouchUpsertResponse{}
-
-	err = c.MakeRequest("PUT", fmt.Sprintf("buildings/%v", toAdd.ID), "", b, &resp)
+	// post new building
+	var resp CouchUpsertResponse
+	err = c.MakeRequest("POST", BUILDINGS, "", b, &resp)
 	if err != nil {
-		c.log.Debugf("%v", err)
+		// if there was a conflict
 		if conflict, ok := err.(*Conflict); ok {
-			msg := fmt.Sprintf("Error: %v Make changes on an updated version of the configuration.", conflict.Error())
-			c.log.Warn(msg)
-			return toAdd, errors.New(msg)
+			return toReturn, errors.New(fmt.Sprintf("building already exists, please update this building or change id's. error: %s", conflict))
 		}
-		//ther was some other problem
-		msg := fmt.Sprintf("unknown problem creating the Building: %v", err.Error())
-		c.log.Warn(msg)
-		return toAdd, errors.New(msg)
+
+		// or an unknown error
+		return toReturn, errors.New(fmt.Sprintf("unable to create building %s: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("Building created, retriving new configuration from database.")
-
-	//return the created config
+	// return the created building
 	toAdd, err = c.GetBuilding(toAdd.ID)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem getting the newly created building: %v", err.Error())
-		c.log.Warn(msg)
-		return toAdd, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("unable getting the building %s after creating it: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("Done.")
-	return toAdd, nil
+	return toReturn, nil
 }
 
 func (c *CouchDB) DeleteBuilding(id string) error {
-	c.log.Infof("Starting delete for building: %v", id)
+	// get the rev of the building to delete
 	building, err := c.getBuilding(id)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem deleting the building: %v", err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to get building %s to delete: %s", id, err))
 	}
 
-	c.log.Debugf("Checking for rooms in building %v", id)
-	//first we need to check if there are any rooms in the building, if there are, we don't allow a delete at this level
+	// check if there are any rooms in the building; if there are, don't allow deletion
 	rms, err := c.GetRoomsByBuilding(id)
 	if err != nil {
-		msg := fmt.Sprintf("Problem checking the building for rooms: %v", err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to check the building for rooms: %s", err))
 	}
 
 	if len(rms) > 0 {
-		c.log.Infof("There were %v rooms in building %v, aborting delete", len(rms), id)
-		return errors.New(fmt.Sprintf("Couldn't delete building %v, there are still rooms associated with the building. Remove all rooms from building before deleting.", id))
+		return errors.New(fmt.Sprintf("there are still rooms associated with the building %s. delete all rooms from it first.", id))
 	}
 
-	c.log.Debugf("No rooms found in building %v. Proceeding with deletion", id)
-
-	err = c.MakeRequest("DELETE", fmt.Sprintf("buildings/%s?rev=%v", id, building.Rev), "", nil, nil)
+	// make request to delete building
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%s/%s?rev=%v", BUILDINGS, id, building.Rev), "", nil, nil)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem deleting the building: %v", err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to delete building %s: %s", id, err))
 	}
 
-	c.log.Debugf("Building %v deleted successfully.", id)
 	return nil
 }
 
+// delete a building without checking if rooms will be affected
 func (c *CouchDB) deleteBuildingWithoutCascade(id string) error {
-	c.log.Infof("starting to delete building *without cascading*: %s", id)
-
 	building, err := c.getBuilding(id)
 	if err != nil {
-		msg := fmt.Sprintf("error getting the building for deletion: %s", err)
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to get building %s to delete: %s", id, err))
 	}
 
-	err = c.MakeRequest("DELETE", fmt.Sprintf("buildings/%s?rev=%v", id, building.Rev), "", nil, nil)
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%s/%s?rev=%v", BUILDINGS, id, building.Rev), "", nil, nil)
 	if err != nil {
-		msg := fmt.Sprintf("error deleting the building %s: %s", id, err)
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unable to delete building %s: %s", id, err))
 	}
 
 	return nil
@@ -174,56 +136,61 @@ func (c *CouchDB) deleteBuildingWithoutCascade(id string) error {
 
 func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.Building, error) {
 	var toReturn structs.Building
-	var roomsToUpdate []structs.Room
 
-	b, err := json.Marshal(building)
+	// validate updated building
+	err := building.Validate()
 	if err != nil {
-		c.log.Warnf("there was a problem marshalling the query: %s", err)
 		return toReturn, err
 	}
 
-	// TODO reorder this so it is after the PUT request
-	// we need to 'change' the id for the new document
-	if id != building.ID {
+	if id == building.ID { // the building ID isn't changing
+		// get the rev of the building
+		bld, err := c.getBuilding(id)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to get building %s to update: %s", err))
+		}
+
+		// marshal the new building
+		b, err := json.Marshal(building)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to unmarshal new building: %s", err))
+		}
+
+		// update the building
+		err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", BUILDINGS, id, bld.Rev), "application/json", b, &toReturn)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to update building %s: %s", id, err))
+		}
+	} else { // the builiding ID is changing :|
 		// delete the old building
 		err = c.deleteBuildingWithoutCascade(id)
 		if err != nil {
-			msg := fmt.Sprintf("failed to delete old building %s: %s", id, err)
-			c.log.Warn(msg)
-			return toReturn, err
+			return toReturn, errors.New(fmt.Sprintf("unable to delete old building %s: %s", id, err))
 		}
 
-		// save the old rooms to be updated afterwords
-		roomsToUpdate, err = c.GetRoomsByBuilding(id)
+		// create the new building
+		_, err = c.CreateBuilding(building)
 		if err != nil {
-			msg := fmt.Sprintf("failed to get rooms inside the building %s: %s", id, err)
-			c.log.Warn(msg)
-			return toReturn, err
+			return toReturn, errors.New(fmt.Sprintf("unable to create new building %s: %s", id, err))
 		}
-	}
 
-	// update the building document
-	err = c.MakeRequest("PUT", fmt.Sprintf("buildings/%s", building.ID), "application/json", b, &toReturn)
-	if err != nil {
-		msg := fmt.Sprintf("error updating the building %s: %s", building.ID, err)
-		c.log.Warn(msg)
-		return toReturn, err
-	}
+		// get rooms that were in the old building
+		rooms, err := c.GetRoomsByBuilding(id)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to get rooms assocated with old building: %s"))
+		}
 
-	// update all the rooms that need to be updated if the building id changed
-	for _, room := range roomsToUpdate {
-		c.log.Debug(room)
-		go func() {
-			// create the new roomID
-			oldID := room.ID
-			split := strings.Split(oldID, "-")
-			split[0] = building.ID
-			room.ID = strings.Join(split, "-")
+		// update each of the rooms to be in the new building
+		for _, room := range rooms {
+			go func() {
+				// create the new room id
+				oldID := room.ID
+				room.ID = strings.Replace(room.ID, id, building.ID, 1)
 
-			c.log.Debugf("Changing room %s to %s, to update building from %s to %s", oldID, room.ID, id, building.ID)
-
-			c.UpdateRoom(oldID, room)
-		}()
+				// update the room
+				c.UpdateRoom(oldID, room)
+			}()
+		}
 	}
 
 	return toReturn, nil

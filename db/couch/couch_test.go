@@ -26,9 +26,12 @@ func init() {
 	couch = &CouchDB{
 		log: logger,
 		// these could be test env vars
-		address:  os.Getenv("TEST_DB_ADDRESS"),
-		username: os.Getenv("TEST_DB_USERNAME"),
-		password: os.Getenv("TEST_DB_PASSWORD"),
+		//	address:  os.Getenv("TEST_DB_ADDRESS"),
+		//	username: os.Getenv("TEST_DB_USERNAME"),
+		//	password: os.Getenv("TEST_DB_PASSWORD"),
+		address:  os.Getenv("DB_ADDRESS"),
+		username: os.Getenv("DB_USERNAME"),
+		password: os.Getenv("DB_PASSWORD"),
 	}
 }
 

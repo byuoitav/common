@@ -12,6 +12,14 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	BUILDINGS           = "buildings"
+	ROOMS               = "rooms"
+	DEVICES             = "devices"
+	DEVICE_TYPES        = "device_types"
+	ROOM_CONFIGURATIONS = "room_configurations"
+)
+
 type CouchDB struct {
 	address  string
 	username string

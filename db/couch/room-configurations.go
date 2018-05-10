@@ -11,7 +11,7 @@ import (
 
 func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, error) {
 	rc, err := c.getRoomConfiguration(id)
-	return rc.RoomConfiguration, err
+	return *rc.RoomConfiguration, err
 }
 
 func (c *CouchDB) getRoomConfiguration(id string) (roomConfiguration, error) {
@@ -29,7 +29,7 @@ func (c *CouchDB) getRoomConfiguration(id string) (roomConfiguration, error) {
 }
 
 func (c *CouchDB) GetAllRoomConfigurations() ([]structs.RoomConfiguration, error) {
-	return []structs.RoomConfiguration{}, nil
+	return []structs.RoomConfiguration{}, errors.New("GetAllRoomConfigurations not implemented")
 }
 
 /*

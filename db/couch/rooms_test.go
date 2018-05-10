@@ -1,38 +1,75 @@
 package couch
 
 import (
+	"log"
 	"testing"
 
 	"github.com/byuoitav/common/structs"
+	"github.com/labstack/echo"
 )
 
 var testRoom = "new_room_a.json"
 
 func TestRoom(t *testing.T) {
-	wipeDatabases()
-	t.Run("CreateRoomWithoutBuilding", testCreateRoomWithoutBuilding)
+	/*
+		//	wipeDatabases()
+		t.Run("CreateRoomWithoutBuilding", testCreateRoomWithoutBuilding)
 
-	// setup an initial building to test with
-	building := getTestBuilding(t)
-	building.ID = "AAA"
+		// setup an initial building to test with
+		building := getTestBuilding(t)
+		building.ID = "AAA"
 
-	_, err := couch.CreateBuilding(building)
+		_, err := couch.CreateBuilding(building)
+		if err != nil {
+			t.Fatalf("failed to create building: %s", err)
+		}
+
+		//	t.Run("CreateRoom", testCreateBuilding)
+		//	wipeDatabase("rooms")
+
+		//t.Run("GetRoom", testGetBuilding)
+		//wipeDatabase("rooms")
+
+		//t.Run("UpdateRoom", testBuildingUpdate)
+		//wipeDatabase("rooms")
+
+		//t.Run("DeleteBuilding", testDeleteBuilding)
+
+		//	wipeDatabases()
+	*/
+
+	router := echo.New()
+
+	router.GET("/room/:name", func(context echo.Context) error {
+		roomname := context.Param("name")
+		room, err := couch.GetRoom(roomname)
+		if err != nil {
+			return context.JSON(400, err)
+		}
+
+		return context.JSON(200, room)
+	})
+
+	router.GET("/building/:name", func(context echo.Context) error {
+		name := context.Param("name")
+		building, err := couch.GetBuilding(name)
+		if err != nil {
+			return context.JSON(400, err)
+		}
+
+		return context.JSON(200, building)
+	})
+
+	router.Start(":9999")
+}
+
+func getRoom(name string) {
+	room, err := couch.GetRoom(name)
 	if err != nil {
-		t.Fatalf("failed to create building: %s", err)
+		log.Printf("error: %s", err)
 	}
 
-	t.Run("CreateRoom", testCreateBuilding)
-	wipeDatabase("rooms")
-
-	//t.Run("GetRoom", testGetBuilding)
-	//wipeDatabase("rooms")
-
-	//t.Run("UpdateRoom", testBuildingUpdate)
-	//wipeDatabase("rooms")
-
-	//t.Run("DeleteBuilding", testDeleteBuilding)
-
-	//	wipeDatabases()
+	log.Printf("room: %v", room)
 }
 
 func testCreateRoomWithoutBuilding(t *testing.T) {

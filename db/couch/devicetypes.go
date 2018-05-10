@@ -12,13 +12,13 @@ import (
 
 func (c *CouchDB) GetDeviceType(id string) (structs.DeviceType, error) {
 	dt, err := c.getDeviceType(id)
-	return dt.DeviceType, err
+	return *dt.DeviceType, err
 }
 
 func (c *CouchDB) getDeviceType(id string) (deviceType, error) {
 	var toReturn deviceType
 
-	err := c.MakeRequest("GET", fmt.Sprintf("device_type/%v", id), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("device_types/%v", id), "", nil, &toReturn)
 	if err != nil {
 		msg := fmt.Sprintf("Could not get deviceType %v. %v", id, err)
 		c.log.Warn(msg)
@@ -58,7 +58,6 @@ Command:
 If a device type is submitted with a valid 'rev' field, the device type will be overwritten.
 */
 func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
-
 	c.log.Infof("Starting creation or udpate of device type %v", toAdd.ID)
 
 	if len(toAdd.ID) < 2 {

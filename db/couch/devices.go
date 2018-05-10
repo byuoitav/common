@@ -47,13 +47,13 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	// create map of typeID -> type
 	typeMap := make(map[string]structs.DeviceType)
 	for _, t := range typeResp.Docs {
-		typeMap[t.ID] = t.DeviceType
+		typeMap[t.ID] = *t.DeviceType
 	}
 
 	// fill types into devices
 	for _, d := range deviceResp.Docs {
 		d.Type = typeMap[d.Type.ID]
-		toReturn = append(toReturn, d.Device)
+		toReturn = append(toReturn, *d.Device)
 	}
 
 	return toReturn, nil
@@ -61,7 +61,7 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 
 func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
-	return device.Device, err
+	return *device.Device, err
 }
 
 func (c *CouchDB) getDevice(id string) (device, error) {
@@ -84,7 +84,7 @@ func (c *CouchDB) GetDevicesByRoom(roomID string) ([]structs.Device, error) {
 	}
 
 	for _, device := range devices {
-		toReturn = append(toReturn, device.Device)
+		toReturn = append(toReturn, *device.Device)
 	}
 
 	return toReturn, nil
@@ -114,7 +114,7 @@ func (c *CouchDB) getDevicesByRoom(roomID string) ([]device, error) {
 	//TODO: Cache them so we're not making a thousand requests for duplicate types.
 	// fill in device type information
 	for _, d := range resp.Docs {
-		// TODO should be the lowercase-verison of GetDeviceType
+		// TODO should be the lowercase-verison of GetDeviceType (maybe?)
 		d.Type, err = c.GetDeviceType(d.Type.ID)
 		if err != nil {
 			msg := fmt.Sprintf("problem getting the device type %s. Error: %s", d.Type.ID, err)

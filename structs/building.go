@@ -10,8 +10,8 @@ type Building struct {
 }
 
 func (b *Building) Validate() error {
-	if len(b.ID) == 0 {
-		return errors.New("building must have an id")
+	if len(b.ID) < 2 {
+		return errors.New("invalid building: id must be at least 2 characters long")
 	}
 	return nil
 }

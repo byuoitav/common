@@ -22,7 +22,7 @@ type Device struct {
 var deviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
 
 func (d *Device) Validate() error {
-	vals := deviceValidationRegex.FindAllStringSubmatch(d.ID, 1)
+	vals := deviceValidationRegex.FindStringSubmatch(d.ID)
 	if len(vals) == 0 {
 		return errors.New("invalid device: inproper id. must match `([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`")
 	}
@@ -55,16 +55,6 @@ func (d *Device) Validate() error {
 
 	return nil
 }
-
-/*
-func (d *Device) Building() string {
-	return strings.Split(d.ID, "-")[0]
-}
-
-func (d *Device) Room() string {
-	return strings.Split(d.ID, "-")[1]
-}
-*/
 
 type DeviceType struct {
 	ID          string       `json:"_id"`

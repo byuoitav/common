@@ -4,7 +4,7 @@ import "github.com/byuoitav/common/structs"
 
 type building struct {
 	Rev string `json:"_rev,omitempty"`
-	structs.Building
+	*structs.Building
 }
 
 type buildingQueryResponse struct {
@@ -14,9 +14,8 @@ type buildingQueryResponse struct {
 }
 
 type room struct {
-	devices []device `json:"devices"`
-	Rev     string   `json:"_rev,omitempty"`
-	structs.Room
+	Rev string `json:"_rev,omitempty"`
+	*structs.Room
 }
 
 type roomQueryResponse struct {
@@ -26,8 +25,8 @@ type roomQueryResponse struct {
 }
 
 type roomConfiguration struct {
-	structs.RoomConfiguration
 	Rev string `json:"_rev,omitempty"`
+	*structs.RoomConfiguration
 }
 
 type roomConfigurationQueryResponse struct {
@@ -37,8 +36,8 @@ type roomConfigurationQueryResponse struct {
 }
 
 type device struct {
-	structs.Device
 	Rev string `json:"_rev,omitempty"`
+	*structs.Device
 }
 
 type deviceQueryResponse struct {
@@ -48,8 +47,8 @@ type deviceQueryResponse struct {
 }
 
 type deviceType struct {
-	structs.DeviceType
 	Rev string `json:"_rev,omitempty"`
+	*structs.DeviceType
 }
 
 type deviceTypeQueryResponse struct {

@@ -4,103 +4,103 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/byuoitav/common/structs"
 )
 
-var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
-
 func (c *CouchDB) GetRoom(id string) (structs.Room, error) {
 	room, err := c.getRoom(id)
-	return room.Room, err
+	return *room.Room, err
 }
 
 func (c *CouchDB) getRoom(id string) (room, error) {
 	var toReturn room
 
-	log.Printf("getting room, making request")
-	err := c.MakeRequest("GET", fmt.Sprintf("rooms/%v", id), "", nil, &toReturn)
+	// get the base room
+	err := c.MakeRequest("GET", fmt.Sprintf("%s/%v", ROOMS, id), "", nil, &toReturn)
 	if err != nil {
-		msg := fmt.Sprintf("[couch] failed to get room %s. %s", id, err)
-		c.log.Warn(msg)
-		log.Printf("msg: %s", msg)
-		return toReturn, errors.New(msg)
-	}
-	log.Printf("made request successfully")
-
-	devices, err := c.getDevicesByRoom(id)
-	if err != nil {
-		msg := fmt.Sprintf("[couch] failed to get devices in room %s. %s", id, err)
-		c.log.Warn(msg)
-		return toReturn, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get room %s: %s", id, err))
 	}
 
+	// get the devices in room
+	devices, err := c.GetDevicesByRoom(id)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get devices in room %s: %s", id, err))
+	}
+
+	// fill devices into room
 	for _, device := range devices {
-		toReturn.devices = append(toReturn.devices, device)
+		toReturn.Devices = append(toReturn.Devices, device)
 	}
 
-	// TODO we need to get the room configuration information
+	// get room configuration
+	toReturn.Configuration, err = c.GetRoomConfiguration(toReturn.Configuration.ID)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get room configuration %s for room %s: %s", toReturn.Configuration.ID, id, err))
+	}
 
 	return toReturn, nil
 }
 
 func (c *CouchDB) GetAllRooms() ([]structs.Room, error) {
 	var toReturn []structs.Room
+
+	// create all room query
 	var query IDPrefixQuery
 	query.Selector.ID.GT = "\x00"
 	query.Limit = 1000
 
+	// marshal query
 	b, err := json.Marshal(query)
 	if err != nil {
-		c.log.Warnf("There was a problem marshalling the query: %v", err.Error())
-		return []structs.Room{}, err
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal query to get all rooms: %s", err))
 	}
 
+	// make request to get rooms
 	var resp roomQueryResponse
-
-	err = c.MakeRequest("POST", fmt.Sprintf("rooms/_find"), "application/json", b, &resp)
+	err = c.MakeRequest("POST", fmt.Sprintf("%v/_find", ROOMS), "application/json", b, &resp)
 	if err != nil {
-		msg := fmt.Sprintf("[couch] Could not get buildings. %v", err.Error())
-		c.log.Warn(msg)
-		return []structs.Room{}, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get all rooms: %s", err))
 	}
 
+	// add each doc to toReturn
 	for _, doc := range resp.Docs {
-		toReturn = append(toReturn, doc.Room)
+		toReturn = append(toReturn, *doc.Room)
 	}
 
 	return toReturn, nil
 }
 
-func (c *CouchDB) GetRoomsByBuilding(buildingID string) ([]structs.Room, error) {
-	//we query from the - to . (the character after - to get all the elements in the room
-	query := IDPrefixQuery{}
-	query.Selector.ID.GT = fmt.Sprintf("%v-", buildingID)
-	query.Selector.ID.LT = fmt.Sprintf("%v.", buildingID)
-	query.Limit = 1000 //some arbitrarily large number for now.
-	b, err := json.Marshal(query)
-	if err != nil {
-		c.log.Warnf("There was a problem marshalling the query: %v", err.Error())
-		return []structs.Room{}, err
-	}
-	c.log.Debugf("Getting all rooms for building: %v", buildingID)
-
-	var resp roomQueryResponse
-	err = c.MakeRequest("POST", fmt.Sprintf("rooms/_find"), "application/json", b, &resp)
-	if err != nil {
-		msg := fmt.Sprintf("[couch] Could not get room %v. %v", buildingID, err.Error())
-		c.log.Warn(msg)
-	}
-
+func (c *CouchDB) GetRoomsByBuilding(id string) ([]structs.Room, error) {
 	var toReturn []structs.Room
 
-	for _, doc := range resp.Docs {
-		toReturn = append(toReturn, doc.Room)
+	// create query from - to . (the character after - to get all the elements in the room)
+	var query IDPrefixQuery
+	query.Selector.ID.GT = fmt.Sprintf("%v-", id)
+	query.Selector.ID.LT = fmt.Sprintf("%v.", id)
+	query.Limit = 1000
+
+	// marshal query
+	b, err := json.Marshal(query)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal query to get rooms in building %s: %s", id, err))
 	}
 
-	return toReturn, err
+	// make request to get rooms
+	var resp roomQueryResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("%v/_find", ROOMS), "application/json", b, &resp)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get rooms in building %s: %s", id, err))
+	}
+
+	// add each doc to toReturn
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, *doc.Room)
+	}
+
+	return toReturn, nil
 }
 
 /*
@@ -114,127 +114,90 @@ CreateRoom creates a room. Required information:
 
 	Any devices included in the room will be evaluated for adding, but the room will be evaluated for creation first. If any devices fail creation, this will NOT roll back the creation of the room, or any other devices. All devices wil  be checked for a device ID before moving to creation. If any are lacking, the no cration of ANY device will proceed.
 */
+func (c *CouchDB) CreateRoom(toAdd structs.Room) (structs.Room, error) {
+	var toReturn structs.Room
 
-func (c *CouchDB) CreateRoom(room structs.Room) (structs.Room, error) {
-	c.log.Debugf("Starting room creation for %v", room.ID)
-
-	vals := roomValidationRegex.FindAllStringSubmatch(room.ID, 1)
-	if len(vals) == 0 {
-		msg := fmt.Sprintf("Couldn't create room. Invalid roomID format %v. Must match `(A-z,0-9]{2,}-[A-z,0-9]+`", room.ID)
-		c.log.Warn(msg)
-		return structs.Room{}, errors.New(msg)
-	}
-
-	//we really should check all the other information here, too
-	if len(room.Name) < 1 || len(room.Designation) < 1 {
-		msg := "Couldn't create room. The room must include a name and a designation."
-		c.log.Warn(msg)
-		return structs.Room{}, errors.New(msg)
-	}
-	c.log.Debugf("RoomID and other information is valid, checking for valid buildingID: %v", vals[0][1])
-
-	_, err := c.GetBuilding(vals[0][1])
-
+	// validate room struct
+	err := toAdd.Validate()
 	if err != nil {
-		if nf, ok := err.(*NotFound); ok {
-			msg := fmt.Sprintf("Trying to create a room in a non-existant building: %v. Create the building before adding the room. message: %v", vals[0][1], nf.Error())
-			c.log.Warn(msg)
-			return structs.Room{}, errors.New(msg)
-		}
-
-		msg := fmt.Sprintf("unknown problem creating the room: %v", err.Error())
-		c.log.Warn(msg)
-		return structs.Room{}, errors.New(msg)
+		return toReturn, err
 	}
 
-	c.log.Debugf("We have a valid buildingID. Checking for a valid room configuration ID")
-
-	if len(room.Configuration.ID) < 1 {
-		msg := fmt.Sprintf("Could not create room: A room configuration ID must be included")
-		c.log.Warn(msg)
-		return structs.Room{}, errors.New(msg)
-	}
-	//get the configuration and check to see if it's not there. If it isn't there, try to add it. If it can't be addedfor whatever reason (it doesn't meet the rquirements) error out.
-	config, err := c.GetRoomConfiguration(room.Configuration.ID)
+	// ensure it's in a real building
+	_, err = c.GetBuilding(strings.Split(toAdd.ID, "-")[0])
 	if err != nil {
 		if _, ok := err.(*NotFound); ok {
-			c.log.Debugf("Room configuration %v not found, attempting to create.", room.Configuration.ID)
+			return toReturn, errors.New(fmt.Sprintf("unable to create room %s: building %s doesn't exist.", toAdd.ID, strings.Split(toAdd.ID, "-")[0]))
+		}
 
-			//this is where we try to create the configuration
-			config, err = c.CreateRoomConfiguration(room.Configuration)
+		return toReturn, errors.New(fmt.Sprintf("unable to validate room %s is in a real building: %s", toAdd.ID, err))
+	}
+
+	// ensure room configuration exists (if it doesn't, create it!)
+	config, err := c.GetRoomConfiguration(toAdd.Configuration.ID)
+	if err != nil {
+		if _, ok := err.(*NotFound); ok { // room config wasn't found
+			// create new room configuration for this room
+			config, err = c.CreateRoomConfiguration(toAdd.Configuration)
 			if err != nil {
-
-				msg := "Trying to create a room with a non-existant room configuration and not enough information to create the configuration. Check the included configuration ID."
-				c.log.Warn(msg)
-				return structs.Room{}, errors.New(msg)
+				return toReturn, errors.New(fmt.Sprintf("unable to create room %s: %s", toAdd.ID, err))
 			}
-			c.log.Debugf("Room configuration created.")
-		} else {
-
-			msg := fmt.Sprintf("unknown problem creating the room: %v", err.Error())
-			c.log.Warn(msg)
-			return structs.Room{}, errors.New(msg)
+		} else { // some other error looking for room config
+			return toReturn, errors.New(fmt.Sprintf("unable to validate if room configuration %s exists or not: %s", toAdd.Configuration.ID, err))
 		}
 	}
 
-	//the configuration should only have the ID.
-	room.Configuration = structs.RoomConfiguration{ID: config.ID}
-	c.log.Debug("Room configuration passed. Creating the room.")
+	// we only want to post room config ID up, so replace config with just that
+	toAdd.Configuration = structs.RoomConfiguration{ID: config.ID}
 
-	//save the devices for later, if there are any, then remove the frmo the room for putting into the database
-	c.log.Debugf("There are %v devices included, saving to be added later.", len(room.Devices))
+	// save the devices to create after creating the room
+	var devices []structs.Device
+	copy(devices, toAdd.Devices)
 
-	devs := []structs.Device{}
-	copy(devs, room.Devices)
-	room.Devices = []structs.Device{}
+	// don't post devices to room table
+	toAdd.Devices = []structs.Device{}
 
-	b, err := json.Marshal(room)
+	// marshal room
+	b, err := json.Marshal(toAdd)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't marshal room into JSON. Error: %v", err.Error())
-		c.log.Error(msg)
-		return structs.Room{}, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal room %s: %s", toAdd.ID, err))
 	}
 
-	resp := CouchUpsertResponse{}
-
-	err = c.MakeRequest("PUT", fmt.Sprintf("rooms/%v", room.ID), "", b, &resp)
+	// post up room!
+	var resp CouchUpsertResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("%v", ROOMS), "", b, &resp)
 	if err != nil {
-		if nf, ok := err.(*Conflict); ok {
-			msg := fmt.Sprintf("There was a conflict updating the room: %v. Make changes on an updated version of the configuration.", nf.Error())
-			c.log.Warn(msg)
-			return structs.Room{}, errors.New(msg)
+		if _, ok := err.(*Conflict); ok { // there was a conflict creating room
+			return toReturn, errors.New(fmt.Sprintf("unable to create new room, because it already exists. error %s", err))
 		}
-		//ther was some other problem
-		msg := fmt.Sprintf("unknown problem creating the room: %v", err.Error())
-		c.log.Warn(msg)
-		return structs.Room{}, errors.New(msg)
+
+		return toReturn, errors.New(fmt.Sprintf("unknown error creating room %s: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("room created, retriving new room from database.")
-
-	//return the created room
-	room, err = c.GetRoom(room.ID)
+	// get room back from database
+	toReturn, err = c.GetRoom(toAdd.ID)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem getting the newly created room: %v", err.Error())
-		c.log.Warn(msg)
-		return room, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("error getting room %s after creating it: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("Done creating room, evaluating devices for creation.")
+	// create the devices
+	var wg sync.WaitGroup
+	for _, device := range devices {
+		wg.Add(1)
 
-	// Do the devices.
-	room.Devices = []structs.Device{}
+		go func() {
+			d, err := c.CreateDevice(device)
+			if err == nil {
+				toReturn.Devices = append(toReturn.Devices, d)
+			}
 
-	for d := range devs {
-		dev, err := c.CreateDevice(devs[d])
-		if err != nil {
-			c.log.Info("Error creating device %v as part of room. Error: %v.", devs[d].ID, err.Error())
-			continue
-		}
-		room.Devices = append(room.Devices, dev)
+			wg.Done()
+		}()
 	}
 
-	return room, nil
+	wg.Wait()
+
+	return toReturn, nil
 }
 
 func (c *CouchDB) DeleteRoom(id string) error {

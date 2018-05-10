@@ -16,60 +16,38 @@ type DB interface {
 	// building
 	CreateBuilding(building structs.Building) (structs.Building, error)
 	GetBuilding(id string) (structs.Building, error)
-	//TODO
 	UpdateBuilding(id string, building structs.Building) (structs.Building, error)
 	DeleteBuilding(id string) error
 
 	// room
-	//TODO
 	CreateRoom(room structs.Room) (structs.Room, error)
-	//TODO
 	GetRoom(id string) (structs.Room, error)
-	//TODO
 	UpdateRoom(id string, room structs.Room) (structs.Room, error)
-	//TODO
 	DeleteRoom(id string) error
 
 	// device
-	//TODO
 	CreateDevice(device structs.Device) (structs.Device, error)
-	//TODO
 	GetDevice(id string) (structs.Device, error)
-	//TODO
 	UpdateDevice(id string, device structs.Device) (structs.Device, error)
-	//TODO
 	DeleteDevice(id string) error
 
 	// device type
-	//TODO
 	CreateDeviceType(dt structs.DeviceType) (structs.DeviceType, error)
-	//TODO
 	GetDeviceType(id string) (structs.DeviceType, error)
-	//TODO
 	UpdateDeviceType(id string, dt structs.DeviceType) (structs.DeviceType, error)
-	//TODO
 	DeleteDeviceType(id string) error
 
 	// room configuration
-	//TODO
 	CreateRoomConfiguration(rc structs.RoomConfiguration) (structs.RoomConfiguration, error)
-	//TODO
 	GetRoomConfiguration(id string) (structs.RoomConfiguration, error)
-	//TODO
 	UpdateRoomConfiguration(id string, rc structs.RoomConfiguration) (structs.RoomConfiguration, error)
-	//TODO
 	DeleteRoomConfiguration(id string) error
 
 	/* bulk functions */
-	//TODO
 	GetAllBuildings() ([]structs.Building, error)
-	//TODO
 	GetAllRooms() ([]structs.Room, error)
-	//TODO
 	GetAllDevices() ([]structs.Device, error)
-	//TODO
 	GetAllDeviceTypes() ([]structs.DeviceType, error)
-	//TODO
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
 }
 
