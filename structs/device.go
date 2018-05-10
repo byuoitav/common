@@ -1,10 +1,14 @@
 package structs
 
-import "strings"
+import (
+	"errors"
+	"fmt"
+	"regexp"
+	"strings"
+)
 
 type Device struct {
-	ID string `json:"_id"`
-	//	Rev         string     `json:"_rev,omitempty"`
+	ID          string     `json:"_id"`
 	Name        string     `json:"name"`
 	Address     string     `json:"address"`
 	Description string     `json:"description"`
@@ -15,6 +19,44 @@ type Device struct {
 	Tags        []string   `json:"tags"`
 }
 
+var deviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
+
+func (d *Device) Validate() error {
+	vals := deviceValidationRegex.FindAllStringSubmatch(d.ID, 1)
+	if len(vals) == 0 {
+		return errors.New("invalid device: inproper id. must match `([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`")
+	}
+
+	if len(d.Name) < 3 {
+		return errors.New("invalid device: name must be at least 3 characters long.")
+	}
+
+	// validate device type
+	if err := d.Type.Validate(); err != nil {
+		return errors.New(fmt.Sprintf("invalid device: %s", err))
+	}
+
+	// validate roles
+	if len(d.Roles) == 0 {
+		return errors.New("invalid device: must include at least 1 role.")
+	}
+	for _, role := range d.Roles {
+		if err := role.Validate(); err != nil {
+			return errors.New(fmt.Sprintf("invalid device: %s", err))
+		}
+	}
+
+	// validate ports
+	for _, port := range d.Ports {
+		if err := port.Validate(); err != nil {
+			return errors.New(fmt.Sprintf("invalid device: %s", err))
+		}
+	}
+
+	return nil
+}
+
+/*
 func (d *Device) Building() string {
 	return strings.Split(d.ID, "-")[0]
 }
@@ -22,10 +64,10 @@ func (d *Device) Building() string {
 func (d *Device) Room() string {
 	return strings.Split(d.ID, "-")[1]
 }
+*/
 
 type DeviceType struct {
-	ID string `json:"_id"`
-	//	Rev         string       `json:"_rev,omitempty"`
+	ID          string       `json:"_id"`
 	Description string       `json:"description,omitempty"`
 	Ports       []Port       `json:"ports,omitempty"`
 	PowerStates []PowerState `json:"power-states,omitempty"`
@@ -33,10 +75,24 @@ type DeviceType struct {
 	Tags        []string     `json:"tags"`
 }
 
+func (dt *DeviceType) Validate() error {
+	if len(dt.ID) == 0 {
+		return errors.New("invalid device type: missing id")
+	}
+	return nil
+}
+
 type PowerState struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
 	Tags        []string `json:"tags"`
+}
+
+func (ps *PowerState) Validate() error {
+	if len(ps.ID) < 3 {
+		return errors.New("invalid power state: id must be at least 2 characters long")
+	}
+	return nil
 }
 
 type Port struct {
@@ -48,10 +104,24 @@ type Port struct {
 	Tags              []string `json:"tags"`
 }
 
+func (p *Port) Validate() error {
+	if len(p.ID) < 3 {
+		return errors.New("invalid port: id must be at least 2 characters long")
+	}
+	return nil
+}
+
 type Role struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
 	Tags        []string `json:"tags"`
+}
+
+func (r *Role) Validate() error {
+	if len(r.ID) < 3 {
+		return errors.New("invalid role: id must at least 2 characters long")
+	}
+	return nil
 }
 
 type Command struct {
@@ -61,14 +131,6 @@ type Command struct {
 	Endpoint     Endpoint     `json:"endpoint"`
 	Tags         []string     `json:"tags"`
 }
-
-/*
-type DeviceQueryResponse struct {
-	Docs     []Device `json:"docs"`
-	Bookmark string   `json:"bookmark"`
-	Warning  string   `json:"warning"`
-}
-*/
 
 type Microservice struct {
 	ID          string   `json:"_id"`

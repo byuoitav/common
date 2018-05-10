@@ -87,15 +87,20 @@ func (c *CouchDB) GetRoomsByBuilding(buildingID string) ([]structs.Room, error) 
 	}
 	c.log.Debugf("Getting all rooms for building: %v", buildingID)
 
-	toReturn := structs.RoomQueryResponse{}
-	err = c.MakeRequest("POST", fmt.Sprintf("rooms/_find"), "application/json", b, &toReturn)
-
+	var resp roomQueryResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("rooms/_find"), "application/json", b, &resp)
 	if err != nil {
 		msg := fmt.Sprintf("[couch] Could not get room %v. %v", buildingID, err.Error())
 		c.log.Warn(msg)
 	}
 
-	return toReturn.Docs, err
+	var toReturn []structs.Room
+
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc.Room)
+	}
+
+	return toReturn, err
 }
 
 /*
