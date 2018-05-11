@@ -10,9 +10,7 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
-//var DeviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
-
-// TODO make GetDevicesByQuery() function
+// var DeviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
 
 func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
@@ -37,6 +35,44 @@ func (c *CouchDB) getDevice(id string) (device, error) {
 	return toReturn, err
 }
 
+func (c *CouchDB) getDevicesByQuery(query IDPrefixQuery, includeType bool) ([]device, error) {
+	var toReturn []device
+
+	// marshal query
+	b, err := json.Marshal(query)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal devices query: %s", err))
+	}
+
+	// make query for devices
+	var resp deviceQueryResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", DEVICES), "application/json", b, &resp)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to query devices: %s", err))
+	}
+
+	if includeType {
+		// get all types
+		types, err := c.GetAllDeviceTypes()
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to get devices types for devices query: ", err))
+		}
+
+		// make a map of type.ID -> type
+		typesMap := make(map[string]structs.DeviceType)
+		for _, t := range types {
+			typesMap[t.ID] = t
+		}
+
+		// fill in device types
+		for _, d := range resp.Docs {
+			d.Type = typesMap[d.Type.ID]
+		}
+	}
+
+	return toReturn, nil
+}
+
 func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	var toReturn []structs.Device
 
@@ -45,23 +81,15 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	query.Selector.ID.GT = "\x00"
 	query.Limit = 5000
 
-	// marshal query
-	b, err := json.Marshal(query)
+	// query devices
+	devices, err := c.getDevicesByQuery(query, false)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("unable to marshal query to get all devices: %s", err))
+		return toReturn, errors.New(fmt.Sprintf("failed getting all devices: %s", err))
 	}
 
-	// get all devices
-	var deviceResp deviceQueryResponse
-
-	// get all devices
-	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", DEVICES), "application/json", b, &deviceResp)
-	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get all devices: %s", err))
-	}
-
-	for _, d := range deviceResp.Docs {
-		toReturn = append(toReturn, *d.Device)
+	// get the struct out of each device
+	for _, device := range devices {
+		toReturn = append(toReturn, *device.Device)
 	}
 
 	return toReturn, nil
@@ -91,29 +119,13 @@ func (c *CouchDB) getDevicesByRoom(roomID string) ([]device, error) {
 	query.Selector.ID.LT = fmt.Sprintf("%v.", roomID)
 	query.Limit = 1000
 
-	// marshal query
-	b, err := json.Marshal(query)
+	// query devices
+	toReturn, err := c.getDevicesByQuery(query, true)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to marshal query to get devices by room %s: %s", roomID, err))
+		return toReturn, errors.New(fmt.Sprintf("failed getting devices in room %s: %s", roomID, err))
 	}
 
-	// make query for devices
-	var resp deviceQueryResponse
-	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", DEVICES), "application/json", b, &resp)
-	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get devices by room %s: %s", roomID, err))
-	}
-
-	//TODO: Cache them so we're not making a thousand requests for duplicate types.
-	// fill in device type information
-	for _, d := range resp.Docs {
-		d.Type, err = c.GetDeviceType(d.Type.ID)
-		if err != nil {
-			return toReturn, errors.New(fmt.Sprintf("failed to get device type (%s) for device %s: %s", d.Type.ID, d.ID, err))
-		}
-	}
-
-	return resp.Docs, err
+	return toReturn, nil
 }
 
 /*
