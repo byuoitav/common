@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/byuoitav/common/structs"
@@ -149,102 +148,81 @@ If a device is passed into the fuction with a valid 'rev' field, the current dev
 `rev` must be omitted to create a new device.
 */
 func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
-	c.log.Infof("Starting add of Device: %v", toAdd.ID)
+	var toReturn structs.Device
 
-	c.log.Debug("Starting checks. Checking name and class.")
-	if len(toAdd.Name) < 3 {
-		return c.lde(fmt.Sprintf("Couldn't create device - invalid name"))
-	}
-
-	c.log.Debug("Name and class are good. Checking Roles")
-	if len(toAdd.Roles) < 1 {
-		return c.lde(fmt.Sprintf("Must include at least one role"))
-	}
-
-	for i := range toAdd.Roles {
-		if err := checkRole(toAdd.Roles[i]); err != nil {
-			return c.lde(fmt.Sprintf("Couldn't create device: %v", err.Error()))
-		}
-	}
-	c.log.Debug("Roles are all valid. Checking ID")
-
-	vals := DeviceValidationRegex.FindAllStringSubmatch(toAdd.ID, 1)
-	if len(vals) == 0 {
-		return c.lde(fmt.Sprintf("Couldn't create Device. Invalid deviceID format %v. Must match `[A-z,0-9]{2,}-[A-z,0-9]+-[A-z]+[0-9]+`", toAdd.ID))
-	}
-
-	c.log.Debug("Device ID is well formed, checking for valid room.")
-
-	_, err := c.GetRoom(vals[0][1])
-
+	// validate device struct
+	err := toAdd.Validate()
 	if err != nil {
-		if nf, ok := err.(NotFound); ok {
-			return c.lde(fmt.Sprintf("Trying to create a device in a non-existant Room: %v. Create the room before adding the device. message: %v", vals[0][1], nf.Error()))
+		return toReturn, err
+	}
+
+	// validate room is real
+	split := strings.Split(toAdd.ID, "-")
+	roomID := split[0] + "-" + split[1]
+	_, err = c.GetRoom(roomID)
+	if err != nil {
+		if _, ok := err.(*NotFound); ok {
+			return toReturn, errors.New(fmt.Sprintf("unable to create device %s: room %s doesn't exist.", toAdd.ID, roomID))
 		}
 
-		return c.lde(fmt.Sprintf("unknown problem creating the device: %v", err.Error()))
-	}
-	c.log.Debug("Device has a valid roomID. Checking for a valid type.")
-
-	if len(toAdd.Type.ID) < 1 {
-		return c.lde("Couldn't create a device, a type ID must be included")
+		return toReturn, errors.New(fmt.Sprintf("unable to validate device %s is in a real room: %s", toAdd.ID, err))
 	}
 
-	log.Printf("getting device type (%s)", toAdd.Type.ID)
+	// validate device type
 	deviceType, err := c.GetDeviceType(toAdd.Type.ID)
 	if err != nil {
-		if nf, ok := err.(*NotFound); ok {
-			c.log.Debug("Device Type not found, attempting to create. Message: %v", nf.Error())
-
+		if _, ok := err.(*NotFound); ok { // device type doesn't exist
+			// try to create device type
 			deviceType, err = c.CreateDeviceType(toAdd.Type)
 			if err != nil {
-				return c.lde("Trying to create a device with a non-existant device type and not enough information to create the type. Check the included type ID")
+				return toReturn, errors.New(fmt.Sprintf("attempting to create a device with a non-existant device type, but not enough information is included to create the type. (error: %s)", err))
 			}
-			c.log.Debug("Type created")
-		} else {
-			c.lde(fmt.Sprintf("Unkown issue creating the device: %v", err.Error()))
+		} else { // unknown error getting device type
+			return toReturn, errors.New(fmt.Sprintf("unable to validate if device type %s exists or not: %s", toAdd.Type.ID, err))
 		}
 	}
 
-	//it should only include the type ID
+	// the device document shoudl only include the type ID
 	toAdd.Type = structs.DeviceType{ID: deviceType.ID}
 
-	c.log.Debug("Type is good. Checking ports.")
-	for i := range toAdd.Ports {
-		if err := c.checkPort(toAdd.Ports[i]); err != nil {
-			return c.lde(fmt.Sprintf("Couldn't create device: %v", err.Error()))
+	// check that each of the ports are valid
+	for _, port := range toAdd.Ports {
+		if err = c.checkPort(port); err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to create device: %s", err))
 		}
 	}
 
-	c.log.Debug("Ports are good. Checks passed. Creating device.")
+	// marshal the device
 	b, err := json.Marshal(toAdd)
 	if err != nil {
-		return c.lde(fmt.Sprintf("Couldn't marshal device into JSON. Error: %v", err.Error()))
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal device: %s", err))
 	}
 
-	resp := CouchUpsertResponse{}
-
-	err = c.MakeRequest("PUT", fmt.Sprintf("devices/%v", toAdd.ID), "", b, &resp)
+	// post up device
+	var resp CouchUpsertResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("%v", DEVICES), "application/json", b, &resp)
 	if err != nil {
-		if nf, ok := err.(Conflict); ok {
-			return c.lde(fmt.Sprintf("There was a conflict updating the device: %v. Make changes on an updated version of the configuration.", nf.Error()))
+		if _, ok := err.(*Conflict); ok { // device with same id already in database
+			return toReturn, errors.New(fmt.Sprintf("unable to create device, because it already exists. error: %s", err))
 		}
-		//ther was some other problem
-		return c.lde(fmt.Sprintf("unknown problem creating the room: %v", err.Error()))
+
+		return toReturn, errors.New(fmt.Sprintf("unknown error creating device %s: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("device created, retriving new device from database.")
+	/*
+		//return the created room
+		toAdd, err = c.GetDevice(toAdd.ID)
+		if err != nil {
+			c.lde(fmt.Sprintf("There was a problem getting the newly created room: %v", err.Error()))
+		}
 
-	//return the created room
-	toAdd, err = c.GetDevice(toAdd.ID)
-	if err != nil {
-		c.lde(fmt.Sprintf("There was a problem getting the newly created room: %v", err.Error()))
-	}
-
-	c.log.Debug("Done creating device.")
-	return toAdd, nil
+		c.log.Debug("Done creating device.")
+		return toAdd, nil
+	*/
+	return toReturn, nil
 }
 
+/*
 //log device error
 //alias to help cut down on cruft
 func (c *CouchDB) lde(msg string) (dev structs.Device, err error) {
@@ -252,32 +230,23 @@ func (c *CouchDB) lde(msg string) (dev structs.Device, err error) {
 	err = errors.New(msg)
 	return
 }
-
-func checkRole(r structs.Role) error {
-	if len(r.ID) < 3 {
-		return errors.New("Invalid role, check name and ID.")
-	}
-	return nil
-}
+*/
 
 func (c *CouchDB) checkPort(p structs.Port) error {
-	if !validatePort(p) {
-		return errors.New("Invalid port, check Name, ID, and Port Type")
-	}
-
-	//now we need to check the source and destination device
+	// check source port
 	if len(p.SourceDevice) > 0 {
 		if _, err := c.GetDevice(p.SourceDevice); err != nil {
-			return errors.New(fmt.Sprintf("Invalid port %v, source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice))
-		}
-	}
-	if len(p.DestinationDevice) > 0 {
-		if _, err := c.GetDevice(p.DestinationDevice); err != nil {
-			return errors.New(fmt.Sprintf("Invalid port %v, destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice))
+			return errors.New(fmt.Sprintf("invalid port %v. source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice))
 		}
 	}
 
-	//we're all good
+	// check desitnation port
+	if len(p.DestinationDevice) > 0 {
+		if _, err := c.GetDevice(p.DestinationDevice); err != nil {
+			return errors.New(fmt.Sprintf("invalid port %v. destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice))
+		}
+	}
+
 	return nil
 }
 
