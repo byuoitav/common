@@ -56,3 +56,9 @@ type deviceTypeQueryResponse struct {
 	Bookmark string       `json:"bookmark"`
 	Warning  string       `json:"warning"`
 }
+
+type queryResponse struct {
+	Docs     []interface{} `json:"docs"`
+	Bookmark string        `json:"bookmark"`
+	Warning  string        `json:"warning"`
+}

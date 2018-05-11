@@ -137,6 +137,54 @@ type IDPrefixQuery struct {
 	Limit int `json:"limit"`
 }
 
+// TODO use this for the queries:)
+// TODO also, make querys more extensible
+func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, database string, toFill interface{}) error {
+	return errors.New("not implemented")
+	// marshal the query
+	b, err := json.Marshal(query)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to marshal query: %s", err))
+	}
+
+	/*
+		// pick which resp to use
+		// could get this by using a type switch on tofill, and no have database param
+		var resp interface{}
+		switch database {
+		case BUILDINGS:
+			resp = buildingQueryResponse{}
+		case ROOMS:
+			resp = roomQueryResponse{}
+		case DEVICES:
+			resp = deviceQueryResponse{}
+		case DEVICE_TYPES:
+			resp = deviceTypeQueryResponse{}
+		case ROOM_CONFIGURATIONS:
+			resp = roomConfigurationQueryResponse{}
+		default:
+			// TODO ??
+			return errors.New("unknown database")
+		}
+	*/
+	var resp queryResponse
+
+	// make query request
+	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", database), "application/json", b, &resp)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to execute query: %s", err))
+	}
+
+	/*
+		// fill the struct
+		for _, doc := range resp.Docs {
+			toFill = append(toFill, doc)
+		}
+	*/
+
+	return nil
+}
+
 type CouchUpsertResponse struct {
 	OK  bool   `json:"ok"`
 	ID  string `json:"id"`

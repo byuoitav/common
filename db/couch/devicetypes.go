@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/byuoitav/common/structs"
 )
@@ -18,18 +16,58 @@ func (c *CouchDB) GetDeviceType(id string) (structs.DeviceType, error) {
 func (c *CouchDB) getDeviceType(id string) (deviceType, error) {
 	var toReturn deviceType
 
-	err := c.MakeRequest("GET", fmt.Sprintf("device_types/%v", id), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", DEVICE_TYPES, id), "", nil, &toReturn)
 	if err != nil {
-		msg := fmt.Sprintf("Could not get deviceType %v. %v", id, err)
-		c.log.Warn(msg)
-		return toReturn, errors.New(msg)
+		err = errors.New(fmt.Sprintf("failed to get device type %s: %s", id, err))
 	}
 
 	return toReturn, err
 }
 
+func (c *CouchDB) getDeviceTypesByQuery(query IDPrefixQuery) ([]deviceType, error) {
+	var toReturn []deviceType
+
+	// marshal query
+	b, err := json.Marshal(query)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal device types query: %s", err))
+	}
+
+	// make query for types
+	var resp deviceTypeQueryResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", DEVICE_TYPES), "application/json", b, &resp)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to query device types: %s", err))
+	}
+
+	// return each document
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc)
+	}
+
+	return toReturn, nil
+}
+
 func (c *CouchDB) GetAllDeviceTypes() ([]structs.DeviceType, error) {
-	return []structs.DeviceType{}, errors.New("not implmented")
+	var toReturn []structs.DeviceType
+
+	// create all device types query
+	var query IDPrefixQuery
+	query.Selector.ID.GT = "\x00"
+	query.Limit = 5000
+
+	// execute query
+	types, err := c.getDeviceTypesByQuery(query)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed getting all device types: %s", err))
+	}
+
+	// return the struct part
+	for _, t := range types {
+		toReturn = append(toReturn, *t.DeviceType)
+	}
+
+	return toReturn, nil
 }
 
 /*
@@ -58,144 +96,68 @@ Command:
 If a device type is submitted with a valid 'rev' field, the device type will be overwritten.
 */
 func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType, error) {
-	c.log.Infof("Starting creation or udpate of device type %v", toAdd.ID)
+	var toReturn structs.DeviceType
 
-	if len(toAdd.ID) < 2 {
-		msg := fmt.Sprintf("Device types must have a valid ID and name")
-		c.log.Warn(msg)
-		return toAdd, errors.New(msg)
+	// validate device type
+	err := toAdd.Validate(true)
+	if err != nil {
+		return toReturn, err
 	}
 
-	c.log.Debug("Passed basic checks, checking ports.")
-
-	for i := range toAdd.Ports {
-		if !validatePort(toAdd.Ports[i]) {
-			msg := "Port was malformed, check the name, id, and type fields"
-			c.log.Warn(msg)
-			return toAdd, errors.New(msg)
-		}
-	}
-	c.log.Debug("Passed port checks, checking Commands")
-
-	for i := range toAdd.Commands {
-		if err := validateCommand(toAdd.Commands[i]); err != nil {
-			c.log.Warn(err.Error())
-			return toAdd, err
-		}
-	}
-
-	c.log.Debug("Passed command checking. Adding the deviceType")
-
+	// marshal device type
 	b, err := json.Marshal(toAdd)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't marshal device type into JSON. Error: %v", err.Error())
-		c.log.Error(msg)
-		return toAdd, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal building %s: %s", toAdd.ID, err))
 	}
 
-	resp := CouchUpsertResponse{}
-
-	err = c.MakeRequest("PUT", fmt.Sprintf("device_types/%v", toAdd.ID), "", b, &resp)
+	// post device type
+	var resp CouchUpsertResponse
+	err = c.MakeRequest("POST", DEVICE_TYPES, "", b, &resp)
 	if err != nil {
-		if nf, ok := err.(Conflict); ok {
-			msg := fmt.Sprintf("There was a conflict updating the device type: %v. Make changes on an updated version of the configuration.", nf.Error())
-			c.log.Warn(msg)
-			return structs.DeviceType{}, errors.New(msg)
+		if _, ok := err.(*Conflict); ok { // a device type with this id already exists
+			return toReturn, errors.New(fmt.Sprintf("device type already exists, please update this building or change id's. error: %s", err))
 		}
-		// there was some other problem
-		msg := fmt.Sprintf("unknown problem creating the device type: %v", err.Error())
-		c.log.Warn(msg)
-		return structs.DeviceType{}, errors.New(msg)
+
+		return toReturn, errors.New(fmt.Sprintf("failed to create the device type %s: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("Device Type created, retriving new record from database.")
-
-	// return the created device type
-	toAdd, err = c.GetDeviceType(toAdd.ID)
+	// get new device type from db, and return that
+	toReturn, err = c.GetDeviceType(toAdd.ID)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem getting the newly created device type: %v", err.Error())
-		c.log.Warn(msg)
-		return toAdd, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get device type %s after creating it: %s", toAdd.ID, err))
 	}
 
-	return toAdd, nil
+	return toReturn, nil
+}
+
+func (c *CouchDB) DeleteDeviceType(id string) error {
+
+	// validate no devices depend on this type
+	devices, err := c.GetDevicesByType(id)
+	if err != nil {
+		return errors.New(fmt.Sprintf("unable to validate no devices depend on this type: %s", err))
+	}
+
+	if len(devices) != 0 {
+		return errors.New(fmt.Sprintf("can't delete device type %s. %v devices still depend on it.", id, len(devices)))
+	}
+
+	// get the rev of the device
+	deviceType, err := c.getDeviceType(id)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get device type %s to delete. does it exist? (error: %s)", id, err))
+	}
+
+	// delete device type
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%v/%v?rev=%v", DEVICE_TYPES, deviceType.ID, deviceType.Rev), "", nil, nil)
+	if err != nil {
+		return errors.New(fmt.Sprintf("unable to delete device type %s: %s", deviceType.ID, err))
+	}
+
+	return nil
 }
 
 // TODO
 func (c *CouchDB) UpdateDeviceType(id string, dt structs.DeviceType) (structs.DeviceType, error) {
 	return structs.DeviceType{}, nil
-}
-
-func (c *CouchDB) DeleteDeviceType(id string) error {
-	c.log.Debugf("[%s] Deleting device type", id)
-
-	// validate no devices depend on device type
-	devices, err := c.GetAllDevices()
-	if err != nil {
-		return err
-	}
-
-	for _, device := range devices {
-		if strings.EqualFold(device.Type.ID, id) {
-			return errors.New(fmt.Sprintf("can't delete device type %s. device %s still depends on it.", id, device.ID))
-		}
-	}
-
-	// get device type to delete
-	dt, err := c.getDeviceType(id)
-	if err != nil {
-		return err
-	}
-
-	// delete device type
-	err = c.MakeRequest("DELETE", fmt.Sprintf("device_types/%s?rev=%s", dt.ID, dt.Rev), "", nil, nil)
-	return err
-}
-
-/*
-func validatePort(p structs.Port) bool {
-	if len(p.ID) < 3 {
-		return false
-	}
-	return true
-}
-*/
-
-func validateCommand(c structs.Command) error {
-	if len(c.ID) < 3 {
-		return errors.New("Invalid base information. Check Name, and ID")
-	}
-
-	//check the microservice
-	err := checkMicroservice(c.Microservice)
-	if err != nil {
-		return err
-	}
-	return checkEndpoint(c.Endpoint)
-}
-
-func checkMicroservice(m structs.Microservice) error {
-	if len(m.ID) < 3 {
-		return errors.New("Invalid Mircroservice. Check Name, and ID")
-	}
-
-	//check the address
-
-	if _, err := url.ParseRequestURI(m.Address); err != nil {
-		return errors.New("Invalid Microservice Address")
-	}
-
-	return nil
-}
-
-func checkEndpoint(e structs.Endpoint) error {
-	if len(e.ID) < 3 {
-		return errors.New("Invalid endpoint. Check Name, and ID")
-	}
-
-	if _, err := url.ParseRequestURI(e.Path); err != nil {
-		return errors.New("Invalid endpoint path")
-	}
-
-	return nil
 }

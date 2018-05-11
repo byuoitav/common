@@ -54,7 +54,7 @@ func (c *CouchDB) getDevicesByQuery(query IDPrefixQuery, includeType bool) ([]de
 		// get all types
 		types, err := c.GetAllDeviceTypes()
 		if err != nil {
-			return toReturn, errors.New(fmt.Sprintf("failed to get devices types for devices query: ", err))
+			return toReturn, errors.New(fmt.Sprintf("failed to get devices types for devices query:%s", err))
 		}
 
 		// make a map of type.ID -> type
@@ -67,6 +67,11 @@ func (c *CouchDB) getDevicesByQuery(query IDPrefixQuery, includeType bool) ([]de
 		for _, d := range resp.Docs {
 			d.Type = typesMap[d.Type.ID]
 		}
+	}
+
+	// return each document
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc)
 	}
 
 	return toReturn, nil
@@ -209,28 +214,57 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 		return toReturn, errors.New(fmt.Sprintf("unknown error creating device %s: %s", toAdd.ID, err))
 	}
 
-	/*
-		//return the created room
-		toAdd, err = c.GetDevice(toAdd.ID)
-		if err != nil {
-			c.lde(fmt.Sprintf("There was a problem getting the newly created room: %v", err.Error()))
-		}
+	// return the device that is in the database
+	toReturn, err = c.GetDevice(toAdd.ID)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("unable to get device %s: %s", toAdd.ID, err))
+	}
 
-		c.log.Debug("Done creating device.")
-		return toAdd, nil
-	*/
 	return toReturn, nil
 }
 
-/*
-//log device error
-//alias to help cut down on cruft
-func (c *CouchDB) lde(msg string) (dev structs.Device, err error) {
-	c.log.Warn(msg)
-	err = errors.New(msg)
-	return
+func (c *CouchDB) DeleteDevice(id string) error {
+	// get the device to delete
+	device, err := c.getDevice(id)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get devcie %s to delete: %s", id, err))
+	}
+
+	// delete the device
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%v/%v?rev=%v", DEVICES, device.ID, device.Rev), "", nil, nil)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to delete device %s: %s", id, err))
+	}
+
+	return nil
 }
-*/
+
+// TODO make this actually update, as opposed to deleting/creating.
+//	 this way you don't have to post up a full document
+// 	 probably need to do this for all of the update functions
+func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device, error) {
+	var toReturn structs.Device
+
+	// validate the new struct
+	err := device.Validate()
+	if err != nil {
+		return toReturn, err
+	}
+
+	// delete the old struct
+	err = c.DeleteDevice(id)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", id, err))
+	}
+
+	// create new version of device
+	toReturn, err = c.CreateDevice(device)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", device.ID, err))
+	}
+
+	return toReturn, err
+}
 
 func (c *CouchDB) checkPort(p structs.Port) error {
 	// check source port
@@ -253,14 +287,13 @@ func (c *CouchDB) checkPort(p structs.Port) error {
 func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device, error) {
 	toReturn := []structs.Device{}
 
+	// get all devices in room
 	devs, err := c.GetDevicesByRoom(roomID)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't get devices for filtering: %v", err.Error())
-		c.log.Warn(msg)
-		return toReturn, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get devices by room and role: %s", err))
 	}
 
-	//go through the devices and check if they have the role indicated
+	// go through the devices and check if they have the role indicated
 	for _, d := range devs {
 		if structs.HasRole(d, role) {
 			toReturn = append(toReturn, d)
@@ -270,18 +303,19 @@ func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device
 	return toReturn, nil
 }
 
-func (c *CouchDB) GetDevicesByRoleAndType(role, dtype string) ([]structs.Device, error) {
+// TODO could actually use a query to be faster
+func (c *CouchDB) GetDevicesByType(deviceType string) ([]structs.Device, error) {
 	var toReturn []structs.Device
 
+	// get all devices
 	devs, err := c.GetAllDevices()
 	if err != nil {
-		msg := fmt.Sprintf("unable to get device list: %v", err.Error())
-		c.log.Warn(msg)
-		return toReturn, err
+		return toReturn, errors.New(fmt.Sprintf("failed to get devices by type: %s", err))
 	}
 
+	// filter for ones that have correct type
 	for _, d := range devs {
-		if structs.HasRole(d, role) && strings.EqualFold(d.Type.ID, dtype) {
+		if strings.EqualFold(d.Type.ID, deviceType) {
 			toReturn = append(toReturn, d)
 		}
 	}
@@ -289,57 +323,20 @@ func (c *CouchDB) GetDevicesByRoleAndType(role, dtype string) ([]structs.Device,
 	return toReturn, nil
 }
 
-func (c *CouchDB) DeleteDevice(id string) error {
-	c.log.Debugf("[%s] Deleting device", id)
+// TODO a real query would probably be faster again
+func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.Device, error) {
+	var toReturn []structs.Device
 
-	device, err := c.getDevice(id)
+	// get all devices
+	devs, err := c.GetAllDevices()
 	if err != nil {
-		msg := fmt.Sprintf("[%s] error looking for device to delete: %s", id, err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get devices by role and type: %s", err))
 	}
 
-	err = c.MakeRequest("DELETE", fmt.Sprintf("devices/%s?rev=%v", device.ID, device.Rev), "", nil, nil)
-	if err != nil {
-		msg := fmt.Sprintf("[%s] error deleting device: %s", id, err.Error())
-		c.log.Warn(msg)
-		return errors.New(msg)
-	}
-
-	return nil
-}
-
-func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device, error) {
-	var toReturn structs.Device
-
-	b, err := json.Marshal(device)
-	if err != nil {
-		msg := fmt.Sprintf("there was a problem marshalling the query: %s", err)
-		c.log.Warnf(msg)
-		return toReturn, errors.New(msg)
-	}
-
-	dev, err := c.getDevice(id)
-	if err != nil {
-		msg := fmt.Sprintf("error getting the device to delete: %s", err)
-		c.log.Warnf(msg)
-		return toReturn, errors.New(msg)
-	}
-
-	err = c.MakeRequest("PUT", fmt.Sprintf("devices/%s?rev=%v", device.ID, dev.Rev), "application/json", b, &toReturn)
-	if err != nil {
-		msg := fmt.Sprintf("error updating the device %s: %s", device.ID, err)
-		c.log.Warn(msg)
-		return toReturn, errors.New(msg)
-	}
-
-	if id != device.ID {
-		// delete the old document
-		err = c.DeleteDevice(id)
-		if err != nil {
-			msg := fmt.Sprintf("error deleting the old device %s: %s", id, err)
-			c.log.Warn(msg)
-			return toReturn, errors.New(msg)
+	// filter for ones that have the role and type
+	for _, d := range devs {
+		if structs.HasRole(d, role) && strings.EqualFold(d.Type.ID, deviceType) {
+			toReturn = append(toReturn, d)
 		}
 	}
 

@@ -16,20 +16,60 @@ func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, er
 
 func (c *CouchDB) getRoomConfiguration(id string) (roomConfiguration, error) {
 	var toReturn roomConfiguration
-	c.log.Debugf("Getting room configuration: %v", id)
 
-	err := c.MakeRequest("GET", fmt.Sprintf("room_configurations/%v", id), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", ROOM_CONFIGURATIONS, id), "", nil, &toReturn)
 
 	if err != nil {
-		msg := fmt.Sprintf("could not get room configuration %v. %s", id, err)
-		c.log.Warn(msg)
+		err = errors.New(fmt.Sprintf("failed to get room configuration %s: %s", id, err))
 	}
 
 	return toReturn, err
 }
 
+func (c *CouchDB) getRoomConfigurationsByQuery(query IDPrefixQuery) ([]roomConfiguration, error) {
+	var toReturn []roomConfiguration
+
+	// marshal query
+	b, err := json.Marshal(query)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal room configurations query: %s", err))
+	}
+
+	// make query for room configs
+	var resp roomConfigurationQueryResponse
+	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", ROOM_CONFIGURATIONS), "application/json", b, &resp)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to query room configurations: %s", err))
+	}
+
+	// return each document
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc)
+	}
+
+	return toReturn, nil
+}
+
 func (c *CouchDB) GetAllRoomConfigurations() ([]structs.RoomConfiguration, error) {
-	return []structs.RoomConfiguration{}, errors.New("GetAllRoomConfigurations not implemented")
+	var toReturn []structs.RoomConfiguration
+
+	// create all device types query
+	var query IDPrefixQuery
+	query.Selector.ID.GT = "\x00"
+	query.Limit = 5000
+
+	// execute query
+	configs, err := c.getRoomConfigurationsByQuery(query)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get all room configurations: %s", err))
+	}
+
+	// just return the struct
+	for _, config := range configs {
+		toReturn = append(toReturn, *config.RoomConfiguration)
+	}
+
+	return toReturn, nil
 }
 
 /*

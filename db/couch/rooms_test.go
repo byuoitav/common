@@ -1,11 +1,12 @@
 package couch
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"testing"
 
 	"github.com/byuoitav/common/structs"
-	"github.com/labstack/echo"
 )
 
 var testRoom = "new_room_a.json"
@@ -38,6 +39,7 @@ func TestRoom(t *testing.T) {
 		//	wipeDatabases()
 	*/
 
+	/* ROUTER
 	router := echo.New()
 
 	router.GET("/room/:name", func(context echo.Context) error {
@@ -61,6 +63,34 @@ func TestRoom(t *testing.T) {
 	})
 
 	router.Start(":9999")
+	*/
+
+	// main
+	dbVersion := &structs.Building{
+		ID:          "danny",
+		Name:        "test",
+		Description: "old",
+		Tags:        []string{"hi", "two"},
+	}
+	log.Printf("dbVersion: %+v", dbVersion)
+
+	db := new(structs.Building)
+	*db = *dbVersion
+
+	updatedVersion := structs.Building{
+		Name: "new name",
+	}
+	log.Printf("updatedVersion: %+v", updatedVersion)
+
+	b, err := json.Marshal(updatedVersion)
+	if err != nil {
+		t.Fatalf("failed to marshal updated version: %s", err)
+	}
+	log.Printf("bytes: %s", b)
+
+	json.NewDecoder(bytes.NewReader(b)).Decode(&db)
+	//json.Unmarshal(b, &dbv)
+	log.Printf("after merge: %+v", db)
 }
 
 func getRoom(name string) {

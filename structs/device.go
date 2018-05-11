@@ -3,6 +3,7 @@ package structs
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -32,7 +33,7 @@ func (d *Device) Validate() error {
 	}
 
 	// validate device type
-	if err := d.Type.Validate(); err != nil {
+	if err := d.Type.Validate(false); err != nil {
 		return errors.New(fmt.Sprintf("invalid device: %s", err))
 	}
 
@@ -65,9 +66,25 @@ type DeviceType struct {
 	Tags        []string     `json:"tags"`
 }
 
-func (dt *DeviceType) Validate() error {
+func (dt *DeviceType) Validate(deepCheck bool) error {
 	if len(dt.ID) == 0 {
 		return errors.New("invalid device type: missing id")
+	}
+
+	if deepCheck {
+		// check all of the ports
+		for _, port := range dt.Ports {
+			if err := port.Validate(); err != nil {
+				return errors.New(fmt.Sprintf("invalid device type: %s", err))
+			}
+		}
+
+		// check all of the commands
+		for _, command := range dt.Commands {
+			if err := command.Validate(); err != nil {
+				return errors.New(fmt.Sprintf("invalid device type: %s", err))
+			}
+		}
 	}
 	return nil
 }
@@ -80,7 +97,7 @@ type PowerState struct {
 
 func (ps *PowerState) Validate() error {
 	if len(ps.ID) < 3 {
-		return errors.New("invalid power state: id must be at least 2 characters long")
+		return errors.New("invalid power state: id must be at least 3 characters long")
 	}
 	return nil
 }
@@ -96,7 +113,7 @@ type Port struct {
 
 func (p *Port) Validate() error {
 	if len(p.ID) < 3 {
-		return errors.New("invalid port: id must be at least 2 characters long")
+		return errors.New("invalid port: id must be at least 3 characters long")
 	}
 	return nil
 }
@@ -109,7 +126,7 @@ type Role struct {
 
 func (r *Role) Validate() error {
 	if len(r.ID) < 3 {
-		return errors.New("invalid role: id must at least 2 characters long")
+		return errors.New("invalid role: id must at least 3 characters long")
 	}
 	return nil
 }
@@ -122,6 +139,23 @@ type Command struct {
 	Tags         []string     `json:"tags"`
 }
 
+func (c *Command) Validate() error {
+	if len(c.ID) < 3 {
+		return errors.New("invalid command: id must be at least 3 characters long")
+	}
+
+	// validate microservice
+	if err := c.Microservice.Validate(); err != nil {
+		return errors.New(fmt.Sprintf("invalid command: %s", err))
+	}
+
+	// validate endpoint
+	if err := c.Endpoint.Validate(); err != nil {
+		return errors.New(fmt.Sprintf("invalid command: %s", err))
+	}
+	return nil
+}
+
 type Microservice struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
@@ -129,11 +163,35 @@ type Microservice struct {
 	Tags        []string `json:"tags"`
 }
 
+func (m *Microservice) Validate() error {
+	if len(m.ID) < 3 {
+		return errors.New("invalid microservice: id must be at least 3 characters long")
+	}
+
+	// validate address
+	if _, err := url.ParseRequestURI(m.Address); err != nil {
+		return errors.New(fmt.Sprintf("invalid microservice: %s", err))
+	}
+	return nil
+}
+
 type Endpoint struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
 	Path        string   `json:"path"`
 	Tags        []string `json:"tags"`
+}
+
+func (e *Endpoint) Validate() error {
+	if len(e.ID) < 3 {
+		return errors.New("invalid endpoint: id must be at least 3 characters long")
+	}
+
+	// validate path
+	if _, err := url.ParseRequestURI(e.Path); err != nil {
+		return errors.New(fmt.Sprintf("invalid endpoint: %s", err))
+	}
+	return nil
 }
 
 func HasRole(device Device, role string) bool {

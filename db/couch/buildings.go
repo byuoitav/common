@@ -19,7 +19,7 @@ func (c *CouchDB) getBuilding(id string) (building, error) {
 
 	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", BUILDINGS, id), "", nil, &toReturn)
 	if err != nil {
-		err = &NotFound{msg: fmt.Sprintf("failed to get building %v: %s", id, err)}
+		err = errors.New(fmt.Sprintf("failed to get building %s: %s", id, err))
 	}
 
 	return toReturn, err
@@ -75,9 +75,8 @@ func (c *CouchDB) CreateBuilding(toAdd structs.Building) (structs.Building, erro
 	var resp CouchUpsertResponse
 	err = c.MakeRequest("POST", BUILDINGS, "", b, &resp)
 	if err != nil {
-		// if there was a conflict
-		if conflict, ok := err.(*Conflict); ok {
-			return toReturn, errors.New(fmt.Sprintf("building already exists, please update this building or change id's. error: %s", conflict))
+		if _, ok := err.(*Conflict); ok { // a building with the same ID already exists
+			return toReturn, errors.New(fmt.Sprintf("building already exists, please update this building or change id's. error: %s", err))
 		}
 
 		// or an unknown error
@@ -147,7 +146,7 @@ func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.
 		// get the rev of the building
 		bld, err := c.getBuilding(id)
 		if err != nil {
-			return toReturn, errors.New(fmt.Sprintf("unable to get building %s to update: %s", err))
+			return toReturn, errors.New(fmt.Sprintf("unable to get building %s to update: %s", id, err))
 		}
 
 		// marshal the new building
@@ -162,6 +161,12 @@ func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.
 			return toReturn, errors.New(fmt.Sprintf("failed to update building %s: %s", id, err))
 		}
 	} else { // the builiding ID is changing :|
+		// get rooms that are in the building
+		rooms, err := c.GetRoomsByBuilding(id)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to get rooms assocated with old building: %s", id))
+		}
+
 		// delete the old building
 		err = c.deleteBuildingWithoutCascade(id)
 		if err != nil {
@@ -172,12 +177,6 @@ func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.
 		_, err = c.CreateBuilding(building)
 		if err != nil {
 			return toReturn, errors.New(fmt.Sprintf("unable to create new building %s: %s", id, err))
-		}
-
-		// get rooms that were in the old building
-		rooms, err := c.GetRoomsByBuilding(id)
-		if err != nil {
-			return toReturn, errors.New(fmt.Sprintf("unable to get rooms assocated with old building: %s"))
 		}
 
 		// update each of the rooms to be in the new building
