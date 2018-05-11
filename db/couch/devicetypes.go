@@ -152,12 +152,14 @@ func (c *CouchDB) DeleteDeviceType(id string) error {
 	return err
 }
 
+/*
 func validatePort(p structs.Port) bool {
 	if len(p.ID) < 3 {
 		return false
 	}
 	return true
 }
+*/
 
 func validateCommand(c structs.Command) error {
 	if len(c.ID) < 3 {

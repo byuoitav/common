@@ -165,10 +165,10 @@ func (c *CouchDB) CreateRoom(toAdd structs.Room) (structs.Room, error) {
 
 	// post up room!
 	var resp CouchUpsertResponse
-	err = c.MakeRequest("POST", fmt.Sprintf("%v", ROOMS), "", b, &resp)
+	err = c.MakeRequest("POST", fmt.Sprintf("%v", ROOMS), "application/json", b, &resp)
 	if err != nil {
 		if _, ok := err.(*Conflict); ok { // there was a conflict creating room
-			return toReturn, errors.New(fmt.Sprintf("unable to create new room, because it already exists. error %s", err))
+			return toReturn, errors.New(fmt.Sprintf("unable to create new room, because it already exists. error: %s", err))
 		}
 
 		return toReturn, errors.New(fmt.Sprintf("unknown error creating room %s: %s", toAdd.ID, err))
