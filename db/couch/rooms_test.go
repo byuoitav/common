@@ -1,8 +1,6 @@
 package couch
 
 import (
-	"bytes"
-	"encoding/json"
 	"log"
 	"testing"
 
@@ -65,32 +63,12 @@ func TestRoom(t *testing.T) {
 	router.Start(":9999")
 	*/
 
-	// main
-	dbVersion := &structs.Building{
-		ID:          "danny",
-		Name:        "test",
-		Description: "old",
-		Tags:        []string{"hi", "two"},
-	}
-	log.Printf("dbVersion: %+v", dbVersion)
+	var query IDPrefixQuery
+	query.Selector.ID.GT = "\x00"
+	query.Limit = 1000
 
-	db := new(structs.Building)
-	*db = *dbVersion
-
-	updatedVersion := structs.Building{
-		Name: "new name",
-	}
-	log.Printf("updatedVersion: %+v", updatedVersion)
-
-	b, err := json.Marshal(updatedVersion)
-	if err != nil {
-		t.Fatalf("failed to marshal updated version: %s", err)
-	}
-	log.Printf("bytes: %s", b)
-
-	json.NewDecoder(bytes.NewReader(b)).Decode(&db)
-	//json.Unmarshal(b, &dbv)
-	log.Printf("after merge: %+v", db)
+	var rooms []structs.Room
+	couch.ExecuteQuery(query, ROOMS, rooms)
 }
 
 func getRoom(name string) {

@@ -52,9 +52,10 @@ type deviceType struct {
 }
 
 type deviceTypeQueryResponse struct {
-	Docs     []deviceType `json:"docs"`
-	Bookmark string       `json:"bookmark"`
-	Warning  string       `json:"warning"`
+	queryResponse
+	Docs []deviceType `json:"docs"`
+	//	Bookmark string       `json:"bookmark"`
+	//	Warning  string       `json:"warning"`
 }
 
 type queryResponse struct {

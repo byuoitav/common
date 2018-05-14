@@ -50,6 +50,22 @@ func (c *CouchDB) GetAllBuildings() ([]structs.Building, error) {
 	return toReturn, err
 }
 
+func (c *CouchDB) getBuildingsByQuery(query IDPrefixQuery) ([]building, error) {
+	var toReturn []building
+	var resp buildingQueryResponse
+
+	err := c.ExecuteQuery(query, resp)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get rooms by query: %s", err))
+	}
+
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc)
+	}
+
+	return toReturn, nil
+}
+
 /*
 AddBuilding adds a building. The building must have at least:
 1) ID

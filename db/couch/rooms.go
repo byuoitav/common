@@ -44,6 +44,22 @@ func (c *CouchDB) getRoom(id string) (room, error) {
 	return toReturn, nil
 }
 
+func (c *CouchDB) getRoomsByQuery(query IDPrefixQuery) ([]room, error) {
+	var toReturn []room
+	var resp roomQueryResponse
+
+	err := c.ExecuteQuery(query, resp)
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get rooms by query: %s", err))
+	}
+
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, doc)
+	}
+
+	return toReturn, nil
+}
+
 func (c *CouchDB) GetAllRooms() ([]structs.Room, error) {
 	var toReturn []structs.Room
 

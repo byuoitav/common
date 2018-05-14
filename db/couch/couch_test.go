@@ -3,28 +3,14 @@ package couch
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 var couch *CouchDB
 var testDir = `./test-data`
 
 func init() {
-	CFG := zap.NewDevelopmentConfig()
-	CFG.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	CFG.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
-	l, err := CFG.Build()
-	if err != nil {
-		log.Panicf("failed to build config for zap logger: %v", err.Error())
-	}
-	logger := l.Sugar()
-
 	couch = &CouchDB{
-		log: logger,
 		// these could be test env vars
 		//	address:  os.Getenv("TEST_DB_ADDRESS"),
 		//	username: os.Getenv("TEST_DB_USERNAME"),

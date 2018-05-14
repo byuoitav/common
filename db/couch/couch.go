@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -24,21 +22,18 @@ type CouchDB struct {
 	address  string
 	username string
 	password string
-	log      *zap.SugaredLogger
 }
 
-func NewDB(address, username, password string, logger *zap.SugaredLogger) *CouchDB {
+func NewDB(address, username, password string) *CouchDB {
 	return &CouchDB{
 		address:  address,
 		username: username,
 		password: password,
-		log:      logger,
 	}
 }
 
 func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte, toFill interface{}) error {
 	url := fmt.Sprintf("%v/%v", c.address, endpoint)
-	c.log.Debugf("Making %s request to %v", method, url)
 
 	// start building the request
 	req, err := http.NewRequest(method, url, bytes.NewReader(body))
@@ -71,15 +66,10 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 
 	if resp.StatusCode/100 != 2 {
-
-		c.log.Infof("Got a non-200 response from: %v. Code: %v", endpoint, resp.StatusCode)
-
-		ce := CouchError{}
+		var ce CouchError
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
-			msg := fmt.Sprintf("Received a non-200 response from %v. Body: %s", url, b)
-			c.log.Warn(msg)
-			return errors.New(msg)
+			return errors.New(fmt.Sprintf("received a non-200 response from %v. Body: %s", url, b))
 		}
 		return c.checkCouchErrors(ce)
 	}
@@ -91,16 +81,13 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, toFill)
 	if err != nil {
-		c.log.Infof("Couldn't umarshal response into the provided struct: %v", err.Error())
-
 		//check to see if it was a known error from couch
-		ce := CouchError{}
+		var ce CouchError
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
-			msg := fmt.Sprintf("Unknown response from couch: %s", b)
-			c.log.Warn(msg)
-			return errors.New(msg)
+			return errors.New(fmt.Sprintf("unknown response from couch: %s", b))
 		}
+
 		//it was an error, we can check on error types
 		return c.checkCouchErrors(ce)
 	}
@@ -108,22 +95,46 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	return nil
 }
 
+func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) error {
+	//	var toFill interface{}
+
+	// marshal query
+	b, err := json.Marshal(query)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to marshal query: %s", err))
+	}
+
+	//var toReturn []interface{}
+	var database string
+	//	var sliceType reflect.Type
+
+	switch responseToFill.(type) {
+	case buildingQueryResponse:
+		database = BUILDINGS
+		//	sliceType = reflect.TypeOf(responseToFill)
+	}
+
+	// execute query
+	err = c.MakeRequest("POST", fmt.Sprintf("%s/find", database), "application/json", b, &responseToFill)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to query database %s: %s", database, err))
+	}
+
+	//	sliceType = reflect.ValueOf(responseToFill)
+
+	return nil
+}
+
 func (c *CouchDB) checkCouchErrors(ce CouchError) error {
-	c.log.Debugf("Checking for couch error type: %v", ce.Error)
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
-		c.log.Debug("Error type found: Not Found.")
 		return &NotFound{fmt.Sprintf("The ID requested was unknown. Message: %v.", ce.Reason)}
 	case "conflict":
-		c.log.Debug("Error type found: Conflict.")
 		return &Conflict{fmt.Sprintf("There was a conflict updating/creating the document: %v", ce.Reason)}
 	case "bad_request":
-		c.log.Debug("Error type found: Bad Request.")
 		return &BadRequest{fmt.Sprintf("The request was bad: %v", ce.Reason)}
 	default:
-		msg := fmt.Sprintf("Unknown error type: %v. Message: %v", ce.Error, ce.Reason)
-		c.log.Warn(msg)
-		return errors.New(msg)
+		return errors.New(fmt.Sprintf("unknown error type: %v. Message: %v", ce.Error, ce.Reason))
 	}
 }
 
@@ -135,54 +146,6 @@ type IDPrefixQuery struct {
 		} `json:"_id"`
 	} `json:"selector"`
 	Limit int `json:"limit"`
-}
-
-// TODO use this for the queries:)
-// TODO also, make querys more extensible
-func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, database string, toFill interface{}) error {
-	return errors.New("not implemented")
-	// marshal the query
-	b, err := json.Marshal(query)
-	if err != nil {
-		return errors.New(fmt.Sprintf("failed to marshal query: %s", err))
-	}
-
-	/*
-		// pick which resp to use
-		// could get this by using a type switch on tofill, and no have database param
-		var resp interface{}
-		switch database {
-		case BUILDINGS:
-			resp = buildingQueryResponse{}
-		case ROOMS:
-			resp = roomQueryResponse{}
-		case DEVICES:
-			resp = deviceQueryResponse{}
-		case DEVICE_TYPES:
-			resp = deviceTypeQueryResponse{}
-		case ROOM_CONFIGURATIONS:
-			resp = roomConfigurationQueryResponse{}
-		default:
-			// TODO ??
-			return errors.New("unknown database")
-		}
-	*/
-	var resp queryResponse
-
-	// make query request
-	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", database), "application/json", b, &resp)
-	if err != nil {
-		return errors.New(fmt.Sprintf("failed to execute query: %s", err))
-	}
-
-	/*
-		// fill the struct
-		for _, doc := range resp.Docs {
-			toFill = append(toFill, doc)
-		}
-	*/
-
-	return nil
 }
 
 type CouchUpsertResponse struct {

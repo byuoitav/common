@@ -9,8 +9,6 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
-// var DeviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
-
 func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
 	return *device.Device, err

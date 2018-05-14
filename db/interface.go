@@ -3,12 +3,9 @@ package db
 import (
 	"log"
 	"os"
-	"sync"
 
 	"github.com/byuoitav/common/db/couch"
 	"github.com/byuoitav/common/structs"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type DB interface {
@@ -49,6 +46,10 @@ type DB interface {
 	GetAllDevices() ([]structs.Device, error)
 	GetAllDeviceTypes() ([]structs.DeviceType, error)
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
+
+	/* Specialty functions */
+	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
+	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
 }
 
 var address string
@@ -65,25 +66,7 @@ func init() {
 	}
 }
 
-func GetDB(logger *zap.SugaredLogger) DB {
-	return couch.NewDB(address, username, password, logger)
-}
-
-var logger *zap.SugaredLogger
-var once sync.Once
-
-func GetDBWithDefaultLogger() DB {
-	once.Do(func() {
-		CFG := zap.NewDevelopmentConfig()
-		CFG.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-		CFG.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
-		l, err := CFG.Build()
-		if err != nil {
-			log.Panicf("failed to build config for zap logger: %v", err.Error())
-		}
-		logger = l.Sugar()
-		logger.Info("Zap logger started for DB")
-	})
-
-	return GetDB(logger)
+func GetDB() DB {
+	// TODO add logic to "pick" which db to create
+	return couch.NewDB(address, username, password)
 }
