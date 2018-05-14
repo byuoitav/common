@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/byuoitav/common/structs"
 )
@@ -73,7 +72,7 @@ func (c *CouchDB) GetAllRoomConfigurations() ([]structs.RoomConfiguration, error
 }
 
 /*
-CreatRoomConfiguraiton adds a room configuration. A valid room configuration must have:
+CreateRoomConfiguraiton adds a room configuration. A valid room configuration must have:
 1) an ID
 2) a name
 3) at least one evaluator.
@@ -83,105 +82,69 @@ CreatRoomConfiguraiton adds a room configuration. A valid room configuration mus
 Note that if the ID is a duplicate, assuming that the `rev` field is valid.
 The existing document will get overwritten.
 */
-func (c *CouchDB) CreateRoomConfiguration(config structs.RoomConfiguration) (structs.RoomConfiguration, error) {
-	c.log.Debugf("Creating a room configuration: %v", config.ID)
+func (c *CouchDB) CreateRoomConfiguration(toAdd structs.RoomConfiguration) (structs.RoomConfiguration, error) {
+	var toReturn structs.RoomConfiguration
 
-	if len(config.ID) == 0 {
-		c.log.Warn("Couldn't create configuration, ID is required.")
-		return config, errors.New("Couldn't create configuration, ID is required.")
-	}
-
-	if len(config.Evaluators) == 0 {
-		msg := "Couldn't create configuration, at least on evaluator is required."
-		c.log.Warn(msg)
-		return config, errors.New(msg)
-	}
-
-	//now we need to go through and check each Evaluator.
-	//TODO: Figure out some way to check if the evaluator key is valid
-
-	for i := range config.Evaluators {
-		if len(config.Evaluators[i].ID) < 1 || len(config.Evaluators[i].CodeKey) < 1 {
-			msg := "Couldn't Create configuration. All evaluators must have an ID and a codeKey"
-			c.log.Warn(msg)
-			return config, errors.New(msg)
-		}
-		//check if priority is 0, if so, set it to 1000
-
-		if config.Evaluators[i].Priority == 0 {
-			config.Evaluators[i].Priority = 1000
-		}
-	}
-
-	c.log.Debugf("All checks passed. Creating configuration.")
-
-	resp := CouchUpsertResponse{}
-
-	b, err := json.Marshal(config)
+	// validate room config
+	err := toAdd.Validate(true)
 	if err != nil {
-
-		msg := fmt.Sprintf("Couldn't marshal configuration into JSON. Error: %v", err.Error())
-		c.log.Error(msg) // this is a slightly bigger deal
-		return config, errors.New(msg)
+		return toReturn, err
 	}
 
-	err = c.MakeRequest("PUT", fmt.Sprintf("room_configurations/%v", config.ID), "", b, &resp)
+	// TODO figure out how to check if the evalutaor key is valid
+
+	// marshal room config
+	b, err := json.Marshal(toAdd)
 	if err != nil {
-		if nf, ok := err.(*Conflict); ok {
-			msg := fmt.Sprintf("There was a conflict updating the configuration: %v. Make changes on an updated version of the configuration.", nf.Error())
-			c.log.Warn(msg)
-			return config, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to marshal room configuration %s: %s", toAdd.ID, err))
+	}
+
+	// post room configuration
+	var resp CouchUpsertResponse
+	err = c.MakeRequest("POST", ROOM_CONFIGURATIONS, "application/json", b, &resp)
+	if err != nil {
+		if _, ok := err.(*Conflict); ok {
+			return toReturn, errors.New(fmt.Sprintf("room configuration already exists; please update this configuration or change id's. error: %s", err))
 		}
-		// there was some other problem
-		msg := fmt.Sprintf("unknown problem creating the configuration: %v", err.Error())
-		c.log.Warn(msg)
-		return config, errors.New(msg)
+
+		return toReturn, errors.New(fmt.Sprintf("failed to create the room configuration %s: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("Configuration created, retriving new configuration from database.")
-
-	//return the created config
-	config, err = c.GetRoomConfiguration(config.ID)
+	// get new room config from db, return it
+	toReturn, err = c.GetRoomConfiguration(toAdd.ID)
 	if err != nil {
-		msg := fmt.Sprintf("There was a problem getting the newly created configuration: %v", err.Error())
-		c.log.Warn(msg)
-		return config, errors.New(msg)
+		return toReturn, errors.New(fmt.Sprintf("failed to get room configuration %s after creating it: %s", toAdd.ID, err))
 	}
 
-	c.log.Debug("Done.")
-	return config, nil
+	return toReturn, nil
 }
 
 func (c *CouchDB) DeleteRoomConfiguration(id string) error {
-	c.log.Debugf("[%s] Deleting room configuration", id)
-
-	// make sure the room configuration isn't being used anywhere
-	rooms, err := c.GetAllRooms()
+	// validate no rooms depend on this type
+	rooms, err := c.GetRoomsByRoomConfiguration(id)
 	if err != nil {
 		return err
 	}
 
-	for _, room := range rooms {
-		if strings.EqualFold(room.Configuration.ID, id) {
-			return errors.New(fmt.Sprintf("can't delete room configuration %s. room %s still uses it.", id, room.ID))
-		}
+	if len(rooms) != 0 {
+		return errors.New(fmt.Sprintf("can't delete room configuration %s. %v rooms still depend on it.", id, len(rooms)))
 	}
 
-	// get room configuration to delete
-	rc, err := c.getRoomConfiguration(id)
+	// get the rev of the room configuration
+	config, err := c.getRoomConfiguration(id)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("failed to get room configuration %s to delete. does it exist? (error: %s)", id, err))
 	}
 
-	// delete the room configuration
-	err = c.MakeRequest("DELETE", fmt.Sprintf("room_configurations/%s?rev=%s", id, rc.Rev), "", nil, nil)
+	// delete room config
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%v/%v?rev=%v", ROOM_CONFIGURATIONS, id, config.Rev), "", nil, nil)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("unable to delete room configuration %s: %s", config.ID, err))
 	}
 
 	return nil
 }
 
 func (c *CouchDB) UpdateRoomConfiguration(id string, rc structs.RoomConfiguration) (structs.RoomConfiguration, error) {
-	return structs.RoomConfiguration{}, nil
+	return structs.RoomConfiguration{}, errors.New(fmt.Sprintf("not implemented"))
 }

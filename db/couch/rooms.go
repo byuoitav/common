@@ -293,3 +293,23 @@ func (c *CouchDB) UpdateRoom(id string, room structs.Room) (structs.Room, error)
 
 	return toReturn, nil
 }
+
+// TODO could use a query to be faster
+func (c *CouchDB) GetRoomsByRoomConfiguration(configID string) ([]structs.Room, error) {
+	var toReturn []structs.Room
+
+	// get all rooms
+	rooms, err := c.GetAllRooms()
+	if err != nil {
+		return toReturn, errors.New(fmt.Sprintf("failed to get rooms by room configuration: %s", err))
+	}
+
+	// filter for ones that have the room configuration
+	for _, room := range rooms {
+		if strings.EqualFold(room.Configuration.ID, configID) {
+			toReturn = append(toReturn, room)
+		}
+	}
+
+	return toReturn, nil
+}

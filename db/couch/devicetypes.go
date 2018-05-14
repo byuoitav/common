@@ -112,10 +112,10 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 
 	// post device type
 	var resp CouchUpsertResponse
-	err = c.MakeRequest("POST", DEVICE_TYPES, "", b, &resp)
+	err = c.MakeRequest("POST", DEVICE_TYPES, "application/json", b, &resp)
 	if err != nil {
 		if _, ok := err.(*Conflict); ok { // a device type with this id already exists
-			return toReturn, errors.New(fmt.Sprintf("device type already exists, please update this building or change id's. error: %s", err))
+			return toReturn, errors.New(fmt.Sprintf("device type already exists, please update this type or change id's. error: %s", err))
 		}
 
 		return toReturn, errors.New(fmt.Sprintf("failed to create the device type %s: %s", toAdd.ID, err))
@@ -131,7 +131,6 @@ func (c *CouchDB) CreateDeviceType(toAdd structs.DeviceType) (structs.DeviceType
 }
 
 func (c *CouchDB) DeleteDeviceType(id string) error {
-
 	// validate no devices depend on this type
 	devices, err := c.GetDevicesByType(id)
 	if err != nil {
@@ -157,7 +156,6 @@ func (c *CouchDB) DeleteDeviceType(id string) error {
 	return nil
 }
 
-// TODO
 func (c *CouchDB) UpdateDeviceType(id string, dt structs.DeviceType) (structs.DeviceType, error) {
-	return structs.DeviceType{}, nil
+	return structs.DeviceType{}, errors.New("not implemented")
 }
