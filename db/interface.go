@@ -50,6 +50,7 @@ type DB interface {
 	/* Specialty functions */
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
+	GetUIConfig(roomID string) (structs.UIConfig, error)
 }
 
 var address string

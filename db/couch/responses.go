@@ -52,14 +52,12 @@ type deviceType struct {
 }
 
 type deviceTypeQueryResponse struct {
-	queryResponse
-	Docs []deviceType `json:"docs"`
-	//	Bookmark string       `json:"bookmark"`
-	//	Warning  string       `json:"warning"`
+	Docs     []deviceType `json:"docs"`
+	Bookmark string       `json:"bookmark"`
+	Warning  string       `json:"warning"`
 }
 
-type queryResponse struct {
-	Docs     []interface{} `json:"docs"`
-	Bookmark string        `json:"bookmark"`
-	Warning  string        `json:"warning"`
+type uiconfig struct {
+	Rev string `json:"_rev",omitempty`
+	*structs.UIConfig
 }

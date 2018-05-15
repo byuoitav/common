@@ -16,6 +16,7 @@ const (
 	DEVICES             = "devices"
 	DEVICE_TYPES        = "device_types"
 	ROOM_CONFIGURATIONS = "room_configurations"
+	UI_CONFIGS          = "ui-configuration"
 )
 
 type CouchDB struct {
