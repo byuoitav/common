@@ -9,7 +9,7 @@ import (
 )
 
 type EventNode struct {
-	node *messenger.Node
+	Node *messenger.Node
 }
 
 // filters: an array of strings to filter events recieved by
@@ -17,10 +17,10 @@ type EventNode struct {
 // name: name of event node
 func NewEventNode(name, address string, filters []string) *EventNode {
 	n := &EventNode{
-		node: messenger.NewNode(name, filters),
+		Node: messenger.NewNode(name, filters),
 	}
 
-	n.node.ConnectToRouter(address)
+	n.Node.ConnectToRouter(address)
 
 	return n
 }
@@ -32,13 +32,13 @@ func (n *EventNode) PublishEvent(eventType string, event Event) error {
 		return err
 	}
 
-	n.node.Write(messenger.Message{Header: eventType, Body: bytes})
+	n.Node.Write(messenger.Message{Header: eventType, Body: bytes})
 	return nil
 }
 
 func (n *EventNode) Read() (Event, error) {
 	var toReturn Event
-	msg := n.node.Read()
+	msg := n.Node.Read()
 
 	err := json.Unmarshal(msg.Body, &toReturn)
 	if err != nil {

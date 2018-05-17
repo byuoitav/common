@@ -72,7 +72,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 		if err != nil {
 			return errors.New(fmt.Sprintf("received a non-200 response from %v. Body: %s", url, b))
 		}
-		return c.checkCouchErrors(ce)
+		return CheckCouchErrors(ce)
 	}
 
 	if toFill == nil {
@@ -90,7 +90,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 		}
 
 		//it was an error, we can check on error types
-		return c.checkCouchErrors(ce)
+		return CheckCouchErrors(ce)
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 	return nil
 }
 
-func (c *CouchDB) checkCouchErrors(ce CouchError) error {
+func CheckCouchErrors(ce CouchError) error {
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
 		return &NotFound{fmt.Sprintf("The ID requested was unknown. Message: %v.", ce.Reason)}
