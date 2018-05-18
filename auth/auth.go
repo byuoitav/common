@@ -3,7 +3,6 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -12,12 +11,11 @@ import (
 )
 
 func VerifyRoleForUser(user, role string) (bool, error) {
-	// get groups that the user is in from activedirectory
+	// get groups that the user is in from active directory
 	groups, err := activedirectory.GetGroupsForUser(user)
 	if err != nil {
 		return false, errors.New(fmt.Sprintf("failed to get groups for user: %s", err))
 	}
-	log.Printf("groups: %s", groups)
 
 	// get roles database
 	db := db.GetDB()
@@ -42,15 +40,10 @@ func VerifyRoleForUser(user, role string) (bool, error) {
 	for _, groupRegex := range groupsWithRole {
 		for _, group := range groups {
 			if groupRegex.MatchString(group) {
-				log.Printf("matched %s with group %s for role '%s'", user, group, role)
 				return true, nil
 			}
 		}
 	}
 
-	return false, nil
-}
-
-func VerifyRolesForUser(user string, roles []string) (bool, error) {
 	return false, nil
 }
