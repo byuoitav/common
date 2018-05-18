@@ -40,12 +40,12 @@ func (e *E) SetType(Type string) *E {
 	return e
 }
 
-func Translate(e error) E {
+func Translate(e error) *E {
 	return Create(e.Error(), reflect.TypeOf(e).String())
 }
 
-func Create(msg string, Type string) E {
-	return E{
+func Create(msg string, Type string) *E {
+	return &E{
 		MessageLog: []string{msg},
 		Type:       Type,
 		Stack:      debug.Stack(),
