@@ -13,20 +13,25 @@ type E struct {
 	Stack      []byte
 }
 
+func (e E) String() string {
+	return e.Error()
+}
+
 func (e E) Error() string {
 	b := strings.Builder{}
 	for i := range e.MessageLog {
-		b.WriteString(msg, " - ", e.MessageLog[i])
+		b.WriteString(" - ")
+		b.WriteString(e.MessageLog[i])
 	}
 	return b.String()
 }
 
 func (e *E) Addf(s string, v ...interface{}) *E {
-	return Add(fmt.Sprintf(s, e...))
+	return e.Add(fmt.Sprintf(s, v...))
 }
 
 func (e *E) Add(s string) *E {
-	e.MessageLog = append(e.MessageLog, strings.Trim(e, " \n\r"))
+	e.MessageLog = append(e.MessageLog, strings.Trim(s, " \n\r"))
 	return e
 }
 
@@ -35,12 +40,12 @@ func (e *E) SetType(Type string) *E {
 	return e
 }
 
-func Translate(error e) E {
-	return Create(e.String(), reflect.TypeOf(e).String())
+func Translate(e error) *E {
+	return Create(e.Error(), reflect.TypeOf(e).String())
 }
 
-func Create(msg string, Type string) E {
-	return E{
+func Create(msg string, Type string) *E {
+	return &E{
 		MessageLog: []string{msg},
 		Type:       Type,
 		Stack:      debug.Stack(),
