@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -26,8 +27,9 @@ type CouchDB struct {
 }
 
 func NewDB(address, username, password string) *CouchDB {
+
 	return &CouchDB{
-		address:  address,
+		address:  strings.Trim(address, "/"),
 		username: username,
 		password: password,
 	}
@@ -67,6 +69,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 
 	if resp.StatusCode/100 != 2 {
+		log.Printf("Non-200 response")
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
@@ -82,6 +85,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, toFill)
 	if err != nil {
+		log.Printf("Can't unmarshal %v", err.Error())
 		//check to see if it was a known error from couch
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
