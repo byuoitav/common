@@ -48,6 +48,7 @@ type DB interface {
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
 
 	/* Specialty functions */
+	GetDevicesByRoom(roomID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
 	GetUIConfig(roomID string) (structs.UIConfig, error)
@@ -59,6 +60,8 @@ var address string
 var username string
 var password string
 
+var database DB
+
 func init() {
 	address = os.Getenv("DB_ADDRESS")
 	username = os.Getenv("DB_USERNAME")
@@ -69,7 +72,12 @@ func init() {
 	}
 }
 
+// GetDB returns the instance of the database to use.
 func GetDB() DB {
 	// TODO add logic to "pick" which db to create
-	return couch.NewDB(address, username, password)
+	if database == nil {
+		database = couch.NewDB(address, username, password)
+	}
+
+	return database
 }
