@@ -51,6 +51,8 @@ type DB interface {
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
 	GetUIConfig(roomID string) (structs.UIConfig, error)
+
+	GetAuth() (structs.Auth, error)
 }
 
 var address string
