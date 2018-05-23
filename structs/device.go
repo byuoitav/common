@@ -57,9 +57,28 @@ func (d *Device) Validate() error {
 	return nil
 }
 
+func (d *Device) GetDeviceRoomID() string {
+	idParts := strings.Split(d.ID, "-")
+	roomID := fmt.Sprintf("%s-%s", idParts[0], idParts[1])
+	return roomID
+}
+
+func (d *Device) GetCommandByName(port string) Command {
+	for _, c := range d.Type.Commands {
+		if c.ID == port {
+			return c
+		}
+	}
+
+	// No command found.
+	return Command{}
+}
+
 type DeviceType struct {
 	ID          string       `json:"_id"`
 	Description string       `json:"description,omitempty"`
+	Input       bool         `json:"input"`
+	Output      bool         `json:"output"`
 	Ports       []Port       `json:"ports,omitempty"`
 	PowerStates []PowerState `json:"power-states,omitempty"`
 	Commands    []Command    `json:"commands,omitempty"`

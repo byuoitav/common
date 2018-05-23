@@ -1,7 +1,7 @@
 package events
 
-//const ContextRouter = "router"
-//const ContextEventNode = "eventnode"
+const ContextRouter = "router"
+const ContextEventNode = "eventnode"
 
 // TODO can I remove this function?
 /*

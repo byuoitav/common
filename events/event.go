@@ -119,3 +119,7 @@ func GetRoomFromHostname() string {
 func GetDeviceNameFromHostname() string {
 	return strings.Split(GetPiHostname(), "-")[2]
 }
+
+func GetDevHostname() string {
+	return os.Getenv("DEVELOPMENT_HOSTNAME")
+}
