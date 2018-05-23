@@ -11,16 +11,18 @@ import (
 
 var L *zap.SugaredLogger
 var cfg zap.Config
-var atom *zap.AtomicLevel
+var atom zap.AtomicLevel
 
 func init() {
 
-	atom = zap.NewAtomicLevel()
+	atom = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 
-	cfg = zap.ProductionConfig()
+	cfg = zap.NewDevelopmentConfig()
+
 	cfg.OutputPaths = append(cfg.OutputPaths)
 	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	cfg.Level = atom
+
 	l, err := cfg.Build()
 	if err != nil {
 		log.Printf("Couldn't build config for zap logger: %v", err.Error())
@@ -45,6 +47,8 @@ func SetLevel(level string) *nerr.E {
 		atom.SetLevel(zapcore.WarnLevel)
 	case "error":
 		atom.SetLevel(zapcore.ErrorLevel)
+	case "dpanic":
+		atom.SetLevel(zapcore.DPanicLevel)
 	case "panic":
 		atom.SetLevel(zapcore.PanicLevel)
 	case "fatal":
@@ -54,4 +58,29 @@ func SetLevel(level string) *nerr.E {
 	}
 
 	return nil
+}
+
+func GetLevel() (string, *nerr.E) {
+	return atom.Level().String(), nil
+	/*
+		switch atom.Level().String() {
+
+		case "DebugLevel":
+			return "debug", nil
+		case "InfoLevel":
+			return "info", nil
+		case "WarnLevel":
+			return "warn", nil
+		case "ErrorLevel":
+			return "error", nil
+		case "DPanicLevel":
+			return "dpanic", nil
+		case "PanicLevel":
+			return "panic", nil
+		case "FatalLevel":
+			return "fatal", nil
+		default:
+			return "", nerr.Create(fmt.Sprintf("Unknown level returned %v", atom.Level().String()), "error")
+		}
+	*/
 }
