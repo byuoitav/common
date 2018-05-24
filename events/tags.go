@@ -14,7 +14,7 @@ Different event types have different routing rules to the different players in t
 */
 
 const (
-	ROOM       = "room"
+	Room       = "room"
 	UI         = "ui"
 	APISuccess = "api-success"
 	APIError   = "api-error"
