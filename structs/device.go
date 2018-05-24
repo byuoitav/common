@@ -155,6 +155,7 @@ type Command struct {
 	Description  string       `json:"description"`
 	Microservice Microservice `json:"microservice"`
 	Endpoint     Endpoint     `json:"endpoint"`
+	Priority     int          `json:"priority"`
 	Tags         []string     `json:"tags"`
 }
 
