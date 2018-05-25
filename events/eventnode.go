@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/messenger"
 )
 
@@ -31,6 +32,8 @@ func (n *EventNode) PublishEvent(eventType string, event Event) error {
 	if err != nil {
 		return err
 	}
+
+	log.L.Infof("sending message with header: %v", eventType)
 
 	n.Node.Write(messenger.Message{Header: eventType, Body: bytes})
 	return nil
