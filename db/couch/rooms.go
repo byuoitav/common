@@ -13,9 +13,8 @@ import (
 func (c *CouchDB) GetRoom(id string) (structs.Room, error) {
 	room, err := c.getRoom(id)
 	if err != nil {
-		return nil, err
+		return structs.Room{}, err
 	}
-
 	//if err was nil then room may be.
 	return *room.Room, nil
 }
