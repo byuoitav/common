@@ -12,7 +12,12 @@ import (
 
 func (c *CouchDB) GetRoom(id string) (structs.Room, error) {
 	room, err := c.getRoom(id)
-	return *room.Room, err
+	if err != nil {
+		return nil, err
+	}
+
+	//if err was nil then room may be.
+	return *room.Room, nil
 }
 
 func (c *CouchDB) getRoom(id string) (room, error) {
