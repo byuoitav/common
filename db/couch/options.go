@@ -1,0 +1,270 @@
+package couch
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/byuoitav/common/structs"
+)
+
+// TEMPLATES
+
+// GetTemplate returns a template UIConfig.
+func (c *CouchDB) GetTemplate(id string) (structs.UIConfig, error) {
+	template, err := c.getTemplate(id)
+	return *template.UIConfig, err
+}
+
+func (c *CouchDB) getTemplate(id string) (uiconfig, error) {
+	var toReturn uiconfig
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, id), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get template %s: %s", id, err)
+	}
+
+	return toReturn, err
+}
+
+// UpdateTemplate sends an updated template to the database.
+func (c *CouchDB) UpdateTemplate(id string, newTemp structs.UIConfig) (structs.UIConfig, error) {
+	var toReturn structs.UIConfig
+
+	if id == newTemp.ID { // the template ID isn't changing
+		// get the rev of the template
+		oldTemp, err := c.getTemplate(id)
+		if err != nil {
+			return toReturn, fmt.Errorf("unable to get template %s to update: %s", id, err)
+		}
+
+		// marshal the new template
+		b, err := json.Marshal(newTemp)
+		if err != nil {
+			return toReturn, fmt.Errorf("unable to marshal new template: %s", err)
+		}
+
+		// update the template
+		err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, id, oldTemp.Rev), "application/json", b, &toReturn)
+		if err != nil {
+			return toReturn, fmt.Errorf("failed to update template %s: %s", id, err)
+		}
+	} else { // the template ID is changing :|
+		// delete the old template
+		err := c.deleteTemplate(id)
+		if err != nil {
+			return toReturn, fmt.Errorf("unable to delete old template %s: %s", id, err)
+		}
+
+		// marshal the new template
+		b, err := json.Marshal(newTemp)
+		if err != nil {
+			return toReturn, fmt.Errorf("unable to marshal new template: %s", err)
+		}
+
+		// post new template
+		var resp CouchUpsertResponse
+		err = c.MakeRequest("POST", OPTIONS, "", b, &resp)
+		if err != nil {
+			if _, ok := err.(*Conflict); ok { // a template with the same ID already exists
+				return toReturn, fmt.Errorf("template already exists, please update this template or change ids. error: %s", err)
+			}
+
+			// or an unknown error
+			return toReturn, fmt.Errorf("unable to create template %s: %s", id, err)
+		}
+	}
+
+	return toReturn, nil
+}
+
+func (c *CouchDB) deleteTemplate(id string) error {
+	// get the template to delete
+	template, err := c.getTemplate(id)
+	if err != nil {
+		return fmt.Errorf("unable to get template %s to delete: %s", id, err)
+	}
+
+	// delete the template
+	err = c.MakeRequest("DELETE", fmt.Sprintf("%v/%v?rev=%v", OPTIONS, id, template.Rev), "", nil, nil)
+	if err != nil {
+		return fmt.Errorf("unable to delete template %s: %s", id, err)
+	}
+
+	return nil
+}
+
+// ICONS
+
+// GetIcons returns a list of IOConfigurations.
+func (c *CouchDB) GetIcons() ([]structs.IOConfiguration, error) {
+	i, err := c.getIcons()
+	return i.iconList, err
+}
+
+func (c *CouchDB) getIcons() (icons, error) {
+	var toReturn icons
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ICONS), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get icon mapping : %s", err)
+	}
+
+	return toReturn, err
+}
+
+// UpdateIcons puts an updated list of icons in the database.
+func (c *CouchDB) UpdateIcons(iconList []structs.IOConfiguration) ([]structs.IOConfiguration, error) {
+	var toReturn []structs.IOConfiguration
+
+	// get the rev of the icon list
+	oldList, err := c.getIcons()
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to get icon list to update: %s", err)
+	}
+
+	// marshal the new icon list
+	b, err := json.Marshal(iconList)
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to marshal new icon list: %s", err)
+	}
+
+	// update the icon list
+	err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, ICONS, oldList.Rev), "application/json", b, &toReturn)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to update the icon list : %s", err)
+	}
+
+	return toReturn, nil
+}
+
+// ROLES
+
+// GetDeviceRoles returns a list of the device roles.
+func (c *CouchDB) GetDeviceRoles() ([]string, error) {
+	roles, err := c.getDeviceRoles()
+	return roles.roleList, err
+}
+
+func (c *CouchDB) getDeviceRoles() (deviceRoles, error) {
+	var toReturn deviceRoles
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ROLES), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get device roles : %s", err)
+	}
+
+	return toReturn, err
+}
+
+// UpdateDeviceRoles puts an updated list of device roles in the database.
+func (c *CouchDB) UpdateDeviceRoles(roles []string) ([]string, error) {
+	var toReturn []string
+
+	// get the rev of the device role list
+	oldList, err := c.getDeviceRoles()
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to get the device role list to update: %s", err)
+	}
+
+	// marshal the new device role list
+	b, err := json.Marshal(roles)
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to marshal new device role list: %s", err)
+	}
+
+	// update the device role list
+	err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, ROLES, oldList.Rev), "application/json", b, &toReturn)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to update the device role list : %s", err)
+	}
+
+	return toReturn, nil
+}
+
+// DESIGNATIONS
+
+// GetRoomDesignations returns a list of the device roles.
+func (c *CouchDB) GetRoomDesignations() ([]string, error) {
+	d, err := c.getRoomDesignations()
+	return d.desigList, err
+}
+
+func (c *CouchDB) getRoomDesignations() (roomDesignations, error) {
+	var toReturn roomDesignations
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ROOM_DESIGNATIONS), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get device roles : %s", err)
+	}
+
+	return toReturn, err
+}
+
+// UpdateRoomDesignations puts an updated list of room designations in the database.
+func (c *CouchDB) UpdateRoomDesignations(desigs []string) ([]string, error) {
+	var toReturn []string
+
+	// get the rev of the room designation list
+	oldList, err := c.getRoomDesignations()
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to get the room designation list to update: %s", err)
+	}
+
+	// marshal the new room designation list
+	b, err := json.Marshal(desigs)
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to marshal new room designation list: %s", err)
+	}
+
+	// update the room designation list
+	err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, ROOM_DESIGNATIONS, oldList.Rev), "application/json", b, &toReturn)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to update the room designation list : %s", err)
+	}
+
+	return toReturn, nil
+}
+
+// TAGS
+
+// GetTags returns a list of the device roles.
+func (c *CouchDB) GetTags() ([]string, error) {
+	t, err := c.getTags()
+	return t.tagList, err
+}
+
+func (c *CouchDB) getTags() (tags, error) {
+	var toReturn tags
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, TAGS), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get device roles : %s", err)
+	}
+
+	return toReturn, err
+}
+
+// UpdateTags puts an updated list of tagsin the database.
+func (c *CouchDB) UpdateTags(newTags []string) ([]string, error) {
+	var toReturn []string
+
+	// get the rev of the tag list
+	oldList, err := c.getTags()
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to get the tag list to update: %s", err)
+	}
+
+	// marshal the new tag list
+	b, err := json.Marshal(newTags)
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to marshal new tag list: %s", err)
+	}
+
+	// update the tag list
+	err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, TAGS, oldList.Rev), "application/json", b, &toReturn)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to update the tag list : %s", err)
+	}
+
+	return toReturn, nil
+}

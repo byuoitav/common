@@ -1,6 +1,7 @@
 package structs
 
 type UIConfig struct {
+	ID                  string               `json:"id,omitempty"`
 	Api                 []string             `json:"api"`
 	Panels              []Panel              `json:"panels"`
 	Presets             []Preset             `json:"presets"`
