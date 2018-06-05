@@ -1,12 +1,12 @@
 package structs
 
 type UIConfig struct {
-	ID                  string               `json:"id,omitempty"`
+	ID                  string               `json:"_id,omitempty"`
 	Api                 []string             `json:"api"`
 	Panels              []Panel              `json:"panels"`
 	Presets             []Preset             `json:"presets"`
 	InputConfiguration  []IOConfiguration    `json:"inputConfiguration"`
-	OutputConfiguration []IOConfiguration    `json:"outputConfiguration"`
+	OutputConfiguration []IOConfiguration    `json:"outputConfiguration,omitempty"`
 	AudioConfiguration  []AudioConfiguration `json:"audioConfiguration"`
 }
 
@@ -14,10 +14,10 @@ type Preset struct {
 	Name                    string   `json:"name"`
 	Icon                    string   `json:"icon"`
 	Displays                []string `json:"displays"`
-	ShareableDisplays       []string `json:"shareableDisplays"`
+	ShareableDisplays       []string `json:"shareableDisplays,omitempty"`
 	AudioDevices            []string `json:"audioDevices"`
 	Inputs                  []string `json:"inputs"`
-	IndependentAudioDevices []string `json:"independentAudioDevices"`
+	IndependentAudioDevices []string `json:"independentAudioDevices,omitempty"`
 }
 
 type Panel struct {

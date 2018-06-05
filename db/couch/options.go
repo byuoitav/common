@@ -63,14 +63,14 @@ func (c *CouchDB) UpdateTemplate(id string, newTemp structs.UIConfig) (structs.U
 
 		// post new template
 		var resp CouchUpsertResponse
-		err = c.MakeRequest("POST", OPTIONS, "", b, &resp)
+		err = c.MakeRequest("POST", fmt.Sprintf("%v/%v", OPTIONS, newTemp.ID), "", b, &resp)
 		if err != nil {
 			if _, ok := err.(*Conflict); ok { // a template with the same ID already exists
-				return toReturn, fmt.Errorf("template already exists, please update this template or change ids. error: %s", err)
+				return toReturn, fmt.Errorf("template already exists, please update this template or change IDs. error: %s", err)
 			}
 
 			// or an unknown error
-			return toReturn, fmt.Errorf("unable to create template %s: %s", id, err)
+			return toReturn, fmt.Errorf("unable to create template %s : %s", id, err)
 		}
 	}
 

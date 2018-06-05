@@ -40,6 +40,12 @@ type DB interface {
 	UpdateRoomConfiguration(id string, rc structs.RoomConfiguration) (structs.RoomConfiguration, error)
 	DeleteRoomConfiguration(id string) error
 
+	// ui configs
+	CreateUIConfig(roomID string, ui structs.UIConfig) (structs.UIConfig, error)
+	GetUIConfig(roomID string) (structs.UIConfig, error)
+	UpdateUIConfig(id string, ui structs.UIConfig) (structs.UIConfig, error)
+	DeleteUIConfig(id string) error
+
 	/* bulk functions */
 	GetAllBuildings() ([]structs.Building, error)
 	GetAllRooms() ([]structs.Room, error)
@@ -51,7 +57,6 @@ type DB interface {
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
-	GetUIConfig(roomID string) (structs.UIConfig, error)
 
 	GetAuth() (structs.Auth, error)
 }
