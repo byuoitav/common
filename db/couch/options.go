@@ -96,7 +96,7 @@ func (c *CouchDB) deleteTemplate(id string) error {
 // ICONS
 
 // GetIcons returns a list of IOConfigurations.
-func (c *CouchDB) GetIcons() ([]structs.IOConfiguration, error) {
+func (c *CouchDB) GetIcons() ([]string, error) {
 	i, err := c.getIcons()
 	return i.iconList, err
 }
