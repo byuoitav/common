@@ -14,7 +14,7 @@ type Device struct {
 	Address     string     `json:"address"`
 	Description string     `json:"description"`
 	DisplayName string     `json:"display_name"`
-	Type        DeviceType `json:"type"`
+	Type        DeviceType `json:"type,omitempty"`
 	Roles       []Role     `json:"roles"`
 	Ports       []Port     `json:"ports"`
 	Tags        []string   `json:"tags"`
