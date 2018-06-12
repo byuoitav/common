@@ -62,25 +62,4 @@ func SetLevel(level string) *nerr.E {
 
 func GetLevel() (string, *nerr.E) {
 	return atom.Level().String(), nil
-	/*
-		switch atom.Level().String() {
-
-		case "DebugLevel":
-			return "debug", nil
-		case "InfoLevel":
-			return "info", nil
-		case "WarnLevel":
-			return "warn", nil
-		case "ErrorLevel":
-			return "error", nil
-		case "DPanicLevel":
-			return "dpanic", nil
-		case "PanicLevel":
-			return "panic", nil
-		case "FatalLevel":
-			return "fatal", nil
-		default:
-			return "", nerr.Create(fmt.Sprintf("Unknown level returned %v", atom.Level().String()), "error")
-		}
-	*/
 }

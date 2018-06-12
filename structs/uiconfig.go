@@ -8,6 +8,7 @@ type UIConfig struct {
 	InputConfiguration  []IOConfiguration    `json:"inputConfiguration"`
 	OutputConfiguration []IOConfiguration    `json:"outputConfiguration,omitempty"`
 	AudioConfiguration  []AudioConfiguration `json:"audioConfiguration"`
+	PseudoInputs        []PseudoInput        `json:"pseudoInputs"`
 }
 
 type Preset struct {
@@ -36,4 +37,12 @@ type AudioConfiguration struct {
 type IOConfiguration struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
+}
+
+type PseudoInput struct {
+	Displayname string `json:"displayname"`
+	Config      []struct {
+		Input   string   `json:"input"`
+		Outputs []string `json:"outputs"`
+	} `json:"config"`
 }

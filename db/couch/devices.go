@@ -23,6 +23,10 @@ func (c *CouchDB) getDevice(id string) (device, error) {
 		return toReturn, errors.New(fmt.Sprintf("failed to get device %s: %s", id, err))
 	}
 
+	if len(toReturn.ID) == 0 {
+		return toReturn, errors.New(fmt.Sprintf("failed to get device %s: %s", id, err))
+	}
+
 	// get its device type
 	toReturn.Type, err = c.GetDeviceType(toReturn.Type.ID)
 	if err != nil {
