@@ -61,3 +61,23 @@ type uiconfig struct {
 	Rev string `json:"_rev",omitempty`
 	*structs.UIConfig
 }
+
+type icons struct {
+	Rev      string   `json:"_rev",omitempty`
+	iconList []string `json:"icons"`
+}
+
+type deviceRoles struct {
+	Rev      string   `json:"_rev",omitempty`
+	roleList []string `json:"roles"`
+}
+
+type roomDesignations struct {
+	Rev       string   `json:"_rev",omitempty`
+	desigList []string `json:"designations"`
+}
+
+type tags struct {
+	Rev     string   `json:"_rev",omitempty`
+	tagList []string `json:"tags"`
+}

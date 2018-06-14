@@ -14,16 +14,16 @@ type Device struct {
 	Address     string     `json:"address"`
 	Description string     `json:"description"`
 	DisplayName string     `json:"display_name"`
-	Type        DeviceType `json:"type"`
+	Type        DeviceType `json:"type,omitempty"`
 	Roles       []Role     `json:"roles"`
 	Ports       []Port     `json:"ports"`
 	Tags        []string   `json:"tags"`
 }
 
-var deviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
+var DeviceIDValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
 
 func (d *Device) Validate() error {
-	vals := deviceValidationRegex.FindStringSubmatch(d.ID)
+	vals := DeviceIDValidationRegex.FindStringSubmatch(d.ID)
 	if len(vals) == 0 {
 		return errors.New("invalid device: inproper id. must match `([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`")
 	}

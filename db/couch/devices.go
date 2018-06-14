@@ -23,6 +23,10 @@ func (c *CouchDB) getDevice(id string) (device, error) {
 		return toReturn, errors.New(fmt.Sprintf("failed to get device %s: %s", id, err))
 	}
 
+	if len(toReturn.ID) == 0 {
+		return toReturn, errors.New(fmt.Sprintf("failed to get device %s: %s", id, err))
+	}
+
 	// get its device type
 	toReturn.Type, err = c.GetDeviceType(toReturn.Type.ID)
 	if err != nil {
@@ -185,7 +189,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 		}
 	}
 
-	// the device document shoudl only include the type ID
+	// the device document should only include the type ID
 	toAdd.Type = structs.DeviceType{ID: deviceType.ID}
 
 	// check that each of the ports are valid
@@ -225,7 +229,7 @@ func (c *CouchDB) DeleteDevice(id string) error {
 	// get the device to delete
 	device, err := c.getDevice(id)
 	if err != nil {
-		return errors.New(fmt.Sprintf("failed to get devcie %s to delete: %s", id, err))
+		return errors.New(fmt.Sprintf("failed to get device %s to delete: %s", id, err))
 	}
 
 	// delete the device

@@ -176,7 +176,7 @@ func (c *CouchDB) UpdateBuilding(id string, building structs.Building) (structs.
 		if err != nil {
 			return toReturn, errors.New(fmt.Sprintf("failed to update building %s: %s", id, err))
 		}
-	} else { // the builiding ID is changing :|
+	} else { // the building ID is changing :|
 		// get rooms that are in the building
 		rooms, err := c.GetRoomsByBuilding(id)
 		if err != nil {
