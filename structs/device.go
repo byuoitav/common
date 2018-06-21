@@ -20,10 +20,10 @@ type Device struct {
 	Tags        []string   `json:"tags"`
 }
 
-var deviceValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
+var DeviceIDValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
 
 func (d *Device) Validate() error {
-	vals := deviceValidationRegex.FindStringSubmatch(d.ID)
+	vals := DeviceIDValidationRegex.FindStringSubmatch(d.ID)
 	if len(vals) == 0 {
 		return errors.New("invalid device: inproper id. must match `([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`")
 	}
