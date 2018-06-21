@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -11,6 +12,7 @@ import (
 
 // GetTemplate returns a template UIConfig.
 func (c *CouchDB) GetTemplate(id string) (structs.UIConfig, error) {
+	log.L.Info(id)
 	template, err := c.getTemplate(id)
 	return *template.UIConfig, err
 }
@@ -98,7 +100,7 @@ func (c *CouchDB) deleteTemplate(id string) error {
 // GetIcons returns a list of IOConfigurations.
 func (c *CouchDB) GetIcons() ([]string, error) {
 	i, err := c.getIcons()
-	return i.iconList, err
+	return i.IconList, err
 }
 
 func (c *CouchDB) getIcons() (icons, error) {
@@ -113,8 +115,8 @@ func (c *CouchDB) getIcons() (icons, error) {
 }
 
 // UpdateIcons puts an updated list of icons in the database.
-func (c *CouchDB) UpdateIcons(iconList []structs.IOConfiguration) ([]structs.IOConfiguration, error) {
-	var toReturn []structs.IOConfiguration
+func (c *CouchDB) UpdateIcons(iconList []string) ([]string, error) {
+	var toReturn []string
 
 	// get the rev of the icon list
 	oldList, err := c.getIcons()
@@ -142,7 +144,7 @@ func (c *CouchDB) UpdateIcons(iconList []structs.IOConfiguration) ([]structs.IOC
 // GetDeviceRoles returns a list of the device roles.
 func (c *CouchDB) GetDeviceRoles() ([]string, error) {
 	roles, err := c.getDeviceRoles()
-	return roles.roleList, err
+	return roles.RoleList, err
 }
 
 func (c *CouchDB) getDeviceRoles() (deviceRoles, error) {
@@ -186,7 +188,7 @@ func (c *CouchDB) UpdateDeviceRoles(roles []string) ([]string, error) {
 // GetRoomDesignations returns a list of the device roles.
 func (c *CouchDB) GetRoomDesignations() ([]string, error) {
 	d, err := c.getRoomDesignations()
-	return d.desigList, err
+	return d.DesigList, err
 }
 
 func (c *CouchDB) getRoomDesignations() (roomDesignations, error) {
@@ -230,7 +232,7 @@ func (c *CouchDB) UpdateRoomDesignations(desigs []string) ([]string, error) {
 // GetTags returns a list of the device roles.
 func (c *CouchDB) GetTags() ([]string, error) {
 	t, err := c.getTags()
-	return t.tagList, err
+	return t.TagList, err
 }
 
 func (c *CouchDB) getTags() (tags, error) {

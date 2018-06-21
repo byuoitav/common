@@ -58,6 +58,18 @@ type DB interface {
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
 
+	/* Options Functions */
+	GetTemplate(id string) (structs.UIConfig, error)
+	UpdateTemplate(id string, newTemp structs.UIConfig) (structs.UIConfig, error)
+	GetIcons() ([]string, error)
+	UpdateIcons(iconList []string) ([]string, error)
+	GetDeviceRoles() ([]string, error)
+	UpdateDeviceRoles(roles []string) ([]string, error)
+	GetRoomDesignations() ([]string, error)
+	UpdateRoomDesignations(desigs []string) ([]string, error)
+	GetTags() ([]string, error)
+	UpdateTags(newTags []string) ([]string, error)
+
 	GetAuth() (structs.Auth, error)
 }
 

@@ -64,20 +64,20 @@ type uiconfig struct {
 
 type icons struct {
 	Rev      string   `json:"_rev",omitempty`
-	iconList []string `json:"icons"`
+	IconList []string `json:"Icons"`
 }
 
 type deviceRoles struct {
 	Rev      string   `json:"_rev",omitempty`
-	roleList []string `json:"roles"`
+	RoleList []string `json:"roles"`
 }
 
 type roomDesignations struct {
 	Rev       string   `json:"_rev",omitempty`
-	desigList []string `json:"designations"`
+	DesigList []string `json:"designations"`
 }
 
 type tags struct {
 	Rev     string   `json:"_rev",omitempty`
-	tagList []string `json:"tags"`
+	TagList []string `json:"tags"`
 }
