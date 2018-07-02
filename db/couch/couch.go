@@ -6,9 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
+
+	"github.com/byuoitav/common/log"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 	ROOM_CONFIGURATIONS = "room_configurations"
 	UI_CONFIGS          = "ui-configuration"
 	OPTIONS             = "options"
-	ICONS               = "IconMap"
+	ICONS               = "Icons"
 	ROLES               = "DeviceRoles"
 	ROOM_DESIGNATIONS   = "RoomDesignations"
 	TAGS                = "Tags"
@@ -74,7 +75,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 
 	if resp.StatusCode/100 != 2 {
-		log.Printf("Non-200 response")
+		log.L.Info("Non-200 response")
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
@@ -90,7 +91,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, toFill)
 	if err != nil {
-		log.Printf("Can't unmarshal %v", err.Error())
+		log.L.Infof("Can't unmarshal %v", err.Error())
 		//check to see if it was a known error from couch
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)

@@ -123,9 +123,9 @@ func (ps *PowerState) Validate() error {
 
 type Port struct {
 	ID                string   `json:"_id"`
-	FriendlyName      string   `json:"friendly-name,omitempty"`
-	SourceDevice      string   `json:"source-device,omitempty"`
-	DestinationDevice string   `json:"destination-device,omitempty"`
+	FriendlyName      string   `json:"friendly_name,omitempty"`
+	SourceDevice      string   `json:"source_device,omitempty"`
+	DestinationDevice string   `json:"destination_device,omitempty"`
 	Description       string   `json:"description,omitempty"`
 	Tags              []string `json:"tags"`
 }
