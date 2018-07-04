@@ -15,15 +15,6 @@ import (
 	cas "gopkg.in/cas.v2"
 )
 
-/*
-	JWTConfig is the default jwt config object to use in an echo middlware using syntax:
-	router.Group("", middlware.JWTWithConfig(auth.JWTConfig))
-
-	To access the information stored in the JWT  use something like:
-	claims, ok := context.Get("client").(*jwt.Token).Claims.(jwt.MapClaims)
-
-	Where `claims` will reutrn a key value string of claims validated by the JWT.
-*/
 var JWTConfig middleware.JWTConfig
 var JWTTTL int
 
@@ -40,6 +31,19 @@ func init() {
 	}
 }
 
+/*
+	AuthenticateUser uses CAS/JWT authentication to authenticate a user
+	To access the information stored in the JWT  use something like:
+	claims, ok := context.Request().Context().Value("client").(*jwt.Token).Claims.(jwt.MapClaims)
+
+	Where `claims` will reutrn a key value string of claims validated by the JWT.
+
+	Included in the context will also be the set groups the user is a part of under the key "user-groups"
+	groups, ok := context.Request().Context().Value("user-groups").(map[string]bool)
+
+	the user will also be available in the context
+	groups, ok := context.Request().Context().Value("user").(string)
+*/
 func AuthenticateUser(next http.Handler) http.Handler {
 	url, _ := url.Parse("https://cas.byu.edu/cas")
 	c := cas.NewClient(&cas.Options{
