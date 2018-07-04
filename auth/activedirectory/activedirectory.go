@@ -7,8 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	"gopkg.in/ldap.v2"
 )
 
 var ldapUsername string
@@ -37,7 +35,6 @@ func init() {
 
 func GetGroupsForUser(user string) ([]string, error) {
 	var groups []string
-
 	// connect to ldap server
 	l, err := ldap.Dial("tcp", ldapURL)
 	if err != nil {
@@ -82,7 +79,6 @@ func GetGroupsForUser(user string) ([]string, error) {
 			break
 		}
 	}
-
 	return groups, nil
 }
 
