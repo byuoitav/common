@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	ldap "gopkg.in/ldap.v2"
 )
 
 var ldapUsername string
