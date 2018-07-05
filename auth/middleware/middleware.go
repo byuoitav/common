@@ -21,7 +21,7 @@ var JWTTTL int
 var signingKey []byte
 
 func init() {
-	JWTTTL = 60
+	JWTTTL = 604800 //one week
 	if len(os.Getenv("JWT_SIGNING_TOKEN")) < 1 {
 		log.L.Infof("No JWT signing token defined, autogenerating...")
 		signingKey = make([]byte, 64)
