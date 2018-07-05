@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,22 +18,32 @@ import (
 
 var JWTConfig middleware.JWTConfig
 var JWTTTL int
+var signingKey []byte
 
 func init() {
 	JWTTTL = 60
 	if len(os.Getenv("JWT_SIGNING_TOKEN")) < 1 {
-		log.L.Fatalf("No JWT signing token specified, but using user based authentication. set JWT_SIGNING_TOKEN variable.")
-	}
-	JWTConfig = middleware.JWTConfig{
-		SigningKey:  os.Getenv("JWT_SIGNING_TOKEN"),
-		ContextKey:  "client",
-		TokenLookup: "header:Authorization",
-		AuthScheme:  "Cookie",
+		log.L.Infof("No JWT signing token defined, autogenerating...")
+		signingKey = make([]byte, 64)
+		_, err := rand.Read(signingKey)
+		if err != nil {
+			log.L.Fatalf("Couldn't autogenerate key: %v", err.Error())
+		}
+		log.L.Infof("Done.")
+	} else {
+		log.L.Infof("Using provided JWT signing token.")
+		signingKey = []byte(os.Getenv("JWT_SIGNING_TOKEN"))
 	}
 }
 
 /*
-	AuthenticateUser uses CAS/JWT authentication to authenticate a user
+	AuthenticateUser uses CAS/JWT authentication to authenticate a user, flow is:
+
+	1. Check for valid, unexpired JWT.
+	2. Check to see if request is authenticated with CAS
+	3. If no - redirect to CAS login
+	4. If valid CAS authentication, issue a JWT token, storing it in a cookie.
+
 	To access the information stored in the JWT  use something like:
 	claims, ok := context.Request().Context().Value("client").(*jwt.Token).Claims.(jwt.MapClaims)
 
@@ -44,7 +55,7 @@ func init() {
 	the user will also be available in the context
 	groups, ok := context.Request().Context().Value("user").(string)
 */
-func AuthenticateUser(next http.Handler) http.Handler {
+func AuthenticateCASUser(next http.Handler) http.Handler {
 	url, _ := url.Parse("https://cas.byu.edu/cas")
 	c := cas.NewClient(&cas.Options{
 		URL: url,
@@ -62,7 +73,7 @@ func AuthenticateUser(next http.Handler) http.Handler {
 				if T.Method.Alg() != "HS256" {
 					return "", fmt.Errorf("Invalid signing method %v", T.Method.Alg())
 				}
-				return []byte(os.Getenv("JWT_SIGNING_TOKEN")), nil
+				return []byte(signingKey), nil
 			})
 
 			//token was valid, check the expiration time.
@@ -79,7 +90,8 @@ func AuthenticateUser(next http.Handler) http.Handler {
 						if !t.Before(time.Now()) {
 							//add the claims info to the context and pass the request on
 							log.L.Debugf("Valid token. Adding client claims to context.")
-							ctx := context.WithValue(r.Context(), "client", token)
+
+							ctx := generateContext(r, token, token.Claims.(jwt.MapClaims)["usr"].(string))
 							next.ServeHTTP(w, r.WithContext(ctx))
 							return
 						}
@@ -107,7 +119,7 @@ func AuthenticateUser(next http.Handler) http.Handler {
 			"usr": user,
 		})
 
-		tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SIGNING_TOKEN")))
+		tokenString, err := token.SignedString([]byte(signingKey))
 		if err != nil {
 			log.L.Errorf("Couldn't sign JWT: %v", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -129,7 +141,19 @@ func AuthenticateUser(next http.Handler) http.Handler {
 		log.L.Debugf("Setting cookie")
 		http.SetCookie(w, &cook)
 
-		next.ServeHTTP(w, r)
+		ctx := generateContext(r, token, user)
+
+		//add values to the context
+		next.ServeHTTP(w, r.WithContext(ctx))
 		return
 	})
+}
+
+//given the user and client token, we'll get all the groups that the user is a part of and include that in the context.
+func generateContext(r *http.Request, clientToken *jwt.Token, username string) context.Context {
+	ctx := context.WithValue(r.Context(), "client", clientToken)
+	ctx = context.WithValue(ctx, "user", username)
+
+	//Get the user groups
+	return ctx
 }

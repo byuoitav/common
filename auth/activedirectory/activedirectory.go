@@ -1,28 +1,36 @@
 package activedirectory
 
 import (
-	"crypto/tls"
-	"errors"
 	"fmt"
-	"log"
 	"os"
+	"strconv"
 	"strings"
 
-	ldap "gopkg.in/ldap.v2"
+	"github.com/byuoitav/common/log"
+	"github.com/byuoitav/common/nerr"
+	"github.com/mavricknz/ldap"
 )
 
 var ldapUsername string
 var ldapPassword string
 var ldapURL string
+var ldapPort int
 var userSearch strings.Builder
 
 func init() {
 	ldapUsername = os.Getenv("LDAP_USERNAME")
 	ldapPassword = os.Getenv("LDAP_PASSWORD")
 	ldapURL = os.Getenv("LDAP_URL")
+	tempLdapPort := os.Getenv("LDAP_PORT")
 
-	if len(ldapUsername) == 0 || len(ldapPassword) == 0 || len(ldapURL) == 0 {
-		log.Fatalf("LDAP username, password, or URL not set.")
+	if len(ldapUsername) == 0 || len(ldapPassword) == 0 || len(ldapURL) == 0 || len(tempLdapPort) == 0 {
+		log.L.Fatalf("LDAP username, password, port or URL not set.")
+	}
+	var err error
+
+	ldapPort, err = strconv.Atoi(tempLdapPort)
+	if err != nil {
+		log.L.Fatalf("Couldn't parse %v for a valid port number.", tempLdapPort)
 	}
 
 	// build the user search string
@@ -35,53 +43,54 @@ func init() {
 	}
 }
 
-func GetGroupsForUser(user string) ([]string, error) {
-	var groups []string
-	// connect to ldap server
-	l, err := ldap.Dial("tcp", ldapURL)
-	if err != nil {
-		return groups, errors.New(fmt.Sprintf("unable to get groups: %s", err))
-	}
-	defer l.Close()
+func GetGroupsForUser(user string) ([]string, *nerr.E) {
+	groups := []string{}
+	conn := ldap.NewLDAPConnection(
+		ldapURL,
+		uint16(ldapPort),
+	)
 
-	// connect with tls
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+	err := conn.Connect()
 	if err != nil {
-		return groups, errors.New(fmt.Sprintf("unable to connect to active directory with tls: %s", err))
+		return groups, nerr.Translate(err).Addf("Couldn't connect to ldap server")
 	}
-
-	// bind with user/pass
-	err = l.Bind(ldapUsername, ldapPassword)
+	defer conn.Close()
+	err = conn.Bind(ldapUsername, ldapPassword)
 	if err != nil {
-		return groups, errors.New(fmt.Sprintf("unable to bind username/password to ldap connection: %s", err))
-	}
+		return groups, nerr.Translate(err).Addf("Couldn't bind to ldap server")
 
-	// build the search request
-	searchRequest := ldap.NewSearchRequest(
-		userSearch.String(),
+	}
+	search := ldap.NewSearchRequest(
+		"ou=people,dc=byu,dc=local",
 		ldap.ScopeWholeSubtree,
 		ldap.DerefAlways,
 		0,
 		0,
 		false,
-		fmt.Sprintf("(name=%s)", user),
-		[]string{"name", "memberOf"},
+		fmt.Sprintf("(Name=%s)", user),
+		[]string{"Name", "MemberOf"},
 		nil,
 	)
-
-	sr, err := l.Search(searchRequest)
+	res, err := conn.Search(search)
 	if err != nil {
-		return groups, errors.New(fmt.Sprintf("failed to search ldap: %s", err))
+		return groups, nerr.Translate(err).Addf("Couldn't search ldap server")
 	}
 
-	for _, entry := range sr.Entries {
-		if strings.EqualFold(user, entry.GetAttributeValue("name")) {
-			tmp := entry.GetAttributeValues("memberOf")
-			groups = translateAttributes(tmp)
-			break
+	//log.L.Debugf("%v", res)
+
+	//verify name
+	for i := 0; i < len(res.Entries); i++ {
+		name := res.Entries[i].GetAttributeValue("Name")
+		if name != user {
+			continue
 		}
+
+		groupsTemp := res.Entries[0].GetAttributeValues("MemberOf")
+		groups = translateAttributes(groupsTemp)
 	}
+
 	return groups, nil
+
 }
 
 func translateAttributes(attributes []string) []string {
