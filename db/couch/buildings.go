@@ -89,7 +89,7 @@ func (c *CouchDB) CreateBuilding(toAdd structs.Building) (structs.Building, erro
 
 	// post new building
 	var resp CouchUpsertResponse
-	err = c.MakeRequest("POST", BUILDINGS, "", b, &resp)
+	err = c.MakeRequest("POST", BUILDINGS, "application/json", b, &resp)
 	if err != nil {
 		if _, ok := err.(*Conflict); ok { // a building with the same ID already exists
 			return toReturn, errors.New(fmt.Sprintf("building already exists, please update this building or change id's. error: %s", err))

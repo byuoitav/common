@@ -253,16 +253,37 @@ func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device
 		return toReturn, err
 	}
 
-	// delete the old struct
-	err = c.DeleteDevice(id)
-	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", id, err))
-	}
+	if id == device.ID { // the device ID isn't changing
+		// get the rev of the device
+		dev, err := c.getDevice(id)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to get device %s to update: %s", id, err))
+		}
 
-	// create new version of device
-	toReturn, err = c.CreateDevice(device)
-	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", device.ID, err))
+		// marshal the new device
+		b, err := json.Marshal(device)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("unable to unmarshal new device: %s", err))
+		}
+
+		// update the device
+		err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", DEVICES, id, dev.Rev), "application/json", b, &toReturn)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", id, err))
+		}
+
+	} else {
+		// delete the old struct
+		err = c.DeleteDevice(id)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", id, err))
+		}
+
+		// create new version of device
+		toReturn, err = c.CreateDevice(device)
+		if err != nil {
+			return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", device.ID, err))
+		}
 	}
 
 	return toReturn, err
