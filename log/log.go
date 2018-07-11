@@ -14,7 +14,6 @@ var cfg zap.Config
 var atom zap.AtomicLevel
 
 func init() {
-
 	atom = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 
 	cfg = zap.NewDevelopmentConfig()
@@ -34,7 +33,6 @@ func init() {
 
 	L = l.Sugar()
 	L.Info("Zap Logger Started")
-
 }
 
 func SetLevel(level string) *nerr.E {
