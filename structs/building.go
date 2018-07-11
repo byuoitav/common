@@ -6,7 +6,7 @@ type Building struct {
 	ID          string   `json:"_id"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (b *Building) Validate() error {

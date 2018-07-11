@@ -57,9 +57,11 @@ type DB interface {
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
+	GetRoomsByBuilding(id string) ([]structs.Room, error)
 
 	/* Options Functions */
 	GetTemplate(id string) (structs.UIConfig, error)
+	GetAllTemplates() ([]structs.Template, error)
 	UpdateTemplate(id string, newTemp structs.UIConfig) (structs.UIConfig, error)
 	GetIcons() ([]string, error)
 	UpdateIcons(iconList []string) ([]string, error)

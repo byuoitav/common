@@ -17,7 +17,7 @@ type Device struct {
 	Type        DeviceType `json:"type,omitempty"`
 	Roles       []Role     `json:"roles"`
 	Ports       []Port     `json:"ports"`
-	Tags        []string   `json:"tags"`
+	Tags        []string   `json:"tags,omitempty"`
 }
 
 var DeviceIDValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
@@ -28,7 +28,7 @@ func (d *Device) Validate() error {
 		return errors.New("invalid device: inproper id. must match `([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`")
 	}
 
-	if len(d.Name) < 3 {
+	if len(d.Name) < 2 {
 		return errors.New("invalid device: name must be at least 3 characters long.")
 	}
 
@@ -82,7 +82,7 @@ type DeviceType struct {
 	Ports       []Port       `json:"ports,omitempty"`
 	PowerStates []PowerState `json:"power-states,omitempty"`
 	Commands    []Command    `json:"commands,omitempty"`
-	Tags        []string     `json:"tags"`
+	Tags        []string     `json:"tags,omitempty"`
 }
 
 func (dt *DeviceType) Validate(deepCheck bool) error {
@@ -111,7 +111,7 @@ func (dt *DeviceType) Validate(deepCheck bool) error {
 type PowerState struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (ps *PowerState) Validate() error {
@@ -127,7 +127,7 @@ type Port struct {
 	SourceDevice      string   `json:"source_device,omitempty"`
 	DestinationDevice string   `json:"destination_device,omitempty"`
 	Description       string   `json:"description,omitempty"`
-	Tags              []string `json:"tags"`
+	Tags              []string `json:"tags,omitempty"`
 }
 
 func (p *Port) Validate() error {
@@ -139,8 +139,8 @@ func (p *Port) Validate() error {
 
 type Role struct {
 	ID          string   `json:"_id"`
-	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
+	Description string   `json:"description,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (r *Role) Validate() error {
@@ -156,7 +156,7 @@ type Command struct {
 	Microservice Microservice `json:"microservice"`
 	Endpoint     Endpoint     `json:"endpoint"`
 	Priority     int          `json:"priority"`
-	Tags         []string     `json:"tags"`
+	Tags         []string     `json:"tags,omitempty"`
 }
 
 func (c *Command) Validate() error {
@@ -180,7 +180,7 @@ type Microservice struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
 	Address     string   `json:"address"`
-	Tags        []string `json:"tags"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (m *Microservice) Validate() error {
@@ -199,7 +199,7 @@ type Endpoint struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
 	Path        string   `json:"path"`
-	Tags        []string `json:"tags"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (e *Endpoint) Validate() error {

@@ -57,3 +57,9 @@ type PseudoInput struct {
 		Outputs []string `json:"outputs"`
 	} `json:"config"`
 }
+
+type Template struct {
+	ID       string   `json:"_id"`
+	UIConfig UIConfig `json:"uiconfig"`
+	Devices  []Device `json:"devices"`
+}

@@ -57,7 +57,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 
 	// add headers
 	if len(contentType) > 0 {
-		req.Header.Add("content-type", contentType)
+		req.Header.Add("Content-Type", contentType)
 	}
 	req.Header.Add("accept", "application/json")
 
@@ -81,6 +81,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 		if err != nil {
 			return errors.New(fmt.Sprintf("received a non-200 response from %v. Body: %s", url, b))
 		}
+		log.L.Error(ce)
 		return CheckCouchErrors(ce)
 	}
 

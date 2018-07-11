@@ -13,7 +13,7 @@ type Room struct {
 	Configuration RoomConfiguration `json:"configuration"`
 	Designation   string            `json:"designation"`
 	Devices       []Device          `json:"devices,omitempty"`
-	Tags          []string          `json:"tags"`
+	Tags          []string          `json:"tags,omitempty"`
 }
 
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
@@ -43,7 +43,7 @@ type RoomConfiguration struct {
 	ID          string      `json:"_id"`
 	Evaluators  []Evaluator `json:"evaluators,omitempty"`
 	Description string      `json:"description,omitempty"`
-	Tags        []string    `json:"tags"`
+	Tags        []string    `json:"tags,omitempty"`
 }
 
 func (rc *RoomConfiguration) Validate(deepCheck bool) error {
@@ -71,7 +71,7 @@ type Evaluator struct {
 	CodeKey     string   `json:"codekey,omitempty"`
 	Description string   `json:"description,omitempty"`
 	Priority    int      `json:"priority,omitempty"`
-	Tags        []string `json:"tags"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (e *Evaluator) Validate() error {
