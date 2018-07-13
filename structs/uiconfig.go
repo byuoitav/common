@@ -59,7 +59,8 @@ type PseudoInput struct {
 }
 
 type Template struct {
-	ID       string   `json:"_id"`
-	UIConfig UIConfig `json:"uiconfig"`
-	Devices  []Device `json:"devices"`
+	ID          string   `json:"_id"`
+	Description string   `json:"description"`
+	UIConfig    UIConfig `json:"uiconfig"`
+	Devices     []Device `json:"devices"`
 }

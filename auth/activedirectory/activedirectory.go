@@ -29,7 +29,7 @@ func GetGroupsForUser(user string) ([]string, *nerr.E) {
 	// connect to ldap server
 	l, err := ldap.Dial("tcp", ldapURL)
 	if err != nil {
-		return groups, nerr.Translte(err).Addf("Unable to dial LDAP to get groups.")
+		return groups, nerr.Translate(err).Addf("Unable to dial LDAP to get groups.")
 	}
 	defer l.Close()
 
