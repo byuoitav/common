@@ -365,6 +365,7 @@ func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.De
 	return toReturn, nil
 }
 
+// CreateBulkDevices does validating and adding for a list of devices to be added to the database.
 func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpdateResponse {
 	var toReturn []structs.BulkUpdateResponse
 	checkedRooms := make(map[string]bool)
@@ -385,6 +386,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 		err := device.Validate()
 		if err != nil {
 			response.Message = err.Error()
+			toReturn = append(toReturn, response)
 			continue
 		}
 
@@ -394,6 +396,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 		valid, ok := checkedRooms[roomID]
 		if ok && !valid {
 			response.Message = fmt.Sprintf("room %s doesn't exist", roomID)
+			toReturn = append(toReturn, response)
 			continue
 		}
 
@@ -402,11 +405,13 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 			if err != nil {
 				if _, ok := err.(*NotFound); ok {
 					response.Message = fmt.Sprintf("room %s doesn't exist", roomID)
+					toReturn = append(toReturn, response)
 					checkedRooms[roomID] = false
 					continue
 				}
 
 				response.Message = err.Error()
+				toReturn = append(toReturn, response)
 				checkedRooms[roomID] = false
 				continue
 			}
@@ -418,22 +423,25 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 		valid, ok = checkedTypes[device.Type.ID]
 		if ok && !valid {
 			response.Message = fmt.Sprintf("device type %s doesn't exist", device.Type.ID)
+			toReturn = append(toReturn, response)
 			continue
 		}
 
 		if !ok {
-			deviceType, err := c.GetDeviceType(device.Type.ID)
+			_, err := c.GetDeviceType(device.Type.ID)
 			if err != nil {
 				if _, ok := err.(*NotFound); ok { // device type doesn't exist
 					// try to create device type
-					deviceType, err = c.CreateDeviceType(device.Type)
+					_, err := c.CreateDeviceType(device.Type)
 					if err != nil {
 						response.Message = fmt.Sprintf("device type %s doesn't exist yet, and not enough information was included to create it. (error: %s)", err)
+						toReturn = append(toReturn, response)
 						checkedTypes[device.Type.ID] = false
 						continue
 					}
 				} else { // unknown error getting device type
 					response.Message = err.Error()
+					toReturn = append(toReturn, response)
 					checkedTypes[device.Type.ID] = false
 					continue
 				}
@@ -451,6 +459,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 				if !validPortIDs[port.SourceDevice] {
 					if _, err := c.GetDevice(port.SourceDevice); err != nil {
 						response.Message = fmt.Sprintf("invalid port %v. source device %s doesn't exist, create it before adding it to a port.", port.ID, port.SourceDevice)
+						toReturn = append(toReturn, response)
 						break
 					}
 				}
@@ -460,6 +469,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 				if !validPortIDs[port.DestinationDevice] {
 					if _, err := c.GetDevice(port.DestinationDevice); err != nil {
 						response.Message = fmt.Sprintf("invalid port %v. destination device %s doesn't exist, create it before adding it to a port.", port.ID, port.DestinationDevice)
+						toReturn = append(toReturn, response)
 						break
 					}
 				}
@@ -467,6 +477,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 		}
 
 		if len(response.Message) > 0 {
+			toReturn = append(toReturn, response)
 			continue
 		}
 
@@ -474,6 +485,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 		b, err := json.Marshal(device)
 		if err != nil {
 			response.Message = fmt.Sprintf("failed to marshal: %s", err)
+			toReturn = append(toReturn, response)
 			continue
 		}
 
@@ -483,14 +495,17 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 		if err != nil {
 			if _, ok := err.(*Conflict); ok { // device with same id already in database
 				response.Message = fmt.Sprintf("unable to create device, because it already exists. error: %s", err)
+				toReturn = append(toReturn, response)
 				continue
 			}
 
 			response.Message = err.Error()
+			toReturn = append(toReturn, response)
 			continue
 		}
 
 		response.Success = true
+		toReturn = append(toReturn, response)
 	}
 
 	return toReturn
