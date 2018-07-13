@@ -10,6 +10,34 @@ import (
 
 // TEMPLATES
 
+// GetAllTemplates returns a list of all the room Templates in the database.
+func (c *CouchDB) GetAllTemplates() ([]structs.Template, error) {
+	var toReturn []structs.Template
+	var query IDPrefixQuery
+	query.Selector.ID.GT = "\x00"
+	query.Limit = 100
+
+	b, err := json.Marshal(query)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to marshal query to get all templates: %s", err)
+	}
+
+	var resp templateQueryResponse
+
+	err = c.MakeRequest("POST", fmt.Sprintf("%v/_find", OPTIONS), "application/json", b, &resp)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to get all templates: %s", err)
+	}
+
+	for _, doc := range resp.Docs {
+		if len(doc.Template.UIConfig.Api) > 0 {
+			toReturn = append(toReturn, *doc.Template)
+		}
+	}
+
+	return toReturn, err
+}
+
 // GetTemplate returns a template UIConfig.
 func (c *CouchDB) GetTemplate(id string) (structs.UIConfig, error) {
 	log.L.Info(id)

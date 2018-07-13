@@ -2,7 +2,6 @@ package couch
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -20,17 +19,17 @@ func (c *CouchDB) getDevice(id string) (device, error) {
 	// get the device
 	err := c.MakeRequest("GET", fmt.Sprintf("%s/%v", DEVICES, id), "", nil, &toReturn)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get device %s: %s", id, err))
+		return toReturn, fmt.Errorf("failed to get device %s: %s", id, err)
 	}
 
 	if len(toReturn.ID) == 0 {
-		return toReturn, errors.New(fmt.Sprintf("failed to get device %s: %s", id, err))
+		return toReturn, fmt.Errorf("failed to get device %s: %s", id, err)
 	}
 
 	// get its device type
 	toReturn.Type, err = c.GetDeviceType(toReturn.Type.ID)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get device type (%s) to get device %s: %s", toReturn.Type.ID, id, err))
+		return toReturn, fmt.Errorf("failed to get device type (%s) to get device %s: %s", toReturn.Type.ID, id, err)
 	}
 
 	return toReturn, err
@@ -42,21 +41,21 @@ func (c *CouchDB) getDevicesByQuery(query IDPrefixQuery, includeType bool) ([]de
 	// marshal query
 	b, err := json.Marshal(query)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to marshal devices query: %s", err))
+		return toReturn, fmt.Errorf("failed to marshal devices query: %s", err)
 	}
 
 	// make query for devices
 	var resp deviceQueryResponse
 	err = c.MakeRequest("POST", fmt.Sprintf("%s/_find", DEVICES), "application/json", b, &resp)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to query devices: %s", err))
+		return toReturn, fmt.Errorf("failed to query devices: %s", err)
 	}
 
 	if includeType {
 		// get all types
 		types, err := c.GetAllDeviceTypes()
 		if err != nil {
-			return toReturn, errors.New(fmt.Sprintf("failed to get devices types for devices query:%s", err))
+			return toReturn, fmt.Errorf("failed to get devices types for devices query:%s", err)
 		}
 
 		// make a map of type.ID -> type
@@ -90,7 +89,7 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	// query devices
 	devices, err := c.getDevicesByQuery(query, false)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed getting all devices: %s", err))
+		return toReturn, fmt.Errorf("failed getting all devices: %s", err)
 	}
 
 	// get the struct out of each device
@@ -128,7 +127,7 @@ func (c *CouchDB) getDevicesByRoom(roomID string) ([]device, error) {
 	// query devices
 	toReturn, err := c.getDevicesByQuery(query, true)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed getting devices in room %s: %s", roomID, err))
+		return toReturn, fmt.Errorf("failed getting devices in room %s: %s", roomID, err)
 	}
 
 	return toReturn, nil
@@ -169,10 +168,10 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	_, err = c.GetRoom(roomID)
 	if err != nil {
 		if _, ok := err.(*NotFound); ok {
-			return toReturn, errors.New(fmt.Sprintf("unable to create device %s: room %s doesn't exist.", toAdd.ID, roomID))
+			return toReturn, fmt.Errorf("unable to create device %s: room %s doesn't exist.", toAdd.ID, roomID)
 		}
 
-		return toReturn, errors.New(fmt.Sprintf("unable to validate device %s is in a real room: %s", toAdd.ID, err))
+		return toReturn, fmt.Errorf("unable to validate device %s is in a real room: %s", toAdd.ID, err)
 	}
 
 	// validate device type
@@ -182,10 +181,10 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 			// try to create device type
 			deviceType, err = c.CreateDeviceType(toAdd.Type)
 			if err != nil {
-				return toReturn, errors.New(fmt.Sprintf("attempting to create a device with a non-existant device type, but not enough information is included to create the type. (error: %s)", err))
+				return toReturn, fmt.Errorf("attempting to create a device with a non-existant device type, but not enough information is included to create the type. (error: %s)", err)
 			}
 		} else { // unknown error getting device type
-			return toReturn, errors.New(fmt.Sprintf("unable to validate if device type %s exists or not: %s", toAdd.Type.ID, err))
+			return toReturn, fmt.Errorf("unable to validate if device type %s exists or not: %s", toAdd.Type.ID, err)
 		}
 	}
 
@@ -195,14 +194,14 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	// check that each of the ports are valid
 	for _, port := range toAdd.Ports {
 		if err = c.checkPort(port); err != nil {
-			return toReturn, errors.New(fmt.Sprintf("unable to create device: %s", err))
+			return toReturn, fmt.Errorf("unable to create device: %s", err)
 		}
 	}
 
 	// marshal the device
 	b, err := json.Marshal(toAdd)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to marshal device: %s", err))
+		return toReturn, fmt.Errorf("failed to marshal device: %s", err)
 	}
 
 	// post up device
@@ -210,16 +209,16 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	err = c.MakeRequest("POST", fmt.Sprintf("%v", DEVICES), "application/json", b, &resp)
 	if err != nil {
 		if _, ok := err.(*Conflict); ok { // device with same id already in database
-			return toReturn, errors.New(fmt.Sprintf("unable to create device, because it already exists. error: %s", err))
+			return toReturn, fmt.Errorf("unable to create device, because it already exists. error: %s", err)
 		}
 
-		return toReturn, errors.New(fmt.Sprintf("unknown error creating device %s: %s", toAdd.ID, err))
+		return toReturn, fmt.Errorf("unknown error creating device %s: %s", toAdd.ID, err)
 	}
 
 	// return the device that is in the database
 	toReturn, err = c.GetDevice(toAdd.ID)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("unable to get device %s: %s", toAdd.ID, err))
+		return toReturn, fmt.Errorf("unable to get device %s: %s", toAdd.ID, err)
 	}
 
 	return toReturn, nil
@@ -229,13 +228,13 @@ func (c *CouchDB) DeleteDevice(id string) error {
 	// get the device to delete
 	device, err := c.getDevice(id)
 	if err != nil {
-		return errors.New(fmt.Sprintf("failed to get device %s to delete: %s", id, err))
+		return fmt.Errorf("failed to get device %s to delete: %s", id, err)
 	}
 
 	// delete the device
 	err = c.MakeRequest("DELETE", fmt.Sprintf("%v/%v?rev=%v", DEVICES, device.ID, device.Rev), "", nil, nil)
 	if err != nil {
-		return errors.New(fmt.Sprintf("failed to delete device %s: %s", id, err))
+		return fmt.Errorf("failed to delete device %s: %s", id, err)
 	}
 
 	return nil
@@ -253,16 +252,37 @@ func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device
 		return toReturn, err
 	}
 
-	// delete the old struct
-	err = c.DeleteDevice(id)
-	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", id, err))
-	}
+	if id == device.ID { // the device ID isn't changing
+		// get the rev of the device
+		dev, err := c.getDevice(id)
+		if err != nil {
+			return toReturn, fmt.Errorf("unable to get device %s to update: %s", id, err)
+		}
 
-	// create new version of device
-	toReturn, err = c.CreateDevice(device)
-	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to update device %s: %s", device.ID, err))
+		// marshal the new device
+		b, err := json.Marshal(device)
+		if err != nil {
+			return toReturn, fmt.Errorf("unable to unmarshal new device: %s", err)
+		}
+
+		// update the device
+		err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", DEVICES, id, dev.Rev), "application/json", b, &toReturn)
+		if err != nil {
+			return toReturn, fmt.Errorf("failed to update device %s: %s", id, err)
+		}
+
+	} else {
+		// delete the old struct
+		err = c.DeleteDevice(id)
+		if err != nil {
+			return toReturn, fmt.Errorf("failed to update device %s: %s", id, err)
+		}
+
+		// create new version of device
+		toReturn, err = c.CreateDevice(device)
+		if err != nil {
+			return toReturn, fmt.Errorf("failed to update device %s: %s", device.ID, err)
+		}
 	}
 
 	return toReturn, err
@@ -272,14 +292,14 @@ func (c *CouchDB) checkPort(p structs.Port) error {
 	// check source port
 	if len(p.SourceDevice) > 0 {
 		if _, err := c.GetDevice(p.SourceDevice); err != nil {
-			return errors.New(fmt.Sprintf("invalid port %v. source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice))
+			return fmt.Errorf("invalid port %v. source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice)
 		}
 	}
 
 	// check desitnation port
 	if len(p.DestinationDevice) > 0 {
 		if _, err := c.GetDevice(p.DestinationDevice); err != nil {
-			return errors.New(fmt.Sprintf("invalid port %v. destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice))
+			return fmt.Errorf("invalid port %v. destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice)
 		}
 	}
 
@@ -292,7 +312,7 @@ func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device
 	// get all devices in room
 	devs, err := c.GetDevicesByRoom(roomID)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get devices by room and role: %s", err))
+		return toReturn, fmt.Errorf("failed to get devices by room and role: %s", err)
 	}
 
 	// go through the devices and check if they have the role indicated
@@ -312,7 +332,7 @@ func (c *CouchDB) GetDevicesByType(deviceType string) ([]structs.Device, error) 
 	// get all devices
 	devs, err := c.GetAllDevices()
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get devices by type: %s", err))
+		return toReturn, fmt.Errorf("failed to get devices by type: %s", err)
 	}
 
 	// filter for ones that have correct type
@@ -332,7 +352,7 @@ func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.De
 	// get all devices
 	devs, err := c.GetAllDevices()
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprintf("failed to get devices by role and type: %s", err))
+		return toReturn, fmt.Errorf("failed to get devices by role and type: %s", err)
 	}
 
 	// filter for ones that have the role and type
@@ -343,4 +363,150 @@ func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.De
 	}
 
 	return toReturn, nil
+}
+
+// CreateBulkDevices does validating and adding for a list of devices to be added to the database.
+func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpdateResponse {
+	var toReturn []structs.BulkUpdateResponse
+	checkedRooms := make(map[string]bool)
+	checkedTypes := make(map[string]bool)
+	validPortIDs := make(map[string]bool)
+
+	for i := range devices {
+		validPortIDs[devices[i].ID] = true
+	}
+
+	for _, device := range devices {
+		response := structs.BulkUpdateResponse{
+			ID:      device.ID,
+			Success: false,
+		}
+
+		// validate device struct
+		err := device.Validate()
+		if err != nil {
+			response.Message = err.Error()
+			toReturn = append(toReturn, response)
+			continue
+		}
+
+		// validate the room exists
+		split := strings.Split(device.ID, "-")
+		roomID := fmt.Sprintf("%s-%s", split[0], split[1])
+		valid, ok := checkedRooms[roomID]
+		if ok && !valid {
+			response.Message = fmt.Sprintf("room %s doesn't exist", roomID)
+			toReturn = append(toReturn, response)
+			continue
+		}
+
+		if !ok {
+			_, err = c.GetRoom(roomID)
+			if err != nil {
+				if _, ok := err.(*NotFound); ok {
+					response.Message = fmt.Sprintf("room %s doesn't exist", roomID)
+					toReturn = append(toReturn, response)
+					checkedRooms[roomID] = false
+					continue
+				}
+
+				response.Message = err.Error()
+				toReturn = append(toReturn, response)
+				checkedRooms[roomID] = false
+				continue
+			}
+
+			checkedRooms[roomID] = true // mark this room as having been checked so we don't do it again
+		}
+
+		// validate the device type
+		valid, ok = checkedTypes[device.Type.ID]
+		if ok && !valid {
+			response.Message = fmt.Sprintf("device type %s doesn't exist", device.Type.ID)
+			toReturn = append(toReturn, response)
+			continue
+		}
+
+		if !ok {
+			_, err := c.GetDeviceType(device.Type.ID)
+			if err != nil {
+				if _, ok := err.(*NotFound); ok { // device type doesn't exist
+					// try to create device type
+					_, err := c.CreateDeviceType(device.Type)
+					if err != nil {
+						response.Message = fmt.Sprintf("device type %s doesn't exist yet, and not enough information was included to create it. (error: %s)", err)
+						toReturn = append(toReturn, response)
+						checkedTypes[device.Type.ID] = false
+						continue
+					}
+				} else { // unknown error getting device type
+					response.Message = err.Error()
+					toReturn = append(toReturn, response)
+					checkedTypes[device.Type.ID] = false
+					continue
+				}
+
+				checkedTypes[device.Type.ID] = true
+			}
+		}
+
+		// clear out extra data in the device type
+		device.Type = structs.DeviceType{ID: device.Type.ID}
+
+		// check that the ports contain valid devices
+		for _, port := range device.Ports {
+			if len(port.SourceDevice) > 0 {
+				if !validPortIDs[port.SourceDevice] {
+					if _, err := c.GetDevice(port.SourceDevice); err != nil {
+						response.Message = fmt.Sprintf("invalid port %v. source device %s doesn't exist, create it before adding it to a port.", port.ID, port.SourceDevice)
+						toReturn = append(toReturn, response)
+						break
+					}
+				}
+			}
+
+			if len(port.DestinationDevice) > 0 {
+				if !validPortIDs[port.DestinationDevice] {
+					if _, err := c.GetDevice(port.DestinationDevice); err != nil {
+						response.Message = fmt.Sprintf("invalid port %v. destination device %s doesn't exist, create it before adding it to a port.", port.ID, port.DestinationDevice)
+						toReturn = append(toReturn, response)
+						break
+					}
+				}
+			}
+		}
+
+		if len(response.Message) > 0 {
+			toReturn = append(toReturn, response)
+			continue
+		}
+
+		// marshal the device
+		b, err := json.Marshal(device)
+		if err != nil {
+			response.Message = fmt.Sprintf("failed to marshal: %s", err)
+			toReturn = append(toReturn, response)
+			continue
+		}
+
+		// post it up
+		var resp CouchUpsertResponse
+		err = c.MakeRequest("POST", fmt.Sprintf("%v", DEVICES), "application/json", b, &resp)
+		if err != nil {
+			if _, ok := err.(*Conflict); ok { // device with same id already in database
+				response.Message = fmt.Sprintf("unable to create device, because it already exists. error: %s", err)
+				toReturn = append(toReturn, response)
+				continue
+			}
+
+			response.Message = err.Error()
+			toReturn = append(toReturn, response)
+			continue
+		}
+
+		response.Success = true
+		toReturn = append(toReturn, response)
+	}
+
+	return toReturn
 }

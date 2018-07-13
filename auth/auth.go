@@ -12,9 +12,9 @@ import (
 
 func VerifyRoleForUser(user, role string) (bool, error) {
 	// get groups that the user is in from active directory
-	groups, err := activedirectory.GetGroupsForUser(user)
-	if err != nil {
-		return false, errors.New(fmt.Sprintf("failed to get groups for user: %s", err))
+	groups, nerr := activedirectory.GetGroupsForUser(user)
+	if nerr != nil {
+		return false, errors.New(fmt.Sprintf("failed to get groups for user: %s", nerr))
 	}
 
 	// get roles database

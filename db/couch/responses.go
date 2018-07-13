@@ -81,3 +81,14 @@ type tags struct {
 	Rev     string   `json:"_rev",omitempty`
 	TagList []string `json:"tags"`
 }
+
+type templateQueryResponse struct {
+	Docs     []template `json:"docs"`
+	Bookmark string     `json:"bookmark"`
+	Warning  string     `json:"warning"`
+}
+
+type template struct {
+	Rev string `json:"_rev",omitempty`
+	*structs.Template
+}

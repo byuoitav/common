@@ -29,20 +29,20 @@ func GetGroupsForUser(user string) ([]string, *nerr.E) {
 	// connect to ldap server
 	l, err := ldap.Dial("tcp", ldapURL)
 	if err != nil {
-		return groups, nerr.Create(fmt.Sprintf("unable to get groups: %s", err), "error")
+		return groups, nerr.Translate(err).Addf("Unable to dial LDAP to get groups.")
 	}
 	defer l.Close()
 
 	// connect with tls
 	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
 	if err != nil {
-		return groups, nerr.Create(fmt.Sprintf("unable to connect to active directory with tls: %s", err), "error")
+		return groups, nerr.Translate(err).Addf("unable to connect to active directory with tls.")
 	}
 
 	// bind with user/pass
 	err = l.Bind(ldapUsername, ldapPassword)
 	if err != nil {
-		return groups, nerr.Create(fmt.Sprintf("unable to bind username/password to ldap connection: %s", err), "error")
+		return groups, nerr.Translate(err).Addf("unable to bind username/password to ldap connection")
 	}
 
 	// build the search request
@@ -60,7 +60,7 @@ func GetGroupsForUser(user string) ([]string, *nerr.E) {
 
 	sr, err := l.Search(searchRequest)
 	if err != nil {
-		return groups, nerr.Create(fmt.Sprintf("failed to search ldap: %s", err), "error")
+		return groups, nerr.Translate(err).Addf("failed to search ldap: %s")
 	}
 
 	for _, entry := range sr.Entries {
