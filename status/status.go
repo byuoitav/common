@@ -24,3 +24,8 @@ type Input struct {
 type Volume struct {
 	Volume int `json:"volume"`
 }
+
+// Battery is a base evaluator struct.
+type Battery struct {
+	Battery int `json:"battery"`
+}
