@@ -100,6 +100,12 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 					log.L.Debugf("Invlaid token, checking CAS")
 					//the JWT isn't valid, so we'll fall through to the CAS check.
 				}
+				log.L.Debug("No expiration time included in token")
+			}
+			if err != nil {
+				log.L.Debugf("Error was not nill when parsing JWT. Error: %v", err.Error())
+			} else {
+				log.L.Debugf("Token wasn't signed with correct key.")
 			}
 		}
 
