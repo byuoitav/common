@@ -19,10 +19,7 @@ type Preset struct {
 	AudioDevices            []string `json:"audioDevices"`
 	Inputs                  []string `json:"inputs"`
 	IndependentAudioDevices []string `json:"independentAudioDevices,omitempty"`
-	Commands                struct {
-		PowerOn  []ConfigCommand `json:"powerOn"`
-		PowerOff []ConfigCommand `json:"powerOff"`
-	} `json:"commands"`
+	Commands                Commands `json:"commands,omitempty"`
 }
 
 type Panel struct {
@@ -30,6 +27,11 @@ type Panel struct {
 	UIPath   string   `json:"uipath"`
 	Preset   string   `json:"preset"`
 	Features []string `json:"features"`
+}
+
+type Commands struct {
+	PowerOn  []ConfigCommand `json:"powerOn,omitempty"`
+	PowerOff []ConfigCommand `json:"powerOff,omitempty"`
 }
 
 type ConfigCommand struct {
