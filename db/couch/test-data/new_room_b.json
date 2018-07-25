@@ -1,0 +1,10 @@
+{
+    "_id": "AAA-XXX", 
+    "name": "Ahocolate Apples",
+    "description": "Ahocolate Apples Aharred in Apricot",
+    "tags": ["c-a"],
+    "designation": "development", 
+    "configuration": {
+        "_id": "AAA"
+   }
+}
