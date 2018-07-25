@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/byuoitav/common/db/couch"
+	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -57,8 +58,11 @@ type DB interface {
 	/* Specialty functions */
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
-	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
+	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, *nerr.E)
+	GetDevicesByRoleAndTypeAndDesignation(roleID, typeID, designation string) ([]structs.Device, *nerr.E)
+
 	GetRoomsByBuilding(id string) ([]structs.Room, error)
+	GetRoomsByDesignation(designation string) ([]structs.Room, *nerr.E)
 
 	/* Options Functions */
 	GetTemplate(id string) (structs.UIConfig, error)
