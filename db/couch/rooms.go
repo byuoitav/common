@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -308,6 +309,26 @@ func (c *CouchDB) UpdateRoom(id string, room structs.Room) (structs.Room, error)
 		toReturn, err = c.CreateRoom(room)
 		if err != nil {
 			return toReturn, errors.New(fmt.Sprintf("failed to update room %s: %s", id, err))
+		}
+	}
+
+	return toReturn, nil
+}
+
+func (c *CouchDB) GetRoomsByDesignation(designation string) ([]structs.Room, *nerr.E) {
+
+	var toReturn []structs.Room
+
+	// get all rooms
+	rooms, err := c.GetAllRooms()
+	if err != nil {
+		return toReturn, nerr.Translate(err).Addf("failed to get rooms by room designation.")
+	}
+
+	// filter for ones that have the room configuration
+	for _, room := range rooms {
+		if strings.EqualFold(room.Designation, designation) {
+			toReturn = append(toReturn, room)
 		}
 	}
 
