@@ -79,6 +79,9 @@ type DeviceType struct {
 	Description string       `json:"description,omitempty"`
 	Input       bool         `json:"input,omitempty"`
 	Output      bool         `json:"output,omitempty"`
+	Source      bool         `json:"source,omitempty"`
+	Destination bool         `json:"destination,omitempty"`
+	Roles       []Role       `json:"roles,omitempty"`
 	Ports       []Port       `json:"ports,omitempty"`
 	PowerStates []PowerState `json:"power-states,omitempty"`
 	Commands    []Command    `json:"commands,omitempty"`
@@ -124,6 +127,7 @@ func (ps *PowerState) Validate() error {
 type Port struct {
 	ID                string   `json:"_id"`
 	FriendlyName      string   `json:"friendly_name,omitempty"`
+	PortType          string   `json:"port_type,omitempty"`
 	SourceDevice      string   `json:"source_device,omitempty"`
 	DestinationDevice string   `json:"destination_device,omitempty"`
 	Description       string   `json:"description,omitempty"`
