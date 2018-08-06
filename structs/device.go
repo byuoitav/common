@@ -77,13 +77,14 @@ func (d *Device) GetCommandByName(port string) Command {
 type DeviceType struct {
 	ID          string       `json:"_id"`
 	Description string       `json:"description,omitempty"`
+	DisplayName string       `json:"display_name,omitempty"`
 	Input       bool         `json:"input,omitempty"`
 	Output      bool         `json:"output,omitempty"`
 	Source      bool         `json:"source,omitempty"`
 	Destination bool         `json:"destination,omitempty"`
 	Roles       []Role       `json:"roles,omitempty"`
 	Ports       []Port       `json:"ports,omitempty"`
-	PowerStates []PowerState `json:"power-states,omitempty"`
+	PowerStates []PowerState `json:"power_states,omitempty"`
 	Commands    []Command    `json:"commands,omitempty"`
 	Tags        []string     `json:"tags,omitempty"`
 }
