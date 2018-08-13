@@ -26,15 +26,15 @@ func NewEventNode(name, address string, filters []string) *EventNode {
 	return n
 }
 
-func (n *EventNode) PublishEvent(eventType string, event Event) error {
-	log.L.Debugf("Sending an event with type: %v", eventType)
+func (n *EventNode) PublishEvent(tag string, event Event) error {
+	log.L.Debugf("Sending an event with tag: %v", tag)
 	// turn event into bytes
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 
-	n.Node.Write(messenger.Message{Header: eventType, Body: bytes})
+	n.Node.Write(messenger.Message{Header: tag, Body: bytes})
 	return nil
 }
 
