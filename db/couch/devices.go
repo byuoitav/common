@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/byuoitav/common/log"
+	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -12,11 +14,8 @@ func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
 	return *device.Device, err
 }
-
 func (c *CouchDB) getDevice(id string) (device, error) {
-	var toReturn device
-
-	// get the device
+	var toReturn device // get the device
 	err := c.MakeRequest("GET", fmt.Sprintf("%s/%v", DEVICES, id), "", nil, &toReturn)
 	if err != nil {
 		return toReturn, fmt.Errorf("failed to get device %s: %s", id, err)
@@ -345,14 +344,48 @@ func (c *CouchDB) GetDevicesByType(deviceType string) ([]structs.Device, error) 
 	return toReturn, nil
 }
 
+func (c *CouchDB) GetDevicesByRoleAndTypeAndDesignation(role, deviceType, designation string) ([]structs.Device, *nerr.E) {
+
+	devs, err := c.GetDevicesByRoleAndType(role, deviceType)
+	if err != nil {
+		return devs, err.Addf("Couldn't get device by role and type and designation")
+	}
+	log.L.Debugf("Found %v devices with type %v and role %v", len(devs), deviceType, role)
+
+	//we have to go get all the rooms with the given designation
+	rooms, err := c.GetRoomsByDesignation(designation)
+	if err != nil {
+		return devs, err.Addf("Couldn't get rooms by designation.")
+	}
+
+	//make a map of roomIDs for fast lookup
+	roomSet := make(map[string]bool)
+
+	for r := range rooms {
+		roomSet[rooms[r].ID] = true
+	}
+	log.L.Debugf("Found %v rooms with designation %v", len(rooms), designation)
+
+	//filter on the match
+	var toReturn []structs.Device
+	for _, d := range devs {
+		roomID := d.ID[:strings.LastIndex(d.ID, "-")]
+		if _, ok := roomSet[roomID]; ok {
+			toReturn = append(toReturn, d)
+		}
+	}
+
+	return toReturn, nil
+}
+
 // TODO a real query would probably be faster again
-func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.Device, error) {
+func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.Device, *nerr.E) {
 	var toReturn []structs.Device
 
 	// get all devices
 	devs, err := c.GetAllDevices()
 	if err != nil {
-		return toReturn, fmt.Errorf("failed to get devices by role and type: %s", err)
+		return toReturn, nerr.Translate(err).Addf("failed to get devices by role and type")
 	}
 
 	// filter for ones that have the role and type

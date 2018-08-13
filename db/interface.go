@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/byuoitav/common/db/couch"
+	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -57,8 +58,11 @@ type DB interface {
 	/* Specialty functions */
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
-	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, error)
+	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, *nerr.E)
+	GetDevicesByRoleAndTypeAndDesignation(roleID, typeID, designation string) ([]structs.Device, *nerr.E)
+
 	GetRoomsByBuilding(id string) ([]structs.Room, error)
+	GetRoomsByDesignation(designation string) ([]structs.Room, *nerr.E)
 
 	/* Options Functions */
 	GetTemplate(id string) (structs.UIConfig, error)
@@ -66,8 +70,8 @@ type DB interface {
 	UpdateTemplate(id string, newTemp structs.UIConfig) (structs.UIConfig, error)
 	GetIcons() ([]string, error)
 	UpdateIcons(iconList []string) ([]string, error)
-	GetDeviceRoles() ([]string, error)
-	UpdateDeviceRoles(roles []string) ([]string, error)
+	GetDeviceRoles() ([]structs.Role, error)
+	UpdateDeviceRoles(roles []structs.Role) ([]structs.Role, error)
 	GetRoomDesignations() ([]string, error)
 	UpdateRoomDesignations(desigs []string) ([]string, error)
 	GetTags() ([]string, error)

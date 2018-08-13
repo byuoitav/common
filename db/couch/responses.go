@@ -68,8 +68,8 @@ type icons struct {
 }
 
 type deviceRoles struct {
-	Rev      string   `json:"_rev",omitempty`
-	RoleList []string `json:"roles"`
+	Rev      string         `json:"_rev",omitempty`
+	RoleList []structs.Role `json:"roles"`
 }
 
 type roomDesignations struct {

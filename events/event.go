@@ -38,6 +38,7 @@ const (
 	HEARTBEAT
 	HEALTH
 	DIVISION
+	DEPLOYMENT
 )
 
 func (e EventType) String() string {
@@ -58,6 +59,8 @@ func (e EventType) String() string {
 		return "HEALTH"
 	case DIVISION:
 		return "DIVISION"
+	case DEPLOYMENT:
+		return "DEPLOYMENT"
 	}
 	return ""
 }
