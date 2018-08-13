@@ -2,11 +2,13 @@ package health
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/byuoitav/common/events"
+	"github.com/labstack/echo"
 )
 
 func SendSuccessfulStartup(healthCheck func() map[string]string, MicroserviceName string, publish func(events.Event)) error {
@@ -74,5 +76,10 @@ func BuildEvent(Type events.EventType, Cause events.EventCause, Key string, Valu
 		Building:         split[0],
 		Room:             split[1],
 	}
+
+}
+
+func HealthCheck(context echo.Context) error {
+	return context.JSON(http.StatusOK, "Uh, had a slight weapons malfunction. But, uh, everything's perfectly all right now. We're fine. We're all fine here, now, thank you. How are you?")
 
 }

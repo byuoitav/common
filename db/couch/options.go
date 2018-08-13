@@ -170,7 +170,7 @@ func (c *CouchDB) UpdateIcons(iconList []string) ([]string, error) {
 // ROLES
 
 // GetDeviceRoles returns a list of the device roles.
-func (c *CouchDB) GetDeviceRoles() ([]string, error) {
+func (c *CouchDB) GetDeviceRoles() ([]structs.Role, error) {
 	roles, err := c.getDeviceRoles()
 	return roles.RoleList, err
 }
@@ -187,8 +187,8 @@ func (c *CouchDB) getDeviceRoles() (deviceRoles, error) {
 }
 
 // UpdateDeviceRoles puts an updated list of device roles in the database.
-func (c *CouchDB) UpdateDeviceRoles(roles []string) ([]string, error) {
-	var toReturn []string
+func (c *CouchDB) UpdateDeviceRoles(roles []structs.Role) ([]structs.Role, error) {
+	var toReturn []structs.Role
 
 	// get the rev of the device role list
 	oldList, err := c.getDeviceRoles()
