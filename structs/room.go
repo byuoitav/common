@@ -6,6 +6,7 @@ import (
 	"regexp"
 )
 
+// Room - a representation of a room containing a TEC Pi system.
 type Room struct {
 	ID            string            `json:"_id"`
 	Name          string            `json:"name"`
@@ -18,6 +19,7 @@ type Room struct {
 
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)
 
+// Validate checks to make sure that the Room's values are valid.
 func (r *Room) Validate() error {
 	vals := roomValidationRegex.FindStringSubmatch(r.ID)
 	if len(vals) == 0 {
@@ -25,20 +27,21 @@ func (r *Room) Validate() error {
 	}
 
 	if len(r.Name) == 0 {
-		return errors.New("invalid room: missing name.")
+		return errors.New("invalid room: missing name")
 	}
 
 	if len(r.Designation) == 0 {
-		return errors.New("invalid room: missing designation.")
+		return errors.New("invalid room: missing designation")
 	}
 
 	if err := r.Configuration.Validate(false); err != nil {
-		return errors.New(fmt.Sprintf("invalid room: %s", err))
+		return fmt.Errorf("invalid room: %s", err)
 	}
 
 	return nil
 }
 
+// RoomConfiguration - a representation of the configuration of a room.
 type RoomConfiguration struct {
 	ID          string      `json:"_id"`
 	Evaluators  []Evaluator `json:"evaluators,omitempty"`
@@ -46,19 +49,20 @@ type RoomConfiguration struct {
 	Tags        []string    `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the RoomConfiguration's values are valid.
 func (rc *RoomConfiguration) Validate(deepCheck bool) error {
 	if len(rc.ID) == 0 {
-		return errors.New("invalid room configuration: missing _id.")
+		return errors.New("invalid room configuration: missing _id")
 	}
 
 	if deepCheck {
 		if len(rc.Evaluators) == 0 {
-			return errors.New("invalid room configuration: at least one evaluator is required.")
+			return errors.New("invalid room configuration: at least one evaluator is required")
 		}
 
 		for _, evaluator := range rc.Evaluators {
 			if err := evaluator.Validate(); err != nil {
-				return errors.New(fmt.Sprintf("invalid room configuration: %s", err))
+				return fmt.Errorf("invalid room configuration: %s", err)
 			}
 		}
 	}
@@ -66,6 +70,7 @@ func (rc *RoomConfiguration) Validate(deepCheck bool) error {
 	return nil
 }
 
+// Evaluator - a representation of a priority evaluator.
 type Evaluator struct {
 	ID          string   `json:"_id"`
 	CodeKey     string   `json:"codekey,omitempty"`
@@ -74,9 +79,10 @@ type Evaluator struct {
 	Tags        []string `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the Evaluator's values are valid.
 func (e *Evaluator) Validate() error {
 	if len(e.ID) == 0 {
-		return errors.New("invalid evaluator: missing evaluator _id.")
+		return errors.New("invalid evaluator: missing evaluator _id")
 	}
 
 	if len(e.CodeKey) == 0 {
