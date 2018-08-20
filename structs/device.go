@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Device - a representation of a device involved in a TEC Pi system.
 type Device struct {
 	ID          string     `json:"_id"`
 	Name        string     `json:"name"`
@@ -20,8 +21,10 @@ type Device struct {
 	Tags        []string   `json:"tags,omitempty"`
 }
 
+// DeviceIDValidationRegex is our regular expression for validating the correct naming scheme.
 var DeviceIDValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
 
+// Validate checks to see if the device's information is valid or not.
 func (d *Device) Validate() error {
 	vals := DeviceIDValidationRegex.FindStringSubmatch(d.ID)
 	if len(vals) == 0 {
@@ -29,40 +32,42 @@ func (d *Device) Validate() error {
 	}
 
 	if len(d.Name) < 2 {
-		return errors.New("invalid device: name must be at least 3 characters long.")
+		return errors.New("invalid device: name must be at least 3 characters long")
 	}
 
 	// validate device type
 	if err := d.Type.Validate(false); err != nil {
-		return errors.New(fmt.Sprintf("invalid device: %s", err))
+		return fmt.Errorf("invalid device: %s", err)
 	}
 
 	// validate roles
 	if len(d.Roles) == 0 {
-		return errors.New("invalid device: must include at least 1 role.")
+		return errors.New("invalid device: must include at least 1 role")
 	}
 	for _, role := range d.Roles {
 		if err := role.Validate(); err != nil {
-			return errors.New(fmt.Sprintf("invalid device: %s", err))
+			return fmt.Errorf("invalid device: %s", err)
 		}
 	}
 
 	// validate ports
 	for _, port := range d.Ports {
 		if err := port.Validate(); err != nil {
-			return errors.New(fmt.Sprintf("invalid device: %s", err))
+			return fmt.Errorf("invalid device: %s", err)
 		}
 	}
 
 	return nil
 }
 
+// GetDeviceRoomID returns the room ID portion of the device ID.
 func (d *Device) GetDeviceRoomID() string {
 	idParts := strings.Split(d.ID, "-")
 	roomID := fmt.Sprintf("%s-%s", idParts[0], idParts[1])
 	return roomID
 }
 
+// GetCommandByName searches for a specific command and returns it if found.
 func (d *Device) GetCommandByName(port string) Command {
 	for _, c := range d.Type.Commands {
 		if c.ID == port {
@@ -74,6 +79,7 @@ func (d *Device) GetCommandByName(port string) Command {
 	return Command{}
 }
 
+// DeviceType - a representation of a type (or category) of devices.
 type DeviceType struct {
 	ID          string       `json:"_id"`
 	Description string       `json:"description,omitempty"`
@@ -89,6 +95,7 @@ type DeviceType struct {
 	Tags        []string     `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the values of the DeviceType are valid.
 func (dt *DeviceType) Validate(deepCheck bool) error {
 	if len(dt.ID) == 0 {
 		return errors.New("invalid device type: missing id")
@@ -98,26 +105,28 @@ func (dt *DeviceType) Validate(deepCheck bool) error {
 		// check all of the ports
 		for _, port := range dt.Ports {
 			if err := port.Validate(); err != nil {
-				return errors.New(fmt.Sprintf("invalid device type: %s", err))
+				return fmt.Errorf("invalid device type: %s", err)
 			}
 		}
 
 		// check all of the commands
 		for _, command := range dt.Commands {
 			if err := command.Validate(); err != nil {
-				return errors.New(fmt.Sprintf("invalid device type: %s", err))
+				return fmt.Errorf("invalid device type: %s", err)
 			}
 		}
 	}
 	return nil
 }
 
+// PowerState - a representation of a device's power state.
 type PowerState struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the PowerState's values are valid.
 func (ps *PowerState) Validate() error {
 	if len(ps.ID) < 3 {
 		return errors.New("invalid power state: id must be at least 3 characters long")
@@ -125,6 +134,7 @@ func (ps *PowerState) Validate() error {
 	return nil
 }
 
+// Port - a representation of an input/output port on a device.
 type Port struct {
 	ID                string   `json:"_id"`
 	FriendlyName      string   `json:"friendly_name,omitempty"`
@@ -135,6 +145,7 @@ type Port struct {
 	Tags              []string `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the Port's values are valid.
 func (p *Port) Validate() error {
 	if len(p.ID) < 3 {
 		return errors.New("invalid port: id must be at least 3 characters long")
@@ -142,12 +153,14 @@ func (p *Port) Validate() error {
 	return nil
 }
 
+// Role - a representation of a role that a device plays in the overall system.
 type Role struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the Role's values are valid.
 func (r *Role) Validate() error {
 	if len(r.ID) < 3 {
 		return errors.New("invalid role: id must at least 3 characters long")
@@ -155,6 +168,7 @@ func (r *Role) Validate() error {
 	return nil
 }
 
+// Command - a representation of an API command to be executed.
 type Command struct {
 	ID           string       `json:"_id"`
 	Description  string       `json:"description"`
@@ -164,6 +178,7 @@ type Command struct {
 	Tags         []string     `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the Command's values are valid.
 func (c *Command) Validate() error {
 	if len(c.ID) < 3 {
 		return errors.New("invalid command: id must be at least 3 characters long")
@@ -171,16 +186,17 @@ func (c *Command) Validate() error {
 
 	// validate microservice
 	if err := c.Microservice.Validate(); err != nil {
-		return errors.New(fmt.Sprintf("invalid command: %s", err))
+		return fmt.Errorf("invalid command: %s", err)
 	}
 
 	// validate endpoint
 	if err := c.Endpoint.Validate(); err != nil {
-		return errors.New(fmt.Sprintf("invalid command: %s", err))
+		return fmt.Errorf("invalid command: %s", err)
 	}
 	return nil
 }
 
+// Microservice - a representation of a microservice in our API.
 type Microservice struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
@@ -188,6 +204,7 @@ type Microservice struct {
 	Tags        []string `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the Microservice's values are valid.
 func (m *Microservice) Validate() error {
 	if len(m.ID) < 3 {
 		return errors.New("invalid microservice: id must be at least 3 characters long")
@@ -195,11 +212,12 @@ func (m *Microservice) Validate() error {
 
 	// validate address
 	if _, err := url.ParseRequestURI(m.Address); err != nil {
-		return errors.New(fmt.Sprintf("invalid microservice: %s", err))
+		return fmt.Errorf("invalid microservice: %s", err)
 	}
 	return nil
 }
 
+// Endpoint - a representation of an API endpoint.
 type Endpoint struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`
@@ -207,6 +225,7 @@ type Endpoint struct {
 	Tags        []string `json:"tags,omitempty"`
 }
 
+// Validate checks to make sure that the Endpoint's values are valid.
 func (e *Endpoint) Validate() error {
 	if len(e.ID) < 3 {
 		return errors.New("invalid endpoint: id must be at least 3 characters long")
@@ -214,11 +233,12 @@ func (e *Endpoint) Validate() error {
 
 	// validate path
 	if _, err := url.ParseRequestURI(e.Path); err != nil {
-		return errors.New(fmt.Sprintf("invalid endpoint: %s", err))
+		return fmt.Errorf("invalid endpoint: %s", err)
 	}
 	return nil
 }
 
+// HasRole checks to see if the given device has the given role.
 func HasRole(device Device, role string) bool {
 	role = strings.ToLower(role)
 	for i := range device.Roles {

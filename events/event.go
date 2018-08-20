@@ -22,6 +22,7 @@ type EventInfo struct {
 	Requestor      string     `json:"requestor"`
 	EventCause     EventCause `json:"eventCause"`
 	Device         string     `json:"device"`
+	DeviceID       string     `json:"device-id,omitempty"`
 	EventInfoKey   string     `json:"eventInfoKey"`
 	EventInfoValue string     `json:"eventInfoValue"`
 }
