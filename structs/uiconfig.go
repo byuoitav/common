@@ -1,5 +1,6 @@
 package structs
 
+// UIConfig - a representation of all the information needed to configure the touchpanel UI.
 type UIConfig struct {
 	ID                  string               `json:"_id,omitempty"`
 	Api                 []string             `json:"api"`
@@ -11,6 +12,7 @@ type UIConfig struct {
 	PseudoInputs        []PseudoInput        `json:"pseudoInputs,omitempty"`
 }
 
+// Preset - a representation of what is controlled by this preset.
 type Preset struct {
 	Name                    string   `json:"name"`
 	Icon                    string   `json:"icon"`
@@ -22,6 +24,7 @@ type Preset struct {
 	Commands                Commands `json:"commands,omitempty"`
 }
 
+// Panel - a representation of a touchpanel and which preset it has.
 type Panel struct {
 	Hostname string   `json:"hostname"`
 	UIPath   string   `json:"uipath"`
@@ -29,11 +32,13 @@ type Panel struct {
 	Features []string `json:"features"`
 }
 
+// Commands - a representation of commands to be sent through the UI.
 type Commands struct {
 	PowerOn  []ConfigCommand `json:"powerOn,omitempty"`
 	PowerOff []ConfigCommand `json:"powerOff,omitempty"`
 }
 
+// ConfigCommand - ...I dunno, ask Danny.
 type ConfigCommand struct {
 	Method   string                 `json:"method"`
 	Port     int                    `json:"port"`
@@ -41,17 +46,20 @@ type ConfigCommand struct {
 	Body     map[string]interface{} `json:"body"`
 }
 
+// AudioConfiguration - a representation of how the audio is configured when using multiple displays.
 type AudioConfiguration struct {
 	Display      string   `json:"display"`
 	AudioDevices []string `json:"audioDevices"`
 	RoomWide     bool     `json:"roomWide"`
 }
 
+// IOConfiguration - a representation of an input or output device.
 type IOConfiguration struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
 }
 
+// PseudoInput - a fake input I guess
 type PseudoInput struct {
 	Displayname string `json:"displayname"`
 	Config      []struct {
@@ -60,6 +68,7 @@ type PseudoInput struct {
 	} `json:"config"`
 }
 
+// Template - the UI config and device list for a room for quick configuration.
 type Template struct {
 	ID          string   `json:"_id"`
 	Description string   `json:"description"`

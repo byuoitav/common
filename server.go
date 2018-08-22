@@ -20,7 +20,7 @@ func NewRouter() *echo.Echo {
 	})
 
 	router.PUT("/log-level/:level", log.SetLogLevel)
-	router.GET("/log-level/:level", log.GetLogLevel)
+	router.GET("/log-level", log.GetLogLevel)
 
 	return router
 }
