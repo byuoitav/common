@@ -1,5 +1,6 @@
 package structs
 
+// Auth - our authentication struct.
 type Auth struct {
 	ID          string   `json:"_id"`
 	Roles       []string `json:"roles"`
