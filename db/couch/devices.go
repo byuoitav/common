@@ -324,6 +324,25 @@ func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device
 	return toReturn, nil
 }
 
+func (c *CouchDB) GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Device, error) {
+	toReturn := []structs.Device{}
+
+	// get all devices in room
+	devs, err := c.GetDevicesByRoom(roomID)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to get devices by room and role: %s", err)
+	}
+
+	// go through the devices and check if they have the role indicated
+	for _, d := range devs {
+		if d.Type.ID == typeID {
+			toReturn = append(toReturn, d)
+		}
+	}
+
+	return toReturn, nil
+}
+
 // TODO could actually use a query to be faster
 func (c *CouchDB) GetDevicesByType(deviceType string) ([]structs.Device, error) {
 	var toReturn []structs.Device

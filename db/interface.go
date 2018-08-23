@@ -57,6 +57,7 @@ type DB interface {
 
 	/* Specialty functions */
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
+	GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, *nerr.E)
 	GetDevicesByRoleAndTypeAndDesignation(roleID, typeID, designation string) ([]structs.Device, *nerr.E)
