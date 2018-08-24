@@ -335,7 +335,7 @@ func (c *CouchDB) GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Devi
 
 	// go through the devices and check if they have the role indicated
 	for _, d := range devs {
-		if d.Type.ID == typeID {
+		if strings.EqualFold(d.Type.ID, typeID) {
 			toReturn = append(toReturn, d)
 		}
 	}
