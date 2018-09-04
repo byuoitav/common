@@ -147,7 +147,7 @@ type Port struct {
 
 // Validate checks to make sure that the Port's values are valid.
 func (p *Port) Validate() error {
-	if len(p.ID) < 3 {
+	if len(p.ID) < 1 {
 		return errors.New("invalid port: id must be at least 3 characters long")
 	}
 	return nil
