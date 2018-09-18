@@ -79,6 +79,9 @@ type DB interface {
 	UpdateTags(newTags []string) ([]string, error)
 
 	GetAuth() (structs.Auth, error)
+
+	//Get the state (replication/readiness) of the database
+	GetStatus() (string, error)
 }
 
 var address string
