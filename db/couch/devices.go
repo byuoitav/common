@@ -192,7 +192,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 
 	// check that each of the ports are valid
 	for _, port := range toAdd.Ports {
-		if err = c.checkPort(port); err != nil {
+		if err = c.checkPort(port, toAdd); err != nil {
 			return toReturn, fmt.Errorf("unable to create device: %s", err)
 		}
 	}
@@ -287,18 +287,22 @@ func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device
 	return toReturn, err
 }
 
-func (c *CouchDB) checkPort(p structs.Port) error {
+func (c *CouchDB) checkPort(p structs.Port, device structs.Device) error {
 	// check source port
 	if len(p.SourceDevice) > 0 {
-		if _, err := c.GetDevice(p.SourceDevice); err != nil {
-			return fmt.Errorf("invalid port %v. source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice)
+		if p.SourceDevice != device.ID {
+			if _, err := c.GetDevice(p.SourceDevice); err != nil {
+				return fmt.Errorf("invalid port %v. source device %v doesn't exist. Create it before adding it to a port", p.ID, p.SourceDevice)
+			}
 		}
 	}
 
 	// check desitnation port
 	if len(p.DestinationDevice) > 0 {
-		if _, err := c.GetDevice(p.DestinationDevice); err != nil {
-			return fmt.Errorf("invalid port %v. destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice)
+		if p.DestinationDevice != device.ID {
+			if _, err := c.GetDevice(p.DestinationDevice); err != nil {
+				return fmt.Errorf("invalid port %v. destination device %v doesn't exist. Create it before adding it to a port", p.ID, p.DestinationDevice)
+			}
 		}
 	}
 
@@ -317,6 +321,25 @@ func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device
 	// go through the devices and check if they have the role indicated
 	for _, d := range devs {
 		if structs.HasRole(d, role) {
+			toReturn = append(toReturn, d)
+		}
+	}
+
+	return toReturn, nil
+}
+
+func (c *CouchDB) GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Device, error) {
+	toReturn := []structs.Device{}
+
+	// get all devices in room
+	devs, err := c.GetDevicesByRoom(roomID)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to get devices by room and role: %s", err)
+	}
+
+	// go through the devices and check if they have the role indicated
+	for _, d := range devs {
+		if strings.EqualFold(d.Type.ID, typeID) {
 			toReturn = append(toReturn, d)
 		}
 	}
