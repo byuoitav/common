@@ -44,7 +44,7 @@ type Event struct {
 	User string `json:"user"`
 
 	// Data is an optional field to dump data that you wont necessarily want to aggregate on, but you may want to search on
-	Data []byte `json:"data,omitempty"`
+	Data interface{} `json:"data,omitempty"`
 }
 
 // BasicDeviceInfo contains device information that is easy to aggregate on.
