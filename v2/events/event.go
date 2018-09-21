@@ -32,7 +32,7 @@ type Event struct {
 	TargetDevice BasicDeviceInfo `json:"target-device"`
 
 	// TargetRoom is the room being affected by the event. e.g. in events arising from an API call this is the room called in the API
-	TargetRoom BasicRoomInfo `json:"target-room"`
+	TargetRoom string `json:"target-room"`
 
 	// Key of the event
 	Key string `json:"key"`
@@ -52,12 +52,6 @@ type BasicDeviceInfo struct {
 	BuildingID string `json:"buildingID,omitempty"`
 	RoomID     string `json:"roomID,omitempty"`
 	DeviceID   string `json:"deviceID,omitempty"`
-}
-
-// BasicRoomInfo contains room information that is easy to aggregate on.
-type BasicRoomInfo struct {
-	BuildingID string `json:"buildingID,omitempty"`
-	RoomID     string `json:"roomID,omitempty"`
 }
 
 // GenerateBasicDeviceInfo takes a device ID and generates a BasicDeviceInfo from it

@@ -22,11 +22,22 @@ type Device struct {
 }
 
 // DeviceIDValidationRegex is our regular expression for validating the correct naming scheme.
-var DeviceIDValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
+var deviceIDValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`)
+
+// IsDeviceIDValid takes a device id and tells you whether or not it is valid.
+func IsDeviceIDValid(id string) bool {
+	reg := deviceIDValidationRegex.Copy()
+
+	vals := reg.FindStringSubmatch(id)
+	if len(vals) == 0 {
+		return false
+	}
+	return true
+}
 
 // Validate checks to see if the device's information is valid or not.
 func (d *Device) Validate() error {
-	vals := DeviceIDValidationRegex.FindStringSubmatch(d.ID)
+	vals := deviceIDValidationRegex.FindStringSubmatch(d.ID)
 	if len(vals) == 0 {
 		return errors.New("invalid device: inproper id. must match `([A-z,0-9]{2,}-[A-z,0-9]+)-[A-z]+[0-9]+`")
 	}
