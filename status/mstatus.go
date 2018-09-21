@@ -31,7 +31,7 @@ type MStatus struct {
 
 // DefaultMStatusHandler can be used as a default mstatus handler
 func DefaultMStatusHandler(ctx echo.Context) error {
-	log.L.Info("MStatus request from %s", ctx.Request().RemoteAddr)
+	log.L.Infof("MStatus request from %v", ctx.Request().RemoteAddr)
 
 	var status MStatus
 	var err error
