@@ -31,8 +31,8 @@ type Event struct {
 	// TargetDevice is the device being affected by the event. e.g. a power on event, this would be the device powering on
 	TargetDevice BasicDeviceInfo `json:"target-device"`
 
-	// TargetRoom is the room being affected by the event. e.g. in events arising from an API call this is the room called in the API
-	TargetRoom string `json:"target-room"`
+	// AffectedRoom is the room being affected by the event. e.g. in events arising from an API call this is the room called in the API
+	AffectedRoom string `json:"affected-room"`
 
 	// Key of the event
 	Key string `json:"key"`
