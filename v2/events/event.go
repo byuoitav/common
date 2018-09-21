@@ -75,3 +75,12 @@ func GenerateBasicDeviceInfo(deviceID string) BasicDeviceInfo {
 		DeviceID:   deviceID,
 	}
 }
+
+func HasTag(e Event, t string) bool {
+	for i := range e.EventTags {
+		if e.EventTags[i] == t {
+			return true
+		}
+	}
+	return false
+}
