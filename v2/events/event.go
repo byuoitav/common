@@ -32,7 +32,7 @@ type Event struct {
 	TargetDevice BasicDeviceInfo `json:"target-device"`
 
 	// AffectedRoom is the room being affected by the event. e.g. in events arising from an API call this is the room called in the API
-	AffectedRoom string `json:"affected-room"`
+	AffectedRoom BasicRoomInfo `json:"affected-room"`
 
 	// Key of the event
 	Key string `json:"key"`
@@ -47,14 +47,19 @@ type Event struct {
 	Data interface{} `json:"data,omitempty"`
 }
 
-// BasicDeviceInfo contains device information that is easy to aggregate on.
-type BasicDeviceInfo struct {
+// BasicRoomInfo contains device information that is easy to aggregate on.
+type BasicRoomInfo struct {
 	BuildingID string `json:"buildingID,omitempty"`
 	RoomID     string `json:"roomID,omitempty"`
-	DeviceID   string `json:"deviceID,omitempty"`
 }
 
-// GenerateBasicDeviceInfo takes a device ID and generates a BasicDeviceInfo from it
+// BasicDeviceInfo contains device information that is easy to aggregate on.
+type BasicDeviceInfo struct {
+	BasicRoomInfo
+	DeviceID string `json:"deviceID,omitempty"`
+}
+
+// GenerateBasicDeviceInfo takes a deviceID and generates a BasicDeviceInfo from it
 func GenerateBasicDeviceInfo(deviceID string) BasicDeviceInfo {
 	deviceID = strings.ToUpper(deviceID)
 
@@ -64,8 +69,27 @@ func GenerateBasicDeviceInfo(deviceID string) BasicDeviceInfo {
 	}
 
 	return BasicDeviceInfo{
+		BasicRoomInfo: BasicRoomInfo{
+			BuildingID: vals[0],
+			RoomID:     vals[0] + "-" + vals[1],
+		},
+		DeviceID: deviceID,
+	}
+}
+
+// GenerateBasicRoomInfo takes a roomID and generates a BasicRoomInfo from it
+func GenerateBasicRoomInfo(roomID string) BasicRoomInfo {
+	roomID = strings.ToUpper(roomID)
+
+	vals := strings.Split(roomID, "-")
+	if len(vals) != 2 {
+		return BasicRoomInfo{
+			RoomID: vals[0],
+		}
+	}
+
+	return BasicRoomInfo{
 		BuildingID: vals[0],
-		RoomID:     vals[0] + "-" + vals[1],
-		DeviceID:   deviceID,
+		RoomID:     vals[1],
 	}
 }
