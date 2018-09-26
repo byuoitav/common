@@ -5,12 +5,11 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 )
 
 type Event struct {
 	Hostname         string    `json:"hostname,omitempty"`
-	Timestamp        time.Time `json:"timestamp,omitempty"`
+	Timestamp        string    `json:"timestamp,omitempty"`
 	LocalEnvironment bool      `json:"localEnvironment,omitempty"`
 	Event            EventInfo `json:"event,omitempty"`
 	Building         string    `json:"building,omitempty"`
