@@ -95,11 +95,13 @@ func GenerateBasicRoomInfo(roomID string) BasicRoomInfo {
 	}
 }
 
+// HasTag returns true of the event has the given tag, or false if it doesn't.
 func HasTag(e Event, t string) bool {
 	for i := range e.EventTags {
 		if e.EventTags[i] == t {
 			return true
 		}
 	}
+
 	return false
 }
