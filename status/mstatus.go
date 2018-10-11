@@ -2,9 +2,11 @@ package status
 
 import (
 	"bufio"
+	"fmt"
 	"net/http"
 	"os"
 
+	"github.com/byuoitav/common/db"
 	"github.com/byuoitav/common/log"
 	"github.com/labstack/echo"
 )
@@ -45,6 +47,34 @@ func DefaultMStatusHandler(ctx echo.Context) error {
 
 	status.StatusCode = Healthy
 	status.Info = "used default mstatus handler"
+	return ctx.JSON(http.StatusOK, status)
+}
+
+// DatabaseMStatusHandler validates that the microservice can talk to the database.
+func DatabaseMStatusHandler(ctx echo.Context) error {
+	log.L.Infof("MStatus request from %v", ctx.Request().RemoteAddr)
+
+	var status MStatus
+	var err error
+
+	status.Version, err = GetMicroserviceVersion()
+	if err != nil {
+		status.Info = "failed to open version.txt"
+		status.StatusCode = Sick
+
+		return ctx.JSON(http.StatusInternalServerError, status)
+	}
+
+	// Test a database retrieval to assess the status.
+	vals, err := db.GetDB().GetAllBuildings()
+	if len(vals) == 0 || err != nil {
+		status.StatusCode = Dead
+		status.Info = fmt.Sprintf("unable to access database: %s", err)
+	} else {
+		status.StatusCode = Healthy
+		status.Info = "Connected to database"
+	}
+
 	return ctx.JSON(http.StatusOK, status)
 }
 
