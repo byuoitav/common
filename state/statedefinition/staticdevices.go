@@ -26,6 +26,8 @@ type StaticDevice struct {
 	DeviceClass string `json:"device-class,omitempty"`
 	DeviceName  string `json:"device-name,omitempty"`
 
+	Tags []string `json:"tags,omitempty"`
+
 	//semi-common fields LastHeartbeat time.Time `json:"last-heartbeat,omitempty"` LastUserInput time.Time `json:"last-user-input,omitempty"`
 	Power string `json:"power,omitempty"`
 
@@ -98,6 +100,11 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 
 	if new.UpdateTimes["device-type"].After(base.UpdateTimes["device-type"]) {
 		diff.DeviceType, merged.DeviceType, changes = compareString(base.DeviceType, new.DeviceType, changes)
+	}
+
+	if new.UpdateTimes["tags"].After(base.UpdateTimes["tags"]) {
+		diff.Tags, merged.Tags, changes = compareTags(base.Tags, new.Tags, changes)
+
 	}
 
 	//semi-common fields
@@ -211,4 +218,35 @@ func compareTime(base, new time.Time, changes bool) (time.Time, time.Time, bool)
 		}
 	}
 	return time.Time{}, base, false || changes
+}
+
+func compareTags(base, new []string, changes bool) ([]string, []string, bool) {
+	if new != nil {
+		if base == nil || !arraysEqual(base, new) {
+			return new, new, true
+		}
+	}
+	return []string{}, base, false || changes
+}
+
+//return false if not equal
+//this is faster than a map-based compare up to about 150/200 elements, assuming an average of a 7 letter tag.
+func arraysEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		found := false
+		for j := range b {
+			if a[i] == b[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
 }
