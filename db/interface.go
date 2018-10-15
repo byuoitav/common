@@ -109,3 +109,8 @@ func GetDB() DB {
 
 	return database
 }
+
+// GetDBWithCustomAuth returns an instance of the database with a custom authentication
+func GetDBWithCustomAuth(address, username, password string) DB {
+	return couch.NewDB(address, username, password)
+}
