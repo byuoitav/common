@@ -26,6 +26,8 @@ const (
 
 // MStatus represents the microservice's health status
 type MStatus struct {
+	Name       string      `json:"name"`
+	Bin        string      `json:"bin"`
 	StatusCode string      `json:"statuscode"`
 	Version    string      `json:"version"`
 	Info       interface{} `json:"info"`
@@ -37,6 +39,8 @@ func DefaultMStatusHandler(ctx echo.Context) error {
 
 	var status MStatus
 	var err error
+
+	status.Bin = os.Args[0]
 
 	status.Version, err = GetMicroserviceVersion()
 	if err != nil {
@@ -56,6 +60,8 @@ func DatabaseMStatusHandler(ctx echo.Context) error {
 
 	var status MStatus
 	var err error
+
+	status.Bin = os.Args[0]
 
 	status.Version, err = GetMicroserviceVersion()
 	if err != nil {
