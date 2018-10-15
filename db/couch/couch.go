@@ -16,6 +16,7 @@ const (
 	BUILDINGS           = "buildings"
 	ROOMS               = "rooms"
 	DEVICES             = "devices"
+	DEVICE_STATES       = "device-state"
 	DEVICE_TYPES        = "device_types"
 	ROOM_CONFIGURATIONS = "room_configurations"
 	UI_CONFIGS          = "ui-configuration"
@@ -137,6 +138,44 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 	return nil
 }
 
+/*
+func (c *CouchDB) GetAllDocs(database string, responseToFill interface{}) error {
+
+	var b []byte
+	err := c.MakeRequest("GET", fmt.Sprintf("%s/_all_docs", database), "", b, &responseToFill)
+	if err != nil {
+		log.L.Errorf("For a loveseat, this couch (%s) isn't very kind: %s", database, err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *CouchDB) GetAllDevices(responseToFill interface{}) ([]byte, error) {
+	//TODO Change database to be the Device State thing
+	var database = DEVICE_STATES
+	//TODO
+	var preProcessBody []byte
+	var allDocs []byte
+
+	err := c.GetAllDocs(database, &responseToFill)
+
+	if err != nil {
+		log.L.Errorf("Failed to get all devices: %s", err)
+		return allDocs, err
+	}
+	err = json.Unmarshal(preProcessBody, responseToFill)
+
+	if err != nil {
+		log.L.Errorf("Failed to unmarshal while getting all devices: %s", err)
+		return allDocs, err
+	}
+
+	allDocs = preProcessBody["rows"]
+
+	return allDocs, nil
+}
+*/
 func CheckCouchErrors(ce CouchError) error {
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
@@ -153,8 +192,9 @@ func CheckCouchErrors(ce CouchError) error {
 type IDPrefixQuery struct {
 	Selector struct {
 		ID struct {
-			GT string `json:"$gt,omitempty"`
-			LT string `json:"$lt,omitempty"`
+			GT    string `json:"$gt,omitempty"`
+			LT    string `json:"$lt,omitempty"`
+			Regex string `json:"$regex,omitempty"`
 		} `json:"_id"`
 	} `json:"selector"`
 	Limit int `json:"limit"`
