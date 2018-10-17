@@ -137,45 +137,6 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 
 	return nil
 }
-
-/*
-func (c *CouchDB) GetAllDocs(database string, responseToFill interface{}) error {
-
-	var b []byte
-	err := c.MakeRequest("GET", fmt.Sprintf("%s/_all_docs", database), "", b, &responseToFill)
-	if err != nil {
-		log.L.Errorf("For a loveseat, this couch (%s) isn't very kind: %s", database, err)
-		return err
-	}
-
-	return nil
-}
-
-func (c *CouchDB) GetAllDevices(responseToFill interface{}) ([]byte, error) {
-	//TODO Change database to be the Device State thing
-	var database = DEVICE_STATES
-	//TODO
-	var preProcessBody []byte
-	var allDocs []byte
-
-	err := c.GetAllDocs(database, &responseToFill)
-
-	if err != nil {
-		log.L.Errorf("Failed to get all devices: %s", err)
-		return allDocs, err
-	}
-	err = json.Unmarshal(preProcessBody, responseToFill)
-
-	if err != nil {
-		log.L.Errorf("Failed to unmarshal while getting all devices: %s", err)
-		return allDocs, err
-	}
-
-	allDocs = preProcessBody["rows"]
-
-	return allDocs, nil
-}
-*/
 func CheckCouchErrors(ce CouchError) error {
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
