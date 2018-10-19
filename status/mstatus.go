@@ -24,8 +24,8 @@ const (
 	versionPath = "version.txt"
 )
 
-// MStatus represents the microservice's health status
-type MStatus struct {
+// Status represents the microservice's health status
+type Status struct {
 	Name       string      `json:"name"`
 	Bin        string      `json:"bin"`
 	StatusCode string      `json:"statuscode"`
@@ -33,11 +33,11 @@ type MStatus struct {
 	Info       interface{} `json:"info"`
 }
 
-// DefaultMStatusHandler can be used as a default mstatus handler
-func DefaultMStatusHandler(ctx echo.Context) error {
-	log.L.Infof("MStatus request from %v", ctx.Request().RemoteAddr)
+// DefaultStatusHandler can be used as a default mstatus handler
+func DefaultStatusHandler(ctx echo.Context) error {
+	log.L.Infof("Status request from %v", ctx.Request().RemoteAddr)
 
-	var status MStatus
+	var status Status
 	var err error
 
 	status.Bin = os.Args[0]
@@ -50,15 +50,15 @@ func DefaultMStatusHandler(ctx echo.Context) error {
 	}
 
 	status.StatusCode = Healthy
-	status.Info = "used default mstatus handler"
+	status.Info = "used default status handler"
 	return ctx.JSON(http.StatusOK, status)
 }
 
-// DatabaseMStatusHandler validates that the microservice can talk to the database.
-func DatabaseMStatusHandler(ctx echo.Context) error {
-	log.L.Infof("MStatus request from %v", ctx.Request().RemoteAddr)
+// DatabaseStatusHandler validates that the microservice can talk to the database.
+func DatabaseStatusHandler(ctx echo.Context) error {
+	log.L.Infof("Status request from %v", ctx.Request().RemoteAddr)
 
-	var status MStatus
+	var status Status
 	var err error
 
 	status.Bin = os.Args[0]
