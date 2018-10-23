@@ -23,6 +23,7 @@ func NewRouter() *echo.Echo {
 
 	// return a default mstatus message
 	router.GET("/mstatus", status.DefaultMStatusHandler)
+	router.GET("/status", status.DefaultMStatusHandler)
 
 	router.PUT("/log-level/:level", log.SetLogLevel)
 	router.GET("/log-level", log.GetLogLevel)

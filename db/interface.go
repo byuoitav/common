@@ -1,10 +1,10 @@
 package db
 
 import (
-	"log"
 	"os"
 
 	"github.com/byuoitav/common/db/couch"
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 )
@@ -96,7 +96,7 @@ func init() {
 	password = os.Getenv("DB_PASSWORD")
 
 	if len(address) == 0 {
-		log.Fatalf("DB_ADDRESS is not set. Failing...")
+		log.L.Errorf("DB_ADDRESS is not set. Failing...")
 	}
 }
 
