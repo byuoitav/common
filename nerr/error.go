@@ -1,6 +1,7 @@
 package nerr
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"runtime/debug"
@@ -50,4 +51,16 @@ func Create(msg string, Type string) *E {
 		Type:       Type,
 		Stack:      debug.Stack(),
 	}
+}
+
+func (e *E) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		MessageLog []string `json:"message-log"`
+		Type       string   `json:"type"`
+		Stack      string   `json:"stack"`
+	}{
+		MessageLog: e.MessageLog,
+		Type:       e.Type,
+		Stack:      fmt.Sprintf("%s", e.Stack),
+	})
 }

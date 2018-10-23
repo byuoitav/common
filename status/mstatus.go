@@ -24,48 +24,55 @@ const (
 	versionPath = "version.txt"
 )
 
-// MStatus represents the microservice's health status
-type MStatus struct {
-	Name       string      `json:"name"`
-	Bin        string      `json:"bin"`
-	StatusCode string      `json:"statuscode"`
-	Version    string      `json:"version"`
-	Info       interface{} `json:"info"`
+// Status represents the microservice's health status
+type Status struct {
+	Name       string                 `json:"name"`
+	Bin        string                 `json:"bin"`
+	StatusCode string                 `json:"statuscode"`
+	Version    string                 `json:"version"`
+	Info       map[string]interface{} `json:"info"`
 }
 
-// DefaultMStatusHandler can be used as a default mstatus handler
-func DefaultMStatusHandler(ctx echo.Context) error {
-	log.L.Debugf("MStatus request from %v", ctx.Request().RemoteAddr)
+// NewStatus retuns an empty, initalized status struct
+func NewStatus() Status {
+	return Status{
+		Info: make(map[string]interface{}),
+	}
+}
 
-	var status MStatus
+// DefaultStatusHandler can be used as a default mstatus handler
+func DefaultStatusHandler(ctx echo.Context) error {
+	log.L.Debugf("Status request from %v", ctx.Request().RemoteAddr)
+
 	var err error
+	status := NewStatus()
 
 	status.Bin = os.Args[0]
 
 	status.Version, err = GetMicroserviceVersion()
 	if err != nil {
 		status.StatusCode = Sick
-		status.Info = "failed to open version.txt"
+		status.Info["error"] = "failed to open version.txt"
 		return ctx.JSON(http.StatusInternalServerError, status)
 	}
 
 	status.StatusCode = Healthy
-	status.Info = "used default mstatus handler"
+	status.Info[""] = "used default status handler"
 	return ctx.JSON(http.StatusOK, status)
 }
 
-// DatabaseMStatusHandler validates that the microservice can talk to the database.
-func DatabaseMStatusHandler(ctx echo.Context) error {
-	log.L.Infof("MStatus request from %v", ctx.Request().RemoteAddr)
+// DatabaseStatusHandler validates that the microservice can talk to the database.
+func DatabaseStatusHandler(ctx echo.Context) error {
+	log.L.Infof("Status request from %v", ctx.Request().RemoteAddr)
 
-	var status MStatus
 	var err error
+	status := NewStatus()
 
 	status.Bin = os.Args[0]
 
 	status.Version, err = GetMicroserviceVersion()
 	if err != nil {
-		status.Info = "failed to open version.txt"
+		status.Info["error"] = "failed to open version.txt"
 		status.StatusCode = Sick
 
 		return ctx.JSON(http.StatusInternalServerError, status)
@@ -75,10 +82,10 @@ func DatabaseMStatusHandler(ctx echo.Context) error {
 	vals, err := db.GetDB().GetAllBuildings()
 	if len(vals) == 0 || err != nil {
 		status.StatusCode = Dead
-		status.Info = fmt.Sprintf("unable to access database: %s", err)
+		status.Info["error"] = fmt.Sprintf("unable to access database: %s", err)
 	} else {
 		status.StatusCode = Healthy
-		status.Info = "Connected to database"
+		status.Info[""] = "Connected to database"
 	}
 
 	return ctx.JSON(http.StatusOK, status)
