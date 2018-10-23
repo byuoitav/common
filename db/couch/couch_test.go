@@ -17,7 +17,7 @@ func init() {
 		//	password: os.Getenv("TEST_DB_PASSWORD"),
 		address:  os.Getenv("DB_ADDRESS"),
 		username: os.Getenv("DB_USERNAME"),
-		password: os.Getenv("DB_PASSWORD"),
+		password: os.Getenv("DB_PASSWORD"), // test stuff: os.Getenv("JOEISAFOOL")
 	}
 }
 
@@ -60,15 +60,15 @@ func setupDatabase(t *testing.T) func(t *testing.T) {
 	t.Log("Setting up database for testing")
 
 	//set up our environment variables
-	oldCouchAddress := os.Getenv("COUCH_ADDRESS")
-	oldCouchUsername := os.Getenv("COUCH_USERNAME")
-	oldCouchPassword := os.Getenv("COUCH_PASSWORD")
-	oldLoggingLocation := os.Getenv("LOGGING_FILE_LOCATION")
+	//oldCouchAddress := os.Getenv("COUCH_ADDRESS")
+	//oldCouchUsername := os.Getenv("COUCH_USERNAME")
+	//oldCouchPassword := os.Getenv("COUCH_PASSWORD")
+	//oldLoggingLocation := os.Getenv("LOGGING_FILE_LOCATION")
 
-	os.Setenv("COUCH_ADDRESS", os.Getenv("COUCH_TESTING_ADDRESS"))
-	os.Setenv("COUCH_USERNAME", os.Getenv("COUCH_TESTING_USERNAME"))
-	os.Setenv("COUCH_PASSWORD", os.Getenv("COUCH_TESTING_PASSWORD"))
-	os.Setenv("LOGGING_FILE_LOCATION", os.Getenv("TEST_LOGGING_FILE_LOCATION"))
+	//os.Setenv("COUCH_ADDRESS", os.Getenv("COUCH_TESTING_ADDRESS"))
+	//os.Setenv("COUCH_USERNAME", os.Getenv("COUCH_TESTING_USERNAME"))
+	//jos.Setenv("COUCH_PASSWORD", os.Getenv("COUCH_TESTING_PASSWORD"))
+	//os.Setenv("LOGGING_FILE_LOCATION", os.Getenv("TEST_LOGGING_FILE_LOCATION"))
 
 	//now we go and set up the database
 
@@ -173,10 +173,10 @@ func setupDatabase(t *testing.T) func(t *testing.T) {
 	}
 
 	return func(tarp *testing.T) {
-		os.Setenv("COUCH_ADDRESS", oldCouchAddress)
-		os.Setenv("COUCH_USERNAME", oldCouchUsername)
-		os.Setenv("COUCH_PASSWORD", oldCouchPassword)
-		os.Setenv("LOGGING_FILE_LOCATION", oldLoggingLocation)
+//		os.Setenv("COUCH_ADDRESS", oldCouchAddress)
+//		os.Setenv("COUCH_USERNAME", oldCouchUsername)
+//		os.Setenv("COUCH_PASSWORD", oldCouchPassword)
+//		os.Setenv("LOGGING_FILE_LOCATION", oldLoggingLocation)
 	}
 }
 
