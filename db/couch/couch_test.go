@@ -17,7 +17,7 @@ func init() {
 		//	password: os.Getenv("TEST_DB_PASSWORD"),
 		address:  os.Getenv("DB_ADDRESS"),
 		username: os.Getenv("DB_USERNAME"),
-		password: os.Getenv("DB_PASSWORD"), // test stuff: os.Getenv("JOEISAFOOL")
+		password: os.Getenv("DB_PASSWORD"),
 	}
 }
 
@@ -67,7 +67,7 @@ func setupDatabase(t *testing.T) func(t *testing.T) {
 
 	//os.Setenv("COUCH_ADDRESS", os.Getenv("COUCH_TESTING_ADDRESS"))
 	//os.Setenv("COUCH_USERNAME", os.Getenv("COUCH_TESTING_USERNAME"))
-	//jos.Setenv("COUCH_PASSWORD", os.Getenv("COUCH_TESTING_PASSWORD"))
+	//os.Setenv("COUCH_PASSWORD", os.Getenv("COUCH_TESTING_PASSWORD"))
 	//os.Setenv("LOGGING_FILE_LOCATION", os.Getenv("TEST_LOGGING_FILE_LOCATION"))
 
 	//now we go and set up the database
