@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/byuoitav/common/db"
 	"github.com/byuoitav/common/log"
@@ -30,7 +31,14 @@ type Status struct {
 	Bin        string                 `json:"bin"`
 	StatusCode string                 `json:"statuscode"`
 	Version    string                 `json:"version"`
+	Uptime     string                 `json:"uptime"`
 	Info       map[string]interface{} `json:"info"`
+}
+
+var startTime time.Time
+
+func init() {
+	startTime = time.Now()
 }
 
 // NewStatus retuns an empty, initalized status struct
@@ -48,6 +56,7 @@ func DefaultStatusHandler(ctx echo.Context) error {
 	status := NewStatus()
 
 	status.Bin = os.Args[0]
+	status.Uptime = GetProgramUptime().String()
 
 	status.Version, err = GetMicroserviceVersion()
 	if err != nil {
@@ -69,6 +78,7 @@ func DatabaseStatusHandler(ctx echo.Context) error {
 	status := NewStatus()
 
 	status.Bin = os.Args[0]
+	status.Uptime = GetProgramUptime().String()
 
 	status.Version, err = GetMicroserviceVersion()
 	if err != nil {
@@ -107,4 +117,9 @@ func GetMicroserviceVersion() (string, error) {
 
 	version := scanner.Text()
 	return version, nil
+}
+
+// GetProgramUptime returns how long the program has been running
+func GetProgramUptime() time.Duration {
+	return time.Since(startTime)
 }
