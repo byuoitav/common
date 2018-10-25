@@ -121,5 +121,5 @@ func GetMicroserviceVersion() (string, error) {
 
 // GetProgramUptime returns how long the program has been running
 func GetProgramUptime() time.Duration {
-	return time.Since(startTime)
+	return time.Since(startTime).Truncate(time.Second)
 }
