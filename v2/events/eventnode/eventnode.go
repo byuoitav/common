@@ -1,4 +1,4 @@
-package events
+package eventnode
 
 import (
 	"encoding/json"

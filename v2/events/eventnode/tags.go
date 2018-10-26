@@ -1,6 +1,11 @@
-package events
+package eventnode
 
 /*
+*****************************
+THESE ARE NOT EVENT-TYPE TAGS
+*****************************
+These are used internally for the router and event nodes. Should probably find a home in an event node package
+
 In the context of our system there are five main players.
 1. Local Event Generators
 2. Room Event Proxies
