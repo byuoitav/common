@@ -75,13 +75,13 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 
 	if resp.StatusCode/100 != 2 {
-		log.L.Info("Non-200 response")
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
-			return errors.New(fmt.Sprintf("received a non-200 response from %v. Body: %s", url, b))
+			return fmt.Errorf("received a non-200 response from %v. Body: %s", url, b)
 		}
-		log.L.Error(ce)
+
+		log.L.Infof("Non-200 response: %v", ce.Error)
 		return CheckCouchErrors(ce)
 	}
 
@@ -92,7 +92,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, toFill)
 	if err != nil {
-		log.L.Infof("Can't unmarshal %v", err.Error())
+		log.L.Errorf("Can't unmarshal %v", err.Error())
 		//check to see if it was a known error from couch
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
