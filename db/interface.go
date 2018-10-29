@@ -65,6 +65,9 @@ type DB interface {
 	GetRoomsByBuilding(id string) ([]structs.Room, error)
 	GetRoomsByDesignation(designation string) ([]structs.Room, *nerr.E)
 
+	/* dmps functions */
+	GetDMPSList() (structs.DMPSList, error)
+
 	/* Options Functions */
 	GetTemplate(id string) (structs.UIConfig, error)
 	GetAllTemplates() ([]structs.Template, error)

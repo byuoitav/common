@@ -24,6 +24,7 @@ const (
 	ROLES               = "DeviceRoles"
 	ROOM_DESIGNATIONS   = "RoomDesignations"
 	TAGS                = "Tags"
+	DMPSLIST            = "dmps"
 )
 
 type CouchDB struct {

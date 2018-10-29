@@ -29,15 +29,21 @@ type StaticDevice struct {
 	Tags []string `json:"tags,omitempty"`
 
 	//semi-common fields LastHeartbeat time.Time `json:"last-heartbeat,omitempty"` LastUserInput time.Time `json:"last-user-input,omitempty"`
-	Power string `json:"power,omitempty"`
+	Power           string `json:"power,omitempty"`
+	Active          string `json:"active,omitempty"`
+	Secure          string `json:"secure,omitempty"`
+	HardwareVersion string `json:"hardware-version,omitempty"`
+	SoftwareVersion string `json:"software-version,omitempty"`
 
 	//Control Processor Specific Fields
 	Websocket      string `json:"websocket,omitempty"`
 	WebsocketCount *int   `json:"websocket-count,omitempty"`
 
 	//Display Specific Fields
-	Blanked *bool  `json:"blanked,omitempty"`
-	Input   string `json:"input,omitempty"`
+	Blanked     *bool  `json:"blanked,omitempty"`
+	Input       string `json:"input,omitempty"`
+	LampHours   string `json:"lamp-hours,omitEmpty"`
+	Temperature string `json:"temperature,omitEmpty"`
 
 	//Audio Device Specific Fields
 	Muted  *bool `json:"muted,omitempty"`
@@ -47,10 +53,11 @@ type StaticDevice struct {
 	BatteryChargeBars         *int   `json:"battery-charge-bars,omitempty"`
 	BatteryChargeMinutes      *int   `json:"battery-charge-minutes,omitempty"`
 	BatteryChargePercentage   *int   `json:"battery-charge-percentage,omitempty"`
-	BatteryChargeHoursMinutes *int   `json:"battery-charge-hours-minutes,omitempty"`
+	BatteryChargeHoursMinutes string `json:"battery-charge-hours-minutes,omitempty"`
 	BatteryCycles             *int   `json:"battery-cycles,omitempty"`
 	BatteryType               string `json:"battery-type,omitempty"`
-	Interference              string `json:"intererence,omitempty"`
+	MicrophoneChannel         string `json:"microphone-channel,omitempty"`
+	Interference              string `json:"interference,omitempty"`
 
 	//meta fields for use in kibana
 	Control               string `json:"control,omitempty"`                //the id - used in a URL
@@ -120,6 +127,18 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	if new.UpdateTimes["power"].After(base.UpdateTimes["power"]) {
 		diff.Power, merged.Power, changes = compareString(base.Power, new.Power, changes)
 	}
+	if new.UpdateTimes["active"].After(base.UpdateTimes["active"]) {
+		diff.Active, merged.Active, changes = compareString(base.Active, new.Active, changes)
+	}
+	if new.UpdateTimes["secure"].After(base.UpdateTimes["secure"]) {
+		diff.Secure, merged.Secure, changes = compareString(base.Secure, new.Power, changes)
+	}
+	if new.UpdateTimes["hardware-version"].After(base.UpdateTimes["hardware-version"]) {
+		diff.HardwareVersion, merged.HardwareVersion, changes = compareString(base.HardwareVersion, new.HardwareVersion, changes)
+	}
+	if new.UpdateTimes["software-version"].After(base.UpdateTimes["software-version"]) {
+		diff.SoftwareVersion, merged.SoftwareVersion, changes = compareString(base.SoftwareVersion, new.SoftwareVersion, changes)
+	}
 
 	//Conrol processor specific fields
 	if new.UpdateTimes["websocket"].After(base.UpdateTimes["websocket"]) {
@@ -136,6 +155,13 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	if new.UpdateTimes["input"].After(base.UpdateTimes["input"]) {
 		diff.Input, merged.Input, changes = compareString(base.Input, new.Input, changes)
 	}
+	if new.UpdateTimes["lamp-hours"].After(base.UpdateTimes["lamp-hours"]) {
+		diff.LampHours, merged.LampHours, changes = compareString(base.LampHours, new.LampHours, changes)
+	}
+	if new.UpdateTimes["temperature"].After(base.UpdateTimes["temperature"]) {
+		diff.Temperature, merged.Temperature, changes = compareString(base.Temperature, new.Temperature, changes)
+	}
+
 	//Audio Device specific fields
 	if new.UpdateTimes["muted"].After(base.UpdateTimes["muted"]) {
 		diff.Muted, merged.Muted, changes = compareBool(base.Muted, new.Muted, changes)
@@ -155,13 +181,16 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.BatteryChargePercentage, merged.BatteryChargePercentage, changes = compareInt(base.BatteryChargePercentage, new.BatteryChargePercentage, changes)
 	}
 	if new.UpdateTimes["battery-chage-hours-minutes"].After(base.UpdateTimes["battery-chage-hours-minutes"]) {
-		diff.BatteryChargeHoursMinutes, merged.BatteryChargeHoursMinutes, changes = compareInt(base.BatteryChargeHoursMinutes, new.BatteryChargeHoursMinutes, changes)
+		diff.BatteryChargeHoursMinutes, merged.BatteryChargeHoursMinutes, changes = compareString(base.BatteryChargeHoursMinutes, new.BatteryChargeHoursMinutes, changes)
 	}
 	if new.UpdateTimes["battery-cycles"].After(base.UpdateTimes["battery-cycles"]) {
 		diff.BatteryCycles, merged.BatteryCycles, changes = compareInt(base.BatteryCycles, new.BatteryCycles, changes)
 	}
 	if new.UpdateTimes["battery-type"].After(base.UpdateTimes["battery-type"]) {
 		diff.BatteryType, merged.BatteryType, changes = compareString(base.BatteryType, new.BatteryType, changes)
+	}
+	if new.UpdateTimes["microphone-channel"].After(base.UpdateTimes["microphone-channel"]) {
+		diff.MicrophoneChannel, merged.MicrophoneChannel, changes = compareString(base.MicrophoneChannel, new.MicrophoneChannel, changes)
 	}
 	if new.UpdateTimes["interference"].After(base.UpdateTimes["interference"]) {
 		diff.Interference, merged.Interference, changes = compareString(base.Interference, new.Interference, changes)
