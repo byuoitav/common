@@ -1,13 +1,14 @@
 package health
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/byuoitav/common/events"
+	"github.com/byuoitav/common/v2/events"
 	"github.com/labstack/echo"
 )
 
@@ -48,38 +49,30 @@ func SendSuccessfulStartup(healthCheck func() map[string]string, MicroserviceNam
 }
 
 func publishEvent(publish func(events.Event), k string, v string, name string) {
-	publish(BuildEvent(
-		events.HEALTH,
-		events.STARTUP,
-		k, v, name,
-	))
+	publish(BuildEvent(k, v, name))
 }
 
-func BuildEvent(Type events.EventType, Cause events.EventCause, Key string, Value string, Device string) events.Event {
-
-	info := events.EventInfo{
-		Type:           Type,
-		EventCause:     Cause,
-		Device:         Device,
-		EventInfoKey:   Key,
-		EventInfoValue: Value,
-	}
-
+func BuildEvent(Key string, Value string, Device string) events.Event {
 	hostname := os.Getenv("PI_HOSTNAME")
 	split := strings.Split(hostname, "-")
+	room := fmt.Sprintf("%s-%s", split[0], split[1])
 
-	return events.Event{
-		Hostname:         hostname,
-		Timestamp:        time.Now().Format(time.RFC3339),
-		LocalEnvironment: len(os.Getenv("LOCAL_ENVIRONMENT")) > 0,
-		Event:            info,
-		Building:         split[0],
-		Room:             split[1],
+	roomInfo := events.GenerateBasicRoomInfo(room)
+
+	deviceInfo := events.GenerateBasicDeviceInfo(Device)
+
+	e := events.Event{
+		GeneratingSystem: hostname,
+		Timestamp:        time.Now(),
+		AffectedRoom:     roomInfo,
+		TargetDevice:     deviceInfo,
+		Key:              Key,
+		Value:            Value,
 	}
 
+	return e
 }
 
 func HealthCheck(context echo.Context) error {
 	return context.JSON(http.StatusOK, "Uh, had a slight weapons malfunction. But, uh, everything's perfectly all right now. We're fine. We're all fine here, now, thank you. How are you?")
-
 }

@@ -105,3 +105,12 @@ func HasTag(e Event, t string) bool {
 
 	return false
 }
+
+// AddToTags takes one or more strings and adds them to the list of event tags on the event.
+func (e Event) AddToTags(tags ...string) {
+	for _, t := range tags {
+		if !HasTag(e, t) {
+			e.EventTags = append(e.EventTags, t)
+		}
+	}
+}
