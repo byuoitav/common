@@ -8,8 +8,8 @@ import (
 	"github.com/byuoitav/common/troubleshootingflow/node"
 )
 
-type Flow struct {
-	//Essential Definition
+type FlowDefinition struct {
+	//Essential Initial Definition
 	FlowChart  map[string]FlowState
 	Triggers   []string
 	StartState string
@@ -17,8 +17,12 @@ type Flow struct {
 	TTR time.Duration
 	//Time to wait before marking alert as flapping.
 	FlappingInterval time.Duration
+}
 
+type Flow struct {
+	FlowDefinition
 	//Filled during process
+
 	StateHistroy []Step
 	CurrentState string
 	Ctx          context.Context //Context
