@@ -94,7 +94,7 @@ func GenerateBasicRoomInfo(roomID string) BasicRoomInfo {
 
 	return BasicRoomInfo{
 		BuildingID: vals[0],
-		RoomID:     vals[1],
+		RoomID:     vals[0] + "-" + vals[1],
 	}
 }
 
