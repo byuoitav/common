@@ -53,7 +53,7 @@ func publishEvent(publish func(events.Event), k string, v string, name string) {
 }
 
 func BuildEvent(Key string, Value string, Device string) events.Event {
-	hostname := os.Getenv("PI_HOSTNAME")
+	hostname := os.Getenv("SYSTEM_ID")
 	split := strings.Split(hostname, "-")
 	room := fmt.Sprintf("%s-%s", split[0], split[1])
 
