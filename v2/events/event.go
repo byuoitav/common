@@ -24,19 +24,19 @@ const (
 // An Event is generated as a result of something happening in a room and enables other systems to act on it, as well as collect metrics.
 type Event struct {
 	// GeneratingSystem is the system actually generating the event. i.e. For an API call against a raspberry pi this would be the hostname of the raspberry pi running the AV-API. If the call is against AWS, this would be 'AWS'
-	GeneratingSystem string `json:"generating-system"`
+	GeneratingSystem string `json:"generating_system"`
 
 	// Timestamp is the time the event took place
 	Timestamp time.Time `json:"timestamp"`
 
 	// EventTags is a collection of strings to give more information about what kind of event this is, used in routing and processing events. See the EventTags const delcaration for some common tags.
-	EventTags []string `json:"event-tags"`
+	EventTags []string `json:"event_tags"`
 
 	// TargetDevice is the device being affected by the event. e.g. a power on event, this would be the device powering on
-	TargetDevice BasicDeviceInfo `json:"target-device"`
+	TargetDevice BasicDeviceInfo `json:"target_device"`
 
 	// AffectedRoom is the room being affected by the event. e.g. in events arising from an API call this is the room called in the API
-	AffectedRoom BasicRoomInfo `json:"affected-room"`
+	AffectedRoom BasicRoomInfo `json:"affected_room"`
 
 	// Key of the event
 	Key string `json:"key"`
