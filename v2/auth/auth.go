@@ -14,6 +14,9 @@ import (
 
 var internalPermissionCache = make(map[string][]base.Response)
 
+//bypass - :0
+var bypassAuth = os.Getenv("BYPASS_AUTH")
+
 //for use on the endpoint
 var authURL = os.Getenv("ENDPOINT_AUTHORIZATION_URL")
 
@@ -42,6 +45,9 @@ func CheckRolesForReceivedRequest(context echo.Context, role string, resourceID 
 
 //CheckRolesForUser to check authorization of a user for a specific resource.  For use in an endpoint receiving requests
 func CheckRolesForUser(user string, accessKey string, role string, resourceID string, resourceType string) (bool, error) {
+	if len(bypassAuth) > 0 {
+		return true, nil
+	}
 
 	cacheTest := checkCacheForAuth(user, accessKey, role, resourceID, resourceType)
 
