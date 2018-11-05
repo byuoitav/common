@@ -16,7 +16,7 @@ func NewRouter() *echo.Echo {
 	router := echo.New()
 
 	router.Pre(middleware.RemoveTrailingSlash())
-	router.Use(middleware.CORS())
+	router.Use(middleware.CORS()) // do we always want this?
 
 	// return a default health message
 	router.GET("/health", func(ctx echo.Context) error {

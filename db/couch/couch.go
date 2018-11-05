@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/byuoitav/common/log"
 )
@@ -62,7 +63,9 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 	req.Header.Add("accept", "application/json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -154,8 +157,9 @@ func CheckCouchErrors(ce CouchError) error {
 type IDPrefixQuery struct {
 	Selector struct {
 		ID struct {
-			GT string `json:"$gt,omitempty"`
-			LT string `json:"$lt,omitempty"`
+			GT    string `json:"$gt,omitempty"`
+			LT    string `json:"$lt,omitempty"`
+			Regex string `json:"$regex,omitempty"`
 		} `json:"_id"`
 	} `json:"selector"`
 	Limit int `json:"limit"`
