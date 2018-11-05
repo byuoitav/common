@@ -1,12 +1,10 @@
 package common
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/status"
-	"github.com/byuoitav/common/v2/auth"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
