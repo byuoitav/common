@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/byuoitav/common/log"
 )
 
 //CreateRequest Creates an http request with a json body representing the body object passed in
@@ -25,6 +27,7 @@ func CreateRequest(method string, url string, body interface{}, headers map[stri
 			return nil, err
 		}
 	}
+	log.L.Debugf("Request body: %s", bodyBytes)
 
 	// start building the request
 	requestToReturn, err := http.NewRequest(method, url, bytes.NewReader(bodyBytes))
@@ -70,12 +73,12 @@ func ExecuteRequest(req *http.Request, output interface{}, timeoutInSeconds int)
 		}
 	}
 
-	//log.L.Debugf("Response [%v] received", string(b))
+	log.L.Debugf("Response [%v] received", string(b))
 
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, &output)
 	if err != nil {
-		return fmt.Errorf("Can't unmarshal %v", err.Error())
+		return fmt.Errorf("Can't unmarshal %v. Received: %s", err.Error(), b)
 	}
 
 	return nil
