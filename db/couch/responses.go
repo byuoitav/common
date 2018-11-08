@@ -1,6 +1,9 @@
 package couch
 
-import "github.com/byuoitav/common/structs"
+import (
+	"github.com/byuoitav/common/state/statedefinition"
+	"github.com/byuoitav/common/structs"
+)
 
 type building struct {
 	Rev string `json:"_rev,omitempty"`
@@ -44,6 +47,12 @@ type deviceQueryResponse struct {
 	Docs     []device `json:"docs"`
 	Bookmark string   `json:"bookmark"`
 	Warning  string   `json:"warning"`
+}
+
+type deviceStateQueryResponse struct {
+	Docs     []statedefinition.StaticDevice `json:"docs"`
+	Bookmark string                         `json:"bookmark"`
+	Warning  string                         `json:"warning"`
 }
 
 type deviceType struct {

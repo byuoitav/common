@@ -6,6 +6,7 @@ import (
 	"github.com/byuoitav/common/db/couch"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
+	"github.com/byuoitav/common/state/statedefinition"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -28,6 +29,9 @@ type DB interface {
 	GetDevice(id string) (structs.Device, error)
 	UpdateDevice(id string, device structs.Device) (structs.Device, error)
 	DeleteDevice(id string) error
+
+	// device state
+	GetDeviceState(string) (statedefinition.StaticDevice, error)
 
 	// device type
 	CreateDeviceType(dt structs.DeviceType) (structs.DeviceType, error)
@@ -53,11 +57,14 @@ type DB interface {
 	GetAllRooms() ([]structs.Room, error)
 	GetAllDevices() ([]structs.Device, error)
 	GetAllDeviceTypes() ([]structs.DeviceType, error)
+	GetAllDeviceStates() ([]statedefinition.StaticDevice, error)
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
 	CreateBulkDevices([]structs.Device) []structs.BulkUpdateResponse // TODO change the response struct
 
 	/* Specialty functions */
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
+	GetDeviceStatesByRoom(roomID string) ([]statedefinition.StaticDevice, error)
+	GetDeviceStatesByBuilding(buildingID string) ([]statedefinition.StaticDevice, error)
 	GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, *nerr.E)
