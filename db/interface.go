@@ -46,6 +46,7 @@ type DB interface {
 	GetUIConfig(roomID string) (structs.UIConfig, error)
 	UpdateUIConfig(id string, ui structs.UIConfig) (structs.UIConfig, error)
 	DeleteUIConfig(id string) error
+	GetUIAttachment(ui, attachment string) (string, []byte, error)
 
 	/* bulk functions */
 	GetAllBuildings() ([]structs.Building, error)
