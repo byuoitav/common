@@ -58,27 +58,27 @@ type deviceTypeQueryResponse struct {
 }
 
 type uiconfig struct {
-	Rev string `json:"_rev",omitempty`
+	Rev string `json:"_rev,omitempty"`
 	*structs.UIConfig
 }
 
 type icons struct {
-	Rev      string   `json:"_rev",omitempty`
+	Rev      string   `json:"_rev,omitempty"`
 	IconList []string `json:"Icons"`
 }
 
 type deviceRoles struct {
-	Rev      string         `json:"_rev",omitempty`
+	Rev      string         `json:"_rev,omitempty"`
 	RoleList []structs.Role `json:"roles"`
 }
 
 type roomDesignations struct {
-	Rev       string   `json:"_rev",omitempty`
+	Rev       string   `json:"_rev,omitempty"`
 	DesigList []string `json:"designations"`
 }
 
 type tags struct {
-	Rev     string   `json:"_rev",omitempty`
+	Rev     string   `json:"_rev,omitempty"`
 	TagList []string `json:"tags"`
 }
 
@@ -89,6 +89,6 @@ type templateQueryResponse struct {
 }
 
 type template struct {
-	Rev string `json:"_rev",omitempty`
+	Rev string `json:"_rev,omitempty"`
 	*structs.Template
 }

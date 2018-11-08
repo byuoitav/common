@@ -35,7 +35,6 @@ type CouchDB struct {
 }
 
 func NewDB(address, username, password string) *CouchDB {
-
 	return &CouchDB{
 		address:  strings.Trim(address, "/"),
 		username: username,
