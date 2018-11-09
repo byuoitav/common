@@ -259,3 +259,14 @@ func HasRole(device Device, role string) bool {
 	}
 	return false
 }
+
+// HasRole checks to see if the given device has the given role.
+func (d *Device) HasRole(role string) bool {
+	role = strings.ToLower(role)
+	for i := range d.Roles {
+		if strings.EqualFold(strings.ToLower(d.Roles[i].ID), role) {
+			return true
+		}
+	}
+	return false
+}
