@@ -203,16 +203,16 @@ func (c *CouchDB) CreateRoom(toAdd structs.Room) (structs.Room, error) {
 
 	// create the devices
 	var wg sync.WaitGroup
-	for _, device := range devices {
+	for index := range devices {
 		wg.Add(1)
 
-		go func() {
-			d, err := c.CreateDevice(device)
+		go func(i int) {
+			d, err := c.CreateDevice(devices[i])
 			if err == nil {
 				toReturn.Devices = append(toReturn.Devices, d)
 			}
 			wg.Done()
-		}()
+		}(index)
 	}
 
 	wg.Wait()
@@ -229,12 +229,13 @@ func (c *CouchDB) DeleteRoom(id string) error {
 
 	// delete each of the devices from the room
 	var wg sync.WaitGroup
-	for _, device := range room.Devices {
+	for index := range room.Devices {
 		wg.Add(1)
-		go func() {
-			c.DeleteDevice(device.ID)
+
+		go func(i int) {
+			c.DeleteDevice(room.Devices[i].ID)
 			wg.Done()
-		}()
+		}(index)
 	}
 	wg.Wait()
 

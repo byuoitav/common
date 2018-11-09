@@ -126,5 +126,6 @@ func GetDeviceNameFromHostname() string {
 }
 
 func GetDevHostname() string {
+	//+deploy not_required
 	return os.Getenv("DEVELOPMENT_HOSTNAME")
 }
