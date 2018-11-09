@@ -4,11 +4,13 @@ import (
 	"log"
 
 	"github.com/byuoitav/common/nerr"
+	"github.com/fatih/color"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
+// L is our SugaredLogger
 var L *zap.SugaredLogger
 var cfg zap.Config
 var atom zap.AtomicLevel
@@ -24,7 +26,7 @@ func init() {
 
 	l, err := cfg.Build()
 	if err != nil {
-		log.Printf("Couldn't build config for zap logger: %v", err.Error())
+		log.Print(color.HiRedString("Couldn't build config for zap logger: %v", err.Error()))
 		panic(err)
 	}
 
@@ -32,9 +34,10 @@ func init() {
 	atom.SetLevel(zapcore.InfoLevel)
 
 	L = l.Sugar()
-	L.Info("Zap Logger Started")
+	L.Info(color.HiYellowString("Zap Logger Started"))
 }
 
+// SetLevel sets the log level
 func SetLevel(level string) *nerr.E {
 	switch level {
 	case "debug":
@@ -58,6 +61,7 @@ func SetLevel(level string) *nerr.E {
 	return nil
 }
 
+// GetLevel returns the current log level
 func GetLevel() (string, *nerr.E) {
 	return atom.Level().String(), nil
 }
