@@ -25,7 +25,7 @@ const (
 
 // Status represents the microservice's health status
 type Status struct {
-	Name       string                 `json:"name"`
+	Name       string                 `json:"name,omitempty"`
 	Bin        string                 `json:"bin"`
 	StatusCode string                 `json:"statuscode"`
 	Version    string                 `json:"version"`

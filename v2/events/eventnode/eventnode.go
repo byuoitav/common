@@ -1,4 +1,4 @@
-package events
+package eventnode
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
+	"github.com/byuoitav/common/v2/events"
 	"github.com/byuoitav/messenger"
 )
 
@@ -29,7 +30,7 @@ func NewEventNode(name, routerAddress string, filters []string) *EventNode {
 }
 
 // PublishEvent publishes an event with the given tag
-func (n *EventNode) PublishEvent(tag string, event Event) *nerr.E {
+func (n *EventNode) PublishEvent(tag string, event events.Event) *nerr.E {
 	log.L.Debugf("Sending an event with tag: %v", tag)
 
 	// turn event into bytes
@@ -42,8 +43,8 @@ func (n *EventNode) PublishEvent(tag string, event Event) *nerr.E {
 	return nil
 }
 
-func (n *EventNode) Read() (Event, *nerr.E) {
-	var toReturn Event
+func (n *EventNode) Read() (events.Event, *nerr.E) {
+	var toReturn events.Event
 	msg := n.Node.Read()
 
 	err := json.Unmarshal(msg.Body, &toReturn)
