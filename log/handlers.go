@@ -10,16 +10,17 @@ import (
 func SetLogLevel(c echo.Context) error {
 	lvl := c.Param("level")
 
-	L.Info("Setting log level to %v")
+	L.Infof("Setting log level to %s", lvl)
 	err := SetLevel(lvl)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	L.Info("Log level set to %v", lvl)
+	L.Info("Log level set to %s", lvl)
 	return c.JSON(http.StatusOK, "ok")
 }
 
+// GetLogLevel returns the current log level
 func GetLogLevel(c echo.Context) error {
 
 	L.Info("Getting log level.")
@@ -28,7 +29,7 @@ func GetLogLevel(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	L.Infof("Log level is %v", lvl)
+	L.Infof("Log level is %s", lvl)
 
 	m := make(map[string]string)
 	m["log-level"] = lvl
