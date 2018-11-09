@@ -14,6 +14,7 @@ func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
 	return *device.Device, err
 }
+
 func (c *CouchDB) getDevice(id string) (device, error) {
 	var toReturn device // get the device
 	err := c.MakeRequest("GET", fmt.Sprintf("%s/%v", DEVICES, id), "", nil, &toReturn)
@@ -490,7 +491,7 @@ func (c *CouchDB) CreateBulkDevices(devices []structs.Device) []structs.BulkUpda
 					// try to create device type
 					_, err := c.CreateDeviceType(device.Type)
 					if err != nil {
-						response.Message = fmt.Sprintf("device type %s doesn't exist yet, and not enough information was included to create it. (error: %s)", err)
+						response.Message = fmt.Sprintf("device type %s doesn't exist yet, and not enough information was included to create it. (error: %s)", device.Type.ID, err)
 						toReturn = append(toReturn, response)
 						checkedTypes[device.Type.ID] = false
 						continue

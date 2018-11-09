@@ -17,6 +17,7 @@ const (
 	BUILDINGS           = "buildings"
 	ROOMS               = "rooms"
 	DEVICES             = "devices"
+	DEVICE_STATES       = "device-state"
 	DEVICE_TYPES        = "device_types"
 	ROOM_CONFIGURATIONS = "room_configurations"
 	UI_CONFIGS          = "ui-configuration"
@@ -35,7 +36,6 @@ type CouchDB struct {
 }
 
 func NewDB(address, username, password string) *CouchDB {
-
 	return &CouchDB{
 		address:  strings.Trim(address, "/"),
 		username: username,
@@ -140,7 +140,6 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 
 	return nil
 }
-
 func CheckCouchErrors(ce CouchError) error {
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
