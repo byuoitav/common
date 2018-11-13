@@ -46,6 +46,24 @@ func NewStatus() Status {
 	}
 }
 
+//NewBaseStatus initializes a status stuct with the default stuff.
+func NewBaseStatus() Status {
+	var err error
+	status := NewStatus()
+
+	status.Bin = os.Args[0]
+	status.Uptime = GetProgramUptime().String()
+
+	status.Version, err = GetMicroserviceVersion()
+	if err != nil {
+		status.StatusCode = Sick
+		status.Info["error"] = "failed to open version.txt"
+	}
+
+	status.StatusCode = Healthy
+	return status
+}
+
 // DefaultStatusHandler can be used as a default mstatus handler
 func DefaultStatusHandler(ctx echo.Context) error {
 	log.L.Debugf("Status request from %v", ctx.Request().RemoteAddr)
