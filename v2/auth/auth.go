@@ -36,23 +36,31 @@ func AddAuthToRequestForUser(request *http.Request, userName string) {
 	request.Header.Add("x-av-user", userName)
 }
 
-/*
-//CheckRolesForReceivedRequest to check authorization of a user for a specific resource.  For use in an endpoint receiving requests
-func CheckRolesForReceivedRequest(context echo.Context, role string, resourceID string, resourceType string) (bool, error) {
-	accessKeyFromRequest := context.Request().Header.Get("x-av-access-key")
-	userFromRequest := context.Request().Header.Get("x-av-user")
-	return CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, resourceID, resourceType)
-}
-*/
-
 // AuthorizeRequest is an echo middleware function that will check the authorization of a user for a specific resource.
 func AuthorizeRequest(role, resourceType string, resourceID func(echo.Context) string) func(echo.HandlerFunc) echo.HandlerFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
+			if len(bypassAuth) > 0 {
+				log.L.Debugf("Bypassing auth check")
+				return next(ctx)
+			}
+			log.L.Debugf("Checking auth for endpoint %s, which requires the role '%s' for resource type '%s'. This request is from %s", ctx.Path(), role, resourceType, ctx.RealIP())
+
 			accessKeyFromRequest := ctx.Request().Header.Get("x-av-access-key")
 			userFromRequest := ctx.Request().Header.Get("x-av-user")
 
-			ok, err := CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, resourceID(ctx), resourceType)
+			if len(accessKeyFromRequest) == 0 || len(userFromRequest) == 0 {
+				return ctx.String(http.StatusBadRequest, "must include 'x-av-access-key' and 'x-av-user' headers")
+			}
+
+			resource := resourceID(ctx)
+			if len(resource) == 0 {
+				return ctx.String(http.StatusInternalServerError, "unable to get resource from request")
+			}
+
+			log.L.Debugf("Resource ID for this auth check is %s (request from %s)", resource, ctx.Path())
+
+			ok, err := CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, resource, resourceType)
 			if err != nil {
 				return ctx.String(http.StatusInternalServerError, fmt.Sprintf("unable to authorize request: %s", err))
 			}
@@ -66,14 +74,18 @@ func AuthorizeRequest(role, resourceType string, resourceID func(echo.Context) s
 	}
 }
 
+// LookupResourceFromAddress uses the ":address" parameter from the endpoint and returns the resourceID requested.
+func LookupResourceFromAddress(ctx echo.Context) string {
+	// TODO this should rip out :address and either use the hostname
+	// or do a reverse DNS lookup to decide what it's hostname is,
+	// and then return the resourceID of the address requested
+	// should be used on device communication microservices (sony-control, etc)
+	return ""
+}
+
 //CheckRolesForUser to check authorization of a user for a specific resource.  For use in an endpoint receiving requests
 func CheckRolesForUser(user string, accessKey string, role string, resourceID string, resourceType string) (bool, error) {
-	if len(bypassAuth) > 0 {
-		return true, nil
-	}
-
 	cacheTest := checkCacheForAuth(user, accessKey, role, resourceID, resourceType)
-
 	if cacheTest {
 		return true, nil
 	}
