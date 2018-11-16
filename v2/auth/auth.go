@@ -36,11 +36,34 @@ func AddAuthToRequestForUser(request *http.Request, userName string) {
 	request.Header.Add("x-av-user", userName)
 }
 
+/*
 //CheckRolesForReceivedRequest to check authorization of a user for a specific resource.  For use in an endpoint receiving requests
 func CheckRolesForReceivedRequest(context echo.Context, role string, resourceID string, resourceType string) (bool, error) {
 	accessKeyFromRequest := context.Request().Header.Get("x-av-access-key")
 	userFromRequest := context.Request().Header.Get("x-av-user")
 	return CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, resourceID, resourceType)
+}
+*/
+
+// AuthorizeRequest is an echo middleware function that will check the authorization of a user for a specific resource.
+func AuthorizeRequest(role, resourceType string, resourceID func(echo.Context) string) func(echo.HandlerFunc) echo.HandlerFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			accessKeyFromRequest := ctx.Request().Header.Get("x-av-access-key")
+			userFromRequest := ctx.Request().Header.Get("x-av-user")
+
+			ok, err := CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, resourceID(ctx), resourceType)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, fmt.Sprintf("unable to authorize request: %s", err))
+			}
+
+			if !ok {
+				return ctx.String(http.StatusUnauthorized, "Not authorized")
+			}
+
+			return next(ctx)
+		}
+	}
 }
 
 //CheckRolesForUser to check authorization of a user for a specific resource.  For use in an endpoint receiving requests
