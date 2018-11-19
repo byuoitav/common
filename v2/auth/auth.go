@@ -94,7 +94,7 @@ func CheckRolesForUser(user string, accessKey string, role string, resourceID st
 	var authRequestBody base.Request
 	authRequestBody.AccessKey = accessKey
 	authRequestBody.UserInformation.ID = user
-	authRequestBody.UserInformation.AuthMethod = "CAS"
+	authRequestBody.UserInformation.AuthMethod = "cas"
 	authRequestBody.UserInformation.ResourceType = resourceType
 	authRequestBody.UserInformation.ResourceID = resourceID
 
