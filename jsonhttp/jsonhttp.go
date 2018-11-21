@@ -66,7 +66,6 @@ func ExecuteRequest(req *http.Request, output interface{}, timeoutInSeconds int)
 	if err != nil {
 		return err
 	}
-
 	if resp.StatusCode/100 != 2 {
 		if err != nil {
 			return fmt.Errorf("received a non-200 response")

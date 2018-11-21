@@ -1,19 +1,9 @@
 package auth
 
-import (
-	"fmt"
-	"net"
-	"os"
-	"strings"
-
-	"github.com/byuoitav/common/log"
-	"github.com/labstack/echo"
-)
-
+/*
 //CheckAuthForLocalEndpoints assumes that the resource ID being acessed is the room the device is currently in.
 func CheckAuthForLocalEndpoints(context echo.Context, role string) (bool, error) {
-	ip, _, err := net.SplitHostPort(context.Request().RemoteAddr)
-	if err != nil {
+	ip, _, err := net.SplitHostPort(context.Request().RemoteAddr) if err != nil {
 		return false, fmt.Errorf("Couldn't parse remote address: %v", err.Error())
 	}
 	log.L.Debugf("Remote addr: %v", ip)
@@ -32,3 +22,4 @@ func CheckAuthForLocalEndpoints(context echo.Context, role string) (bool, error)
 
 	return CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, roomID[0]+"-"+roomID[1], "room")
 }
+*/
