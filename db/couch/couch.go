@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/byuoitav/common/log"
 )
@@ -16,6 +17,7 @@ const (
 	BUILDINGS           = "buildings"
 	ROOMS               = "rooms"
 	DEVICES             = "devices"
+	DEVICE_STATES       = "device-state"
 	DEVICE_TYPES        = "device_types"
 	ROOM_CONFIGURATIONS = "room_configurations"
 	UI_CONFIGS          = "ui-configuration"
@@ -24,6 +26,7 @@ const (
 	ROLES               = "DeviceRoles"
 	ROOM_DESIGNATIONS   = "RoomDesignations"
 	TAGS                = "Tags"
+	DMPSLIST            = "dmps"
 )
 
 type CouchDB struct {
@@ -33,7 +36,6 @@ type CouchDB struct {
 }
 
 func NewDB(address, username, password string) *CouchDB {
-
 	return &CouchDB{
 		address:  strings.Trim(address, "/"),
 		username: username,
@@ -61,7 +63,9 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 	req.Header.Add("accept", "application/json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -75,13 +79,13 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	}
 
 	if resp.StatusCode/100 != 2 {
-		log.L.Info("Non-200 response")
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
-			return errors.New(fmt.Sprintf("received a non-200 response from %v. Body: %s", url, b))
+			return fmt.Errorf("received a non-200 response from %v. Body: %s", url, b)
 		}
-		log.L.Error(ce)
+
+		log.L.Infof("Non-200 response: %v", ce.Error)
 		return CheckCouchErrors(ce)
 	}
 
@@ -92,7 +96,7 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	//otherwise we unmarshal
 	err = json.Unmarshal(b, toFill)
 	if err != nil {
-		log.L.Infof("Can't unmarshal %v", err.Error())
+		log.L.Errorf("Can't unmarshal %v", err.Error())
 		//check to see if it was a known error from couch
 		var ce CouchError
 		err = json.Unmarshal(b, &ce)
@@ -136,7 +140,6 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 
 	return nil
 }
-
 func CheckCouchErrors(ce CouchError) error {
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
@@ -153,8 +156,9 @@ func CheckCouchErrors(ce CouchError) error {
 type IDPrefixQuery struct {
 	Selector struct {
 		ID struct {
-			GT string `json:"$gt,omitempty"`
-			LT string `json:"$lt,omitempty"`
+			GT    string `json:"$gt,omitempty"`
+			LT    string `json:"$lt,omitempty"`
+			Regex string `json:"$regex,omitempty"`
 		} `json:"_id"`
 	} `json:"selector"`
 	Limit int `json:"limit"`

@@ -2,9 +2,12 @@ package couch
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
 
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -31,7 +34,7 @@ func (c *CouchDB) CreateUIConfig(roomID string, toAdd structs.UIConfig) (structs
 
 	b, err := json.Marshal(toAdd)
 	if err != nil {
-		return toReturn, errors.New(fmt.Sprint("failed to marshal the config file for %s : %s", roomID, err))
+		return toReturn, fmt.Errorf("failed to marshal the config file for %s: %s", roomID, err)
 	}
 
 	// Send up the UIConfig
@@ -124,4 +127,50 @@ func (c *CouchDB) UpdateUIConfig(id string, update structs.UIConfig) (structs.UI
 	}
 
 	return toReturn, nil
+}
+
+// GetUIAttachment returns the attachment for the given ui if it exists.
+// returns the content-type header, the attachment, and an error if the request against couchdb failed.
+func (c *CouchDB) GetUIAttachment(ui, attachment string) (string, []byte, error) {
+	url := fmt.Sprintf("%v/%v/%v/%v", c.address, UI_CONFIGS, ui, attachment)
+
+	// start building the request
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// add auth
+	if len(c.username) > 0 && len(c.password) > 0 {
+		req.SetBasicAuth(c.username, c.password)
+	}
+
+	// build client with a timeout
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil, err
+	}
+	defer resp.Body.Close()
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if resp.StatusCode/100 != 2 {
+		var ce CouchError
+		err = json.Unmarshal(b, &ce)
+		if err != nil {
+			return "", nil, fmt.Errorf("received a non-200 response from %v. Body: %s", url, b)
+		}
+
+		log.L.Infof("Non-200 response: %v", ce.Error)
+		return "", nil, CheckCouchErrors(ce)
+	}
+
+	return resp.Header.Get("content-type"), b, nil
 }

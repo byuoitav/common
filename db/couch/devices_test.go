@@ -59,7 +59,7 @@ func testGetDevice(t *testing.T) {
 	}
 
 	if !isDeviceEqual(device, d) {
-		t.Fatalf("got wrong device back from database. \ngot: %s\nexpected: %s", d, device)
+		t.Fatalf("got wrong device back from database. \ngot: %v\nexpected: %v", d, device)
 	}
 }
 
@@ -99,7 +99,7 @@ func testUpdateDevice(t *testing.T) {
 	}
 
 	if d.Address != device.Address || d.Name != device.Name {
-		t.Fatalf("updated device is incorrect. \ngot: %s\nexpected: %s", d, device)
+		t.Fatalf("updated device is incorrect. \ngot: %v\nexpected: %v", d, device)
 	}
 }
 

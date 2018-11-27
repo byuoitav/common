@@ -67,8 +67,8 @@ func TestRoom(t *testing.T) {
 	query.Selector.ID.GT = "\x00"
 	query.Limit = 1000
 
-	var rooms []structs.Room
-	couch.ExecuteQuery(query, ROOMS, rooms)
+	// var rooms []structs.Room
+	//	couch.ExecuteQuery(query, ROOMS, rooms)
 }
 
 func getRoom(name string) {

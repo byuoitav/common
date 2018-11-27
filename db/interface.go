@@ -1,11 +1,12 @@
 package db
 
 import (
-	"log"
 	"os"
 
 	"github.com/byuoitav/common/db/couch"
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
+	"github.com/byuoitav/common/state/statedefinition"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -29,6 +30,9 @@ type DB interface {
 	UpdateDevice(id string, device structs.Device) (structs.Device, error)
 	DeleteDevice(id string) error
 
+	// device state
+	GetDeviceState(string) (statedefinition.StaticDevice, error)
+
 	// device type
 	CreateDeviceType(dt structs.DeviceType) (structs.DeviceType, error)
 	GetDeviceType(id string) (structs.DeviceType, error)
@@ -46,17 +50,21 @@ type DB interface {
 	GetUIConfig(roomID string) (structs.UIConfig, error)
 	UpdateUIConfig(id string, ui structs.UIConfig) (structs.UIConfig, error)
 	DeleteUIConfig(id string) error
+	GetUIAttachment(ui, attachment string) (string, []byte, error)
 
 	/* bulk functions */
 	GetAllBuildings() ([]structs.Building, error)
 	GetAllRooms() ([]structs.Room, error)
 	GetAllDevices() ([]structs.Device, error)
 	GetAllDeviceTypes() ([]structs.DeviceType, error)
+	GetAllDeviceStates() ([]statedefinition.StaticDevice, error)
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
 	CreateBulkDevices([]structs.Device) []structs.BulkUpdateResponse // TODO change the response struct
 
 	/* Specialty functions */
 	GetDevicesByRoom(roomID string) ([]structs.Device, error)
+	GetDeviceStatesByRoom(roomID string) ([]statedefinition.StaticDevice, error)
+	GetDeviceStatesByBuilding(buildingID string) ([]statedefinition.StaticDevice, error)
 	GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Device, error)
 	GetDevicesByRoomAndRole(roomID, roleID string) ([]structs.Device, error)
 	GetDevicesByRoleAndType(roleID, typeID string) ([]structs.Device, *nerr.E)
@@ -64,6 +72,9 @@ type DB interface {
 
 	GetRoomsByBuilding(id string) ([]structs.Room, error)
 	GetRoomsByDesignation(designation string) ([]structs.Room, *nerr.E)
+
+	/* dmps functions */
+	GetDMPSList() (structs.DMPSList, error)
 
 	/* Options Functions */
 	GetTemplate(id string) (structs.UIConfig, error)
@@ -96,7 +107,7 @@ func init() {
 	password = os.Getenv("DB_PASSWORD")
 
 	if len(address) == 0 {
-		log.Fatalf("DB_ADDRESS is not set. Failing...")
+		log.L.Errorf("DB_ADDRESS is not set. Failing...")
 	}
 }
 
@@ -108,4 +119,9 @@ func GetDB() DB {
 	}
 
 	return database
+}
+
+// GetDBWithCustomAuth returns an instance of the database with a custom authentication
+func GetDBWithCustomAuth(address, username, password string) DB {
+	return couch.NewDB(address, username, password)
 }
