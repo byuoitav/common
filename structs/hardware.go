@@ -2,6 +2,7 @@ package structs
 
 // HardwareInfo contains the common information for device hardware information
 type HardwareInfo struct {
+	ModelName       string `json:"model_name,omitempty"`
 	IPAddress       string `json:"ip_address,omitempty"`
 	MACAddress      string `json:"mac_address,omitempty"`
 	SerialNumber    string `json:"serial_number,omitempty"`
