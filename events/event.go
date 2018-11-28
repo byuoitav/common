@@ -1,10 +1,11 @@
 package events
 
 import (
-	"log"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/byuoitav/common/log"
 )
 
 type Event struct {
