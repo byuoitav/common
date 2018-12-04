@@ -18,5 +18,13 @@ type HardwareInfo struct {
 type NetworkInfo struct {
 	IPAddress  string   `json:"ip_address,omitempty"`
 	MACAddress string   `json:"mac_address,omitempty"`
+	Gateway    string   `json:"gateway,omitempty"`
 	DNS        []string `json:"dns,omitempty"`
+}
+
+// VIAUsers contains the counts of the users logged in to the VIA and their status
+type VIAUsers struct {
+	InactiveUsers []string `json:"inactive_users"`
+	ActiveUsers   []string `json:"active_users"`
+	UsersWaiting  []string `json:"users_waiting"`
 }
