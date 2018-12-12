@@ -22,6 +22,7 @@ const (
 	RoomSystem      = "room-system"
 	UICommunication = "ui-communication"
 	Alert           = "alert"
+	Computer	= "computer"
 )
 
 // An Event is generated as a result of something happening in a room and enables other systems to act on it, as well as collect metrics.
