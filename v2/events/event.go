@@ -104,9 +104,9 @@ func GenerateBasicRoomInfo(roomID string) BasicRoomInfo {
 }
 
 // AddToTags takes one or more strings and adds them to the list of event tags on the event.
-func (e Event) AddToTags(tags ...string) {
+func (e *Event) AddToTags(tags ...string) {
 	for _, t := range tags {
-		if !ContainsAllTags(e, t) {
+		if !ContainsAllTags(*e, t) {
 			e.EventTags = append(e.EventTags, t)
 		}
 	}
