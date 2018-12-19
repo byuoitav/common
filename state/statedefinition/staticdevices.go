@@ -59,6 +59,11 @@ type StaticDevice struct {
 	MicrophoneChannel         string `json:"microphone-channel,omitempty"`
 	Interference              string `json:"interference,omitempty"`
 
+	//Fields specific to Vias
+
+	CurrentUserCount *int `json:"current-user-count,omitempty"`
+	PresenterCount   *int `json:"presenter-count,omitempty"`
+
 	//meta fields for use in kibana
 	Control               string `json:"control,omitempty"`                //the id - used in a URL
 	EnableNotifications   string `json:"enable-notifications,omitempty"`   //the id - used in a URL
@@ -194,6 +199,14 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	}
 	if new.UpdateTimes["interference"].After(base.UpdateTimes["interference"]) {
 		diff.Interference, merged.Interference, changes = compareString(base.Interference, new.Interference, changes)
+	}
+
+	//Via specific fields
+	if new.UpdateTimes["current-user-count"].After(base.UpdateTimes["current-user-count"]) {
+		diff.CurrentUserCount, merged.CurrentUserCount, changes = compareInt(base.CurrentUserCount, new.CurrentUserCount, changes)
+	}
+	if new.UpdateTimes["presenter-count"].After(base.UpdateTimes["presenter-count"]) {
+		diff.PresenterCount, merged.PresenterCount, changes = compareInt(base.PresenterCount, new.PresenterCount, changes)
 	}
 
 	//meta fields
