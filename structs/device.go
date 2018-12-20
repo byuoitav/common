@@ -78,16 +78,33 @@ func (d *Device) GetDeviceRoomID() string {
 	return roomID
 }
 
-// GetCommandByName searches for a specific command and returns it if found.
-func (d *Device) GetCommandByName(port string) Command {
-	for _, c := range d.Type.Commands {
-		if c.ID == port {
-			return c
+// GetCommandByID searches for a specific command and returns it if found.
+func (d *Device) GetCommandByID(id string) Command {
+	for i := range d.Type.Commands {
+		if d.Type.Commands[i].ID == id {
+			return d.Type.Commands[i]
 		}
 	}
 
 	// No command found.
 	return Command{}
+}
+
+// GetPortFromSrc returns the port going to me from src, and nil if one doesn't exist
+func (d *Device) GetPortFromSrc(src string) *Port {
+	return d.GetPortFromSrcAndDest(src, d.ID)
+}
+
+// GetPortFromSrcAndDest returns the port with a matching src/dest, and nil if one doesn't exist
+func (d *Device) GetPortFromSrcAndDest(src, dest string) *Port {
+	for i := range d.Ports {
+		// log.L.Debugf("checking port %s -> %s", d.Ports[i].SourceDevice, d.Ports[i].DestinationDevice)
+		if d.Ports[i].SourceDevice == src && d.Ports[i].DestinationDevice == dest {
+			return &d.Ports[i]
+		}
+	}
+
+	return nil
 }
 
 // DeviceType - a representation of a type (or category) of devices.
@@ -205,6 +222,15 @@ func (c *Command) Validate() error {
 		return fmt.Errorf("invalid command: %s", err)
 	}
 	return nil
+}
+
+// BuildCommandAddress builds the full address for a command based off it's the microservice and endpoint
+func (c Command) BuildCommandAddress() string {
+	if len(c.Microservice.Address) > 0 && len(c.Endpoint.Path) > 0 {
+		return fmt.Sprintf("%s%s", c.Microservice.Address, c.Endpoint.Path)
+	}
+
+	return ""
 }
 
 // Microservice - a representation of a microservice in our API.

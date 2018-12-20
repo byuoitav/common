@@ -29,3 +29,8 @@ type Volume struct {
 type Battery struct {
 	Battery int `json:"battery"`
 }
+
+// ActiveInput is a base struct for active inputs
+type ActiveInput struct {
+	ActiveInput string `json:"active_input,omitempty"`
+}

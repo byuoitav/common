@@ -1,8 +1,9 @@
 package couch
 
 import (
-	"log"
 	"testing"
+
+	"github.com/byuoitav/common/log"
 
 	"github.com/byuoitav/common/structs"
 )
@@ -74,10 +75,10 @@ func TestRoom(t *testing.T) {
 func getRoom(name string) {
 	room, err := couch.GetRoom(name)
 	if err != nil {
-		log.Printf("error: %s", err)
+		log.L.Infof("error: %s", err)
 	}
 
-	log.Printf("room: %v", room)
+	log.L.Infof("room: %v", room)
 }
 
 func testCreateRoomWithoutBuilding(t *testing.T) {
