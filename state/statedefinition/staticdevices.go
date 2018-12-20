@@ -41,10 +41,11 @@ type StaticDevice struct {
 	WebsocketCount *int   `json:"websocket-count,omitempty"`
 
 	//Display Specific Fields
-	Blanked     *bool  `json:"blanked,omitempty"`
-	Input       string `json:"input,omitempty"`
-	LampHours   string `json:"lamp-hours,omitempty"`
-	Temperature string `json:"temperature,omitempty"`
+	Blanked      *bool  `json:"blanked,omitempty"`
+	Input        string `json:"input,omitempty"`
+	LampHours    string `json:"lamp-hours,omitempty"`
+	Temperature  string `json:"temperature,omitempty"`
+	ActiveSignal *bool  `json:"active-signal,omitempty"`
 
 	//Audio Device Specific Fields
 	Muted  *bool `json:"muted,omitempty"`
@@ -179,6 +180,10 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	}
 	if new.UpdateTimes["temperature"].After(base.UpdateTimes["temperature"]) {
 		diff.Temperature, merged.Temperature, changes = compareString(base.Temperature, new.Temperature, changes)
+	}
+
+	if new.UpdateTimes["active-signal"].After(base.UpdateTimes["active-signal"]) {
+		diff.ActiveSignal, merged.ActiveSignal, changes = compareBool(base.ActiveSignal, new.ActiveSignal, changes)
 	}
 
 	//Audio Device specific fields
