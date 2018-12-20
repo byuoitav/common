@@ -3,7 +3,7 @@ package inputgraph
 import (
 	"testing"
 
-	"github.com/byuoitav/av-api/base"
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
 )
 
@@ -202,12 +202,12 @@ func TestGraphBuilding(t *testing.T) {
 
 	graph, err := BuildGraph(Devices)
 	if err != nil {
-		base.Log("error: %v", err.Error())
+		log.L.Errorf("error: %v", err.Error())
 		t.FailNow()
 	}
 
 	if debug {
-		base.Log("%+v", graph.AdjacencyMap)
+		log.L.Errorf("%+v", graph.AdjacencyMap)
 	}
 }
 
@@ -215,7 +215,7 @@ func TestReachability(t *testing.T) {
 
 	graph, err := BuildGraph(Devices)
 	if err != nil {
-		base.Log("error: %v", err.Error())
+		log.L.Infof("error: %v", err.Error())
 		t.FailNow()
 	}
 
@@ -227,7 +227,7 @@ func TestReachability(t *testing.T) {
 
 	if debug {
 		for _, v := range ret {
-			base.Log("%v", v.ID)
+			log.L.Infof("%v", v.ID)
 		}
 	}
 	debug = false
