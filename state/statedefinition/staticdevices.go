@@ -246,6 +246,14 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.AverageProcessesSleep, merged.AverageProcessesSleep, changes = compareFloat64(base.AverageProcessesSleep, new.AverageProcessesSleep, changes)
 	}
 
+	//DMPS fields
+	if new.UpdateTimes["status-message"].After(base.UpdateTimes["status-message"]) {
+		diff.StatusMessage, merged.StatusMessage, changes = compareString(base.StatusMessage, new.StatusMessage, changes)
+	}
+	if new.UpdateTimes["transmit-rf-power"].After(base.UpdateTimes["transmit-rf-power"]) {
+		diff.TransmitRFPower, merged.TransmitRFPower, changes = compareString(base.TransmitRFPower, new.TransmitRFPower, changes)
+	}
+
 	//meta fields
 	if new.UpdateTimes["control"].After(base.UpdateTimes["control"]) {
 		diff.Control, merged.Control, changes = compareString(base.Control, new.Control, changes)
