@@ -26,6 +26,7 @@ const (
 	Mstatus         = "mstatus"
 	Via             = "via"
 	HardwareInfo    = "hardware-info"
+	ActiveSignal    = "active-signal"
 )
 
 // An Event is generated as a result of something happening in a room and enables other systems to act on it, as well as collect metrics.
