@@ -80,6 +80,10 @@ type StaticDevice struct {
 	DiskUsagePercentage   *float64 `json:"disk-used-percent,omitempty"`
 	AverageProcessesSleep *float64 `json:"avg-procs-u-sleep,omitempty"`
 
+	//DMPS information
+	StatusMessage   string `json:"status-message,omitempty"`
+	TransmitRFPower string `json:"transmit-rf-power,omitempty"`
+
 	UpdateTimes map[string]time.Time `json:"field-state-received"`
 }
 
