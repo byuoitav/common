@@ -6,6 +6,7 @@ import (
 	"github.com/byuoitav/common/nerr"
 )
 
+//StaticDevice .
 //*************************
 //IMPORTANT - if you add fields to this struct be sure to change the CompareDevices function
 //*************************
@@ -69,6 +70,15 @@ type StaticDevice struct {
 	EnableNotifications   string `json:"enable-notifications,omitempty"`   //the id - used in a URL
 	SuppressNotifications string `json:"suppress-notifications,omitempty"` //the id - used in a URL
 	ViewDashboard         string `json:"ViewDashboard,omitempty"`          //the id - used in a URL
+
+	//Linux Device Information
+	CPUUsagePercentage    *float64 `json:"cpu-usage-percent,omitempty"`
+	VMemUsage             *float64 `json:"v-mem-used-percent,omitempty"`
+	SMemUsage             *float64 `json:"s-mem-used-percent,omitempty"`
+	CPUTemp               *float64 `json:"cpu-thermal0-temp,omitempty"`
+	DiskWrites            *int     `json:"writes-to-mmcblk0,omitempty"`
+	DiskUsagePercentage   *float64 `json:"disk-used-percent,omitempty"`
+	AverageProcessesSleep *float64 `json:"avg-procs-u-sleep,omitempty"`
 
 	UpdateTimes map[string]time.Time `json:"field-state-received"`
 }
@@ -209,6 +219,29 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.PresenterCount, merged.PresenterCount, changes = compareInt(base.PresenterCount, new.PresenterCount, changes)
 	}
 
+	//PI Hardware Info fields
+	if new.UpdateTimes["cpu-usage-percent"].After(base.UpdateTimes["cpu-usage-percent"]) {
+		diff.CPUUsagePercentage, merged.CPUUsagePercentage, changes = compareFloat64(base.CPUUsagePercentage, new.CPUUsagePercentage, changes)
+	}
+	if new.UpdateTimes["v-mem-used-percent"].After(base.UpdateTimes["v-mem-used-percent"]) {
+		diff.VMemUsage, merged.VMemUsage, changes = compareFloat64(base.VMemUsage, new.VMemUsage, changes)
+	}
+	if new.UpdateTimes["s-mem-used-percent"].After(base.UpdateTimes["s-mem-used-percent"]) {
+		diff.SMemUsage, merged.SMemUsage, changes = compareFloat64(base.SMemUsage, new.SMemUsage, changes)
+	}
+	if new.UpdateTimes["cpu-thermal0-temp"].After(base.UpdateTimes["cpu-thermal0-temp"]) {
+		diff.CPUTemp, merged.CPUTemp, changes = compareFloat64(base.CPUTemp, new.CPUTemp, changes)
+	}
+	if new.UpdateTimes["writes-to-mmcblk0"].After(base.UpdateTimes["writes-to-mmcblk0"]) {
+		diff.DiskWrites, merged.DiskWrites, changes = compareInt(base.DiskWrites, new.DiskWrites, changes)
+	}
+	if new.UpdateTimes["disk-used-percent"].After(base.UpdateTimes["disk-used-percent"]) {
+		diff.DiskUsagePercentage, merged.DiskUsagePercentage, changes = compareFloat64(base.DiskUsagePercentage, new.DiskUsagePercentage, changes)
+	}
+	if new.UpdateTimes["avg-procs-u-sleep"].After(base.UpdateTimes["avg-procs-u-sleep"]) {
+		diff.AverageProcessesSleep, merged.AverageProcessesSleep, changes = compareFloat64(base.AverageProcessesSleep, new.AverageProcessesSleep, changes)
+	}
+
 	//meta fields
 	if new.UpdateTimes["control"].After(base.UpdateTimes["control"]) {
 		diff.Control, merged.Control, changes = compareString(base.Control, new.Control, changes)
@@ -236,6 +269,15 @@ func compareString(base, new string, changes bool) (string, string, bool) {
 }
 
 func compareBool(base, new *bool, changes bool) (*bool, *bool, bool) {
+	if new != nil {
+		if base == nil || *base != *new {
+			return new, new, true
+		}
+	}
+	return nil, base, false || changes
+}
+
+func compareFloat64(base, new *float64, changes bool) (*float64, *float64, bool) {
 	if new != nil {
 		if base == nil || *base != *new {
 			return new, new, true
