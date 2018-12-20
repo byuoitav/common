@@ -31,7 +31,7 @@ func init() {
 	}
 
 	//we're gonna default to info for now
-	atom.SetLevel(zapcore.InfoLevel)
+	atom.SetLevel(zapcore.WarnLevel)
 
 	L = l.Sugar()
 	L.Info(color.HiYellowString("Zap Logger Started"))

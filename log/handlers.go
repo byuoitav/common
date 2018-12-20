@@ -16,7 +16,7 @@ func SetLogLevel(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	L.Info("Log level set to %s", lvl)
+	L.Infof("Log level set to %s", lvl)
 	return c.JSON(http.StatusOK, "ok")
 }
 
