@@ -22,6 +22,11 @@ const (
 	RoomSystem      = "room-system"
 	UICommunication = "ui-communication"
 	Alert           = "alert"
+	Computer        = "computer"
+	Mstatus         = "mstatus"
+	Via             = "via"
+	HardwareInfo    = "hardware-info"
+	ActiveSignal    = "active-signal"
 )
 
 // An Event is generated as a result of something happening in a room and enables other systems to act on it, as well as collect metrics.
@@ -102,9 +107,9 @@ func GenerateBasicRoomInfo(roomID string) BasicRoomInfo {
 }
 
 // AddToTags takes one or more strings and adds them to the list of event tags on the event.
-func (e Event) AddToTags(tags ...string) {
+func (e *Event) AddToTags(tags ...string) {
 	for _, t := range tags {
-		if !ContainsAllTags(e, t) {
+		if !ContainsAllTags(*e, t) {
 			e.EventTags = append(e.EventTags, t)
 		}
 	}

@@ -1,7 +1,7 @@
 package activedirectory
 
 import (
-	"log"
+	"github.com/byuoitav/common/log"
 	"os"
 	"testing"
 )
@@ -12,5 +12,5 @@ func TestGetGroups(t *testing.T) {
 		t.Fatalf("failed to get groups: %s", err)
 	}
 
-	log.Printf("groups: %s", groups)
+	log.L.Infof("groups: %s", groups)
 }

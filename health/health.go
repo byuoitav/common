@@ -2,22 +2,23 @@ package health
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/byuoitav/common/log"
 
 	"github.com/byuoitav/common/v2/events"
 	"github.com/labstack/echo"
 )
 
 func SendSuccessfulStartup(healthCheck func() map[string]string, MicroserviceName string, publish func(events.Event)) error {
-	log.Printf("[HealthCheck] will report success in 10 seconds, waiting for listening services to be up")
+	log.L.Infof("[HealthCheck] will report success in 10 seconds, waiting for listening services to be up")
 	time.Sleep(10 * time.Second)
-	log.Printf("[HealthCheck] Reporting microsrevice startup complete")
+	log.L.Infof("[HealthCheck] Reporting microsrevice startup complete")
 
-	log.Printf("[HealthCheck] Checking Health...")
+	log.L.Infof("[HealthCheck] Checking Health...")
 	statusReport := healthCheck()
 	allSuccess := true
 	for _, v := range statusReport {
@@ -35,7 +36,7 @@ func SendSuccessfulStartup(healthCheck func() map[string]string, MicroserviceNam
 	report["report"] = statusReport
 	report["Microservice"] = MicroserviceName
 
-	log.Printf("[HealthCheck] Reporting...")
+	log.L.Infof("[HealthCheck] Reporting...")
 	for k, v := range statusReport {
 		publishEvent(publish, k, v, MicroserviceName)
 	}
