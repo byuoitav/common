@@ -393,9 +393,13 @@ func (c *CouchDB) GetDevicesByRoleAndTypeAndDesignation(role, deviceType, design
 	//filter on the match
 	var toReturn []structs.Device
 	for _, d := range devs {
-		roomID := d.ID[:strings.LastIndex(d.ID, "-")]
-		if _, ok := roomSet[roomID]; ok {
-			toReturn = append(toReturn, d)
+		idx := strings.LastIndex(d.ID, "-")
+
+		if idx > 0 {
+			roomID := d.ID[:idx]
+			if _, ok := roomSet[roomID]; ok {
+				toReturn = append(toReturn, d)
+			}
 		}
 	}
 
