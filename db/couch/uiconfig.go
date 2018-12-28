@@ -174,3 +174,29 @@ func (c *CouchDB) GetUIAttachment(ui, attachment string) (string, []byte, error)
 
 	return resp.Header.Get("content-type"), b, nil
 }
+
+// GetAllUIConfigs returns a list of all the UI Config documents in the database
+func (c *CouchDB) GetAllUIConfigs() ([]structs.UIConfig, error) {
+	var toReturn []structs.UIConfig
+	var query IDPrefixQuery
+	query.Selector.ID.GT = "\x00"
+	query.Limit = 1000
+
+	b, err := json.Marshal(query)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to marshal query to get all UI configs: %s", err)
+	}
+
+	var resp uiconfigQueryResponse
+
+	err = c.MakeRequest("POST", fmt.Sprintf("%v/_find", UI_CONFIGS), "application/json", b, &resp)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to get all UI configs: %s", err)
+	}
+
+	for _, doc := range resp.Docs {
+		toReturn = append(toReturn, *doc.UIConfig)
+	}
+
+	return toReturn, err
+}
