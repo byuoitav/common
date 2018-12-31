@@ -89,7 +89,7 @@ type StaticDevice struct {
 	DiskUsagePercentage   *float64 `json:"disk-used-percent,omitempty"`
 	AverageProcessesSleep *float64 `json:"avg-procs-u-sleep,omitempty"`
 
-	BroadcomChipTemp string `json:"bcm2835_thermal-temp,omitempty"`
+	BroadcomChipTemp *float64 `json:"bcm2835_thermal0-temp,omitempty"`
 
 	//DMPS information
 	StatusMessage   string `json:"status-message,omitempty"`
@@ -281,7 +281,9 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	if new.UpdateTimes["avg-procs-u-sleep"].After(base.UpdateTimes["avg-procs-u-sleep"]) {
 		diff.AverageProcessesSleep, merged.AverageProcessesSleep, changes = compareFloat64(base.AverageProcessesSleep, new.AverageProcessesSleep, changes)
 	}
-
+	if new.UpdateTimes["bcm2835_thermal0-temp"].After(base.UpdateTimes["bcm2835_thermal0-temp"]) {
+		diff.BroadcomChipTemp, merged.BroadcomChipTemp, changes = compareFloat64(base.BroadcomChipTemp, new.BroadcomChipTemp, changes)
+	}
 	//DMPS fields
 	if new.UpdateTimes["status-message"].After(base.UpdateTimes["status-message"]) {
 		diff.StatusMessage, merged.StatusMessage, changes = compareString(base.StatusMessage, new.StatusMessage, changes)
