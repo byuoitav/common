@@ -35,6 +35,14 @@ type StaticDevice struct {
 	Secure          string `json:"secure,omitempty"`
 	HardwareVersion string `json:"hardware-version,omitempty"`
 	SoftwareVersion string `json:"software-version,omitempty"`
+	FirmwareVersion string `json:"firmware-version"`
+	SerialNumber    string `json:"serial-number"`
+	IPAddress       string `json:"ip-address"`
+	MACAddress      string `json:"mac-address"`
+	ModelName       string `json:"model-name"`
+
+	DNSAddress     string `json:"dns-address,omitempty"`
+	DefaultGateway string `json:"default-gateway"`
 
 	//Control Processor Specific Fields
 	Websocket      string `json:"websocket,omitempty"`
@@ -80,6 +88,8 @@ type StaticDevice struct {
 	DiskWrites            *int     `json:"writes-to-mmcblk0,omitempty"`
 	DiskUsagePercentage   *float64 `json:"disk-used-percent,omitempty"`
 	AverageProcessesSleep *float64 `json:"avg-procs-u-sleep,omitempty"`
+
+	BroadcomChipTemp string `json:"bcm2835_thermal-temp,omitempty"`
 
 	//DMPS information
 	StatusMessage   string `json:"status-message,omitempty"`
@@ -158,6 +168,27 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	}
 	if new.UpdateTimes["software-version"].After(base.UpdateTimes["software-version"]) {
 		diff.SoftwareVersion, merged.SoftwareVersion, changes = compareString(base.SoftwareVersion, new.SoftwareVersion, changes)
+	}
+	if new.UpdateTimes["firmware-version"].After(base.UpdateTimes["firmware-version"]) {
+		diff.FirmwareVersion, merged.FirmwareVersion, changes = compareString(base.FirmwareVersion, new.FirmwareVersion, changes)
+	}
+	if new.UpdateTimes["serial-number"].After(base.UpdateTimes["serial-number"]) {
+		diff.SerialNumber, merged.SerialNumber, changes = compareString(base.SerialNumber, new.SerialNumber, changes)
+	}
+	if new.UpdateTimes["ip-address"].After(base.UpdateTimes["ip-address"]) {
+		diff.IPAddress, merged.IPAddress, changes = compareString(base.IPAddress, new.IPAddress, changes)
+	}
+	if new.UpdateTimes["mac-address"].After(base.UpdateTimes["mac-address"]) {
+		diff.MACAddress, merged.MACAddress, changes = compareString(base.MACAddress, new.MACAddress, changes)
+	}
+	if new.UpdateTimes["dns-address"].After(base.UpdateTimes["dns-address"]) {
+		diff.DNSAddress, merged.DNSAddress, changes = compareString(base.DNSAddress, new.DNSAddress, changes)
+	}
+	if new.UpdateTimes["default-gateway"].After(base.UpdateTimes["default-gateway"]) {
+		diff.DefaultGateway, merged.DefaultGateway, changes = compareString(base.DefaultGateway, new.DefaultGateway, changes)
+	}
+	if new.UpdateTimes["model-name"].After(base.UpdateTimes["model-name"]) {
+		diff.ModelName, merged.ModelName, changes = compareString(base.ModelName, new.ModelName, changes)
 	}
 
 	//Conrol processor specific fields
