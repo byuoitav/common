@@ -84,6 +84,8 @@ type StaticDevice struct {
 	StatusMessage   string `json:"status-message,omitempty"`
 	TransmitRFPower string `json:"transmit-rf-power,omitempty"`
 
+	// HardwareInfo
+
 	UpdateTimes map[string]time.Time `json:"field-state-received"`
 }
 
