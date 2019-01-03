@@ -224,7 +224,7 @@ func (c *CouchDB) getRoomDesignations() (roomDesignations, error) {
 
 	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ROOM_DESIGNATIONS), "", nil, &toReturn)
 	if err != nil {
-		err = fmt.Errorf("failed to get device roles : %s", err)
+		err = fmt.Errorf("failed to get room designations : %s", err)
 	}
 
 	return toReturn, err
