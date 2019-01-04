@@ -59,6 +59,7 @@ type DB interface {
 	GetAllDeviceTypes() ([]structs.DeviceType, error)
 	GetAllDeviceStates() ([]statedefinition.StaticDevice, error)
 	GetAllRoomConfigurations() ([]structs.RoomConfiguration, error)
+	GetAllUIConfigs() ([]structs.UIConfig, error)
 	CreateBulkDevices([]structs.Device) []structs.BulkUpdateResponse // TODO change the response struct
 
 	/* Specialty functions */

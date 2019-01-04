@@ -7,6 +7,7 @@ import (
 	"github.com/byuoitav/common/status"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	echopprof "github.com/sevenNt/echo-pprof"
 )
 
 // NewRouter returns a echo router with default routes/middleware to be used by all microservices.
@@ -26,6 +27,9 @@ func NewRouter() *echo.Echo {
 
 	router.PUT("/log-level/:level", log.SetLogLevel)
 	router.GET("/log-level", log.GetLogLevel)
+
+	// wrap with pprof
+	echopprof.Wrap(router)
 
 	return router
 }
