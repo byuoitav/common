@@ -71,6 +71,12 @@ type uiconfig struct {
 	*structs.UIConfig
 }
 
+type uiconfigQueryResponse struct {
+	Docs     []uiconfig `json:"docs"`
+	Bookmark string     `json:"bookmark"`
+	Warning  string     `json:"warning"`
+}
+
 type icons struct {
 	Rev      string   `json:"_rev,omitempty"`
 	IconList []string `json:"Icons"`
