@@ -10,6 +10,7 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
+// DB .
 type DB interface {
 	/* crud functions */
 	// building
@@ -89,6 +90,9 @@ type DB interface {
 	UpdateRoomDesignations(desigs []string) ([]string, error)
 	GetTags() ([]string, error)
 	UpdateTags(newTags []string) ([]string, error)
+
+	// for device-monitoring service
+	GetDMJobs(deviceID string) (structs.Jobs, error)
 
 	GetAuth() (structs.Auth, error)
 

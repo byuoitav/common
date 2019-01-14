@@ -53,6 +53,14 @@ func Create(msg string, Type string) *E {
 	}
 }
 
+func Createf(Type string, format string, a ...interface{}) *E {
+	return &E{
+		MessageLog: []string{fmt.Sprintf(format, a...)},
+		Type:       Type,
+		Stack:      debug.Stack(),
+	}
+}
+
 func (e *E) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		MessageLog []string `json:"message-log"`
