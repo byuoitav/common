@@ -31,15 +31,15 @@ func init() {
 		panic(err)
 	}
 
+	L = l.Sugar()
+	L.Info(color.HiYellowString("Zap Logger Started"))
+
 	// look for log level env var
 	level := os.Getenv("LOG_LEVEL")
 	if len(level) > 0 {
 		SetLevel(level)
-		L.Info("Set log level to %s", level)
+		L.Info(color.HiYellowString("Set log level to %s", level))
 	}
-
-	L = l.Sugar()
-	L.Info(color.HiYellowString("Zap Logger Started"))
 }
 
 // SetLevel sets the log level
