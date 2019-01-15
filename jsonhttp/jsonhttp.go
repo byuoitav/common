@@ -89,14 +89,31 @@ func BasicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-
 //CreateAndExecuteJSONRequest will execute an HTTP request from json
 func CreateAndExecuteJSONRequest(processTitle string, method string, url string, body interface{}, headers map[string]string, timeoutInSeconds int, output interface{}) (string, *http.Response, error) {
-	req, err := CreateRequest(method, url, body, headers)
+	var bodyBytes []byte
+	var ok bool
+	var err error
 
+	if bodyBytes, ok = body.([]byte); !ok {
+		//marshal
+		bodyBytes, err = json.Marshal(body)
+
+		if err != nil {
+			return "", nil, err
+		}
+	}
+	log.L.Debugf("Request body: %s", bodyBytes)
+
+	// start building the request
+	requestToReturn, err := http.NewRequest(method, url, bytes.NewReader(bodyBytes))
 	if err != nil {
-		log.L.Debugf("Error creating request for %s: %v", processTitle, err.Error())
 		return "", nil, err
+	}
+
+	//add headers
+	for key, value := range headers {
+		requestToReturn.Header.Add(key, value)
 	}
 
 	if reflect.ValueOf(output).Kind() != reflect.Ptr && output != nil {
@@ -106,7 +123,7 @@ func CreateAndExecuteJSONRequest(processTitle string, method string, url string,
 
 	client := &http.Client{}
 	client.Timeout = time.Duration(timeoutInSeconds) * time.Second
-	resp, err := client.Do(req)
+	resp, err := client.Do(requestToReturn)
 	if err != nil {
 		log.L.Debugf("Error executing request for %s: %v", processTitle, err.Error())
 		return "", nil, err
