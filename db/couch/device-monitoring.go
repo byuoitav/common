@@ -9,6 +9,12 @@ import (
 // GetDMJobs returns the device-monitoring's config file if there is one, or the default config file.
 func (c *CouchDB) GetDMJobs(deviceID string) (structs.Jobs, error) {
 	jobs, err := c.getDMJobs(deviceID)
+	if err != nil {
+		return structs.Jobs{}, err
+	} else if jobs.Jobs == nil {
+		return structs.Jobs{}, fmt.Errorf("jobs.Jobs was nil")
+	}
+
 	return *jobs.Jobs, err
 }
 
