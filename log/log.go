@@ -2,6 +2,7 @@ package log
 
 import (
 	"log"
+	"os"
 
 	"github.com/byuoitav/common/nerr"
 	"github.com/fatih/color"
@@ -16,7 +17,7 @@ var cfg zap.Config
 var atom zap.AtomicLevel
 
 func init() {
-	atom = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	atom = zap.NewAtomicLevelAt(zapcore.WarnLevel)
 
 	cfg = zap.NewDevelopmentConfig()
 
@@ -30,8 +31,12 @@ func init() {
 		panic(err)
 	}
 
-	//we're gonna default to info for now
-	atom.SetLevel(zapcore.WarnLevel)
+	// look for log level env var
+	level := os.Getenv("LOG_LEVEL")
+	if len(level) > 0 {
+		SetLevel(level)
+		L.Info("Set log level to %s", level)
+	}
 
 	L = l.Sugar()
 	L.Info(color.HiYellowString("Zap Logger Started"))
