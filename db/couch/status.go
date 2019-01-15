@@ -41,6 +41,7 @@ func (c *CouchDB) GetStatus() (string, error) {
 	if err != nil {
 		return "not-ready", err
 	}
+
 	return state, nil
 }
 
@@ -75,10 +76,11 @@ func (c *CouchDB) CheckReplication(replID string) (string, *nerr.E) {
 		err = CheckCouchErrors(ce)
 		if _, ok := err.(*NotFound); resp.StatusCode == 404 && ok {
 			return "not_started", nil
-		} else {
-			return "", nerr.Translate(err).Addf("Issue checking replication status of %v", replID)
 		}
+
+		return "", nerr.Translate(err).Addf("Issue checking replication status of %v", replID)
 	}
+
 	//if it's a 200 response, lets see what the state is
 	state := couchReplicationState{}
 	err = json.Unmarshal(b, &state)
