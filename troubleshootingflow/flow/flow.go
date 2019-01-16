@@ -23,7 +23,7 @@ type Flow struct {
 	FlowDefinition
 	//Filled during process
 
-	StateHistroy []Step
+	StateHistory []Step
 	CurrentState string
 	Ctx          context.Context //Context
 
