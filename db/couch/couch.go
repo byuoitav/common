@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/byuoitav/common/log"
@@ -27,14 +29,18 @@ const (
 	ROOM_DESIGNATIONS   = "RoomDesignations"
 	TAGS                = "Tags"
 	DMPSLIST            = "dmps"
+
+	deviceMonitoring = "device-monitoring"
 )
 
+// CouchDB .
 type CouchDB struct {
 	address  string
 	username string
 	password string
 }
 
+// NewDB .
 func NewDB(address, username, password string) *CouchDB {
 	return &CouchDB{
 		address:  strings.Trim(address, "/"),
@@ -43,13 +49,19 @@ func NewDB(address, username, password string) *CouchDB {
 	}
 }
 
-func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte, toFill interface{}) error {
-	url := fmt.Sprintf("%v/%v", c.address, endpoint)
+func (c *CouchDB) req(method, endpoint, contentType string, body []byte) (string, []byte, error) {
+	errMsg := "unable to make request against couch"
 
-	// start building the request
+	if len(c.address) == 0 {
+		return "", nil, fmt.Errorf("%s: couch address not set", errMsg)
+	}
+
+	url := fmt.Sprintf("%s/%s", c.address, endpoint)
+
+	// build request
 	req, err := http.NewRequest(method, url, bytes.NewReader(body))
 	if err != nil {
-		return err
+		return "", nil, fmt.Errorf("%s: %s", errMsg, err)
 	}
 
 	// add auth
@@ -61,51 +73,88 @@ func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte,
 	if len(contentType) > 0 {
 		req.Header.Add("Content-Type", contentType)
 	}
-	req.Header.Add("accept", "application/json")
 
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
+
+	// validate that couch is ready, wait if it isn't
+	c.waitUntilReady()
+
+	// execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return "", nil, fmt.Errorf("%s: %s", errMsg, err)
 	}
-
 	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", nil, fmt.Errorf("%s: %s", errMsg, err)
 	}
 
 	if resp.StatusCode/100 != 2 {
-		var ce CouchError
+		ce := CouchError{}
 		err = json.Unmarshal(b, &ce)
 		if err != nil {
-			return fmt.Errorf("received a non-200 response from %v. Body: %s", url, b)
+			return "", nil, fmt.Errorf("%s: received a non-200 response from %s. body: %s", errMsg, url, b)
 		}
 
-		log.L.Infof("Non-200 response: %v", ce.Error)
-		return CheckCouchErrors(ce)
+		log.L.Warnf("non-200 response from couch: %s", ce.Error)
+		return "", nil, fmt.Errorf("%s: %s", errMsg, CheckCouchErrors(ce))
+	}
+
+	return resp.Header.Get("content-type"), b, nil
+}
+
+var (
+	checkReady sync.Once
+	readyMu    sync.Mutex
+)
+
+func (c *CouchDB) waitUntilReady() {
+	checkReady.Do(func() {
+		readyMu.Lock()
+
+		for len(os.Getenv("STOP_REPLICATION")) == 0 {
+			// wait until database is ready
+			state, err := c.GetStatus()
+			if err != nil || state != "completed" {
+				log.L.Warnf("Database replication in state %v; Retrying in 5 seconds", state)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+
+			log.L.Infof("Database replication in state %v. Allowing CouchDB requests now.", state)
+			break
+		}
+
+		readyMu.Unlock()
+	})
+
+	readyMu.Lock()
+	readyMu.Unlock()
+}
+
+// MakeRequest .
+func (c *CouchDB) MakeRequest(method, endpoint, contentType string, body []byte, toFill interface{}) error {
+	respType, body, err := c.req(method, endpoint, contentType, body)
+	if err != nil {
+		return err
+	}
+
+	if !strings.EqualFold(respType, "application/json") {
+		return fmt.Errorf("unexpected response content-type: expected %s, but got %s", "application/json", respType)
 	}
 
 	if toFill == nil {
 		return nil
 	}
 
-	//otherwise we unmarshal
-	err = json.Unmarshal(b, toFill)
+	// unmarshal body
+	err = json.Unmarshal(body, toFill)
 	if err != nil {
-		log.L.Errorf("Can't unmarshal %v", err.Error())
-		//check to see if it was a known error from couch
-		var ce CouchError
-		err = json.Unmarshal(b, &ce)
-		if err != nil {
-			return errors.New(fmt.Sprintf("unknown response from couch: %s", b))
-		}
-
-		//it was an error, we can check on error types
-		return CheckCouchErrors(ce)
+		return fmt.Errorf("unable to make request against couch: %s", err)
 	}
 
 	return nil
@@ -140,6 +189,7 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 
 	return nil
 }
+
 func CheckCouchErrors(ce CouchError) error {
 	switch strings.ToLower(ce.Error) {
 	case "not_found":
