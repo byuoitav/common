@@ -126,6 +126,7 @@ func (c *CouchDB) waitUntilReady() {
 			}
 
 			log.L.Infof("Database replication in state %v. Allowing CouchDB requests now.", state)
+			break
 		}
 
 		readyMu.Unlock()
