@@ -97,13 +97,24 @@ type tags struct {
 	TagList []string `json:"tags"`
 }
 
+type template struct {
+	Rev string `json:"_rev,omitempty"`
+	*structs.Template
+}
+
 type templateQueryResponse struct {
 	Docs     []template `json:"docs"`
 	Bookmark string     `json:"bookmark"`
 	Warning  string     `json:"warning"`
 }
 
-type template struct {
+type jobs struct {
 	Rev string `json:"_rev,omitempty"`
-	*structs.Template
+	*structs.Jobs
+}
+
+type jobsQueryResponse struct {
+	Docs     []template `json:"docs"`
+	Bookmark string     `json:"bookmark"`
+	Warning  string     `json:"warning"`
 }

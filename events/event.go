@@ -106,7 +106,7 @@ func GetPiHostname() string {
 	once.Do(func() {
 		hostname = os.Getenv("PI_HOSTNAME")
 		if len(hostname) == 0 {
-			log.Fatalf("failed to get pi hostname. Is it set?")
+			log.L.Fatalf("failed to get pi hostname. Is it set?")
 		}
 	})
 
