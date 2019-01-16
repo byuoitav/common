@@ -120,7 +120,7 @@ func (c *CouchDB) waitUntilReady() {
 			// wait until database is ready
 			state, err := c.GetStatus()
 			if err != nil || state != "completed" {
-				log.L.Warnf("Database replication in state %v; Retrying in 5 seconds", state)
+				log.L.Warnf("Database replication in state %v (error: %s); Retrying in 5 seconds", state, err)
 				time.Sleep(5 * time.Second)
 				continue
 			}
