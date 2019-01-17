@@ -116,6 +116,7 @@ func (c *CouchDB) waitUntilReady() {
 	checkReady.Do(func() {
 		readyMu.Lock()
 
+		// +deployment not-required
 		for len(os.Getenv("STOP_REPLICATION")) == 0 {
 			// wait until database is ready
 			state, err := c.GetStatus()
