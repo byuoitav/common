@@ -101,7 +101,7 @@ func (c *CouchDB) req(method, endpoint, contentType string, body []byte) (string
 		}
 
 		log.L.Warnf("non-200 response from couch: %s", ce.Error)
-		return "", nil, fmt.Errorf("%s: %s", errMsg, CheckCouchErrors(ce))
+		return "", nil, CheckCouchErrors(ce)
 	}
 
 	return resp.Header.Get("content-type"), b, nil
@@ -183,7 +183,7 @@ func (c *CouchDB) ExecuteQuery(query IDPrefixQuery, responseToFill interface{}) 
 	// execute query
 	err = c.MakeRequest("POST", fmt.Sprintf("%s/find", database), "application/json", b, &responseToFill)
 	if err != nil {
-		return errors.New(fmt.Sprintf("failed to query database %s: %s", database, err))
+		return err
 	}
 
 	//	sliceType = reflect.ValueOf(responseToFill)
