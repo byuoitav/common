@@ -1,14 +1,14 @@
-package flow
+package structs
 
 import (
 	"time"
-
-	"github.com/byuoitav/common/v2/events"
 )
 
 // Alert is a struct that contains the information regarding an alerting event.
 type Alert struct {
-	events.BasicDeviceInfo
+	BuildingID     string         `json:"buildingID"`
+	RoomID         string         `json:"roomID"`
+	DeviceID       string         `json:"deviceID"`
 	Type           AlertType      `json:"type"`
 	IncidentID     string         `json:"incident-id"`
 	Severity       AlertSeverity  `json:"severity"`
