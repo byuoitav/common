@@ -117,7 +117,7 @@ func CreateAndExecuteJSONRequest(processTitle string, method string, url string,
 	}
 
 	if reflect.ValueOf(output).Kind() != reflect.Ptr && output != nil {
-		log.L.Debugf("Error creating request for %s: output variable must be a pointer", processTitle, err.Error())
+		log.L.Debugf("Error creating request for %s: output variable must be a pointer", processTitle)
 		return "", nil, fmt.Errorf("output variable must be a pointer")
 	}
 
