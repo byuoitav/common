@@ -36,7 +36,7 @@ func (c *CouchDB) getDMJobs(deviceID string) (jobs, error) {
 	// if that failed in a not-found error, get the default job config
 	err = c.MakeRequest("GET", fmt.Sprintf("%v/%v", deviceMonitoring, "default"), "", nil, &toReturn)
 	if err != nil {
-		return toReturn, fmt.Errorf("unable to get device monitoring jobs: %s", err)
+		return toReturn, fmt.Errorf("unable to get default device monitoring jobs: %s", err)
 	}
 
 	return toReturn, nil
