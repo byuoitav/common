@@ -24,7 +24,8 @@ func (c *CouchDB) getDMJobs(deviceID string) (jobs, error) {
 	// get the device specific jobs
 	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", deviceMonitoring, deviceID), "", nil, &toReturn)
 	if err != nil {
-		if _, ok := err.(NotFound); ok {
+		if _, ok := err.(*NotFound); ok {
+		} else if _, ok := err.(NotFound); ok {
 		} else {
 			return toReturn, fmt.Errorf("unable to get device monitoring jobs: %s", err)
 		}
