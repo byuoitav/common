@@ -16,6 +16,7 @@ type Alert struct {
 	Category   AlertCategory `json:"category"`
 	Severity   AlertSeverity `json:"severity"`
 	Message    string        `json:"message"`
+	MessageLog []string      `json:"message-log"`
 	Data       interface{}   `json:"data,omitempty"`
 	IncidentID string        `json:"incident-id"`
 
