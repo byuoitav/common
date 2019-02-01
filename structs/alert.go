@@ -19,9 +19,9 @@ type Alert struct {
 	Data       interface{}   `json:"data,omitempty"`
 	IncidentID string        `json:"incident-id"`
 
-	AlertStartTime      `json:"start-time"`
-	AlertEndTime        `json:"end-time"`
-	AlertLastUpdateTime `json:"update-time"`
+	AlertStartTime      time.Time `json:"start-time"`
+	AlertEndTime        time.Time `json:"end-time"`
+	AlertLastUpdateTime time.Time `json:"update-time"`
 
 	Respolved      bool           `json:"resolved"`
 	Responders     []string       `json:"responders"`
