@@ -10,7 +10,7 @@ import (
 type Alert struct {
 	events.BasicDeviceInfo
 
-	AlertID string `json:"alertID"`
+	AlertID string `json:"_id"`
 
 	Type       AlertType     `json:"type"`
 	Category   AlertCategory `json:"category"`
@@ -19,11 +19,15 @@ type Alert struct {
 	Data       interface{}   `json:"data,omitempty"`
 	IncidentID string        `json:"incident-id"`
 
-	CountBeforeResolution int            `json:"count-before-resolution"`
-	Responders            []string       `json:"responders"`
-	HelpSentAt            time.Time      `json:"help-sent-at"`
-	HelpArrivedAt         time.Time      `json:"help-arrived-at"`
-	ResolutionInfo        ResolutionInfo `json:"resolution-info"`
+	AlertStartTime      `json:"start-time"`
+	AlertEndTime        `json:"end-time"`
+	AlertLastUpdateTime `json:"update-time"`
+
+	Respolved      bool           `json:"resolved"`
+	Responders     []string       `json:"responders"`
+	HelpSentAt     time.Time      `json:"help-sent-at"`
+	HelpArrivedAt  time.Time      `json:"help-arrived-at"`
+	ResolutionInfo ResolutionInfo `json:"resolution-info"`
 
 	AlertTags  []string `json:"alert-tags"`
 	RoomTags   []string `json:"room-tags"`
