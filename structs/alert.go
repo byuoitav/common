@@ -2,31 +2,39 @@ package structs
 
 import (
 	"time"
+
+	"github.com/byuoitav/common/v2/events"
 )
 
 // Alert is a struct that contains the information regarding an alerting event.
 type Alert struct {
-	AlertID               string         `json:"alertID"`
-	BuildingID            string         `json:"buildingID"`
-	RoomID                string         `json:"roomID"`
-	DeviceID              string         `json:"deviceID"`
-	Type                  AlertType      `json:"type"`
-	IncidentID            string         `json:"incident-id"`
-	Severity              AlertSeverity  `json:"severity"`
-	Message               string         `json:"message"`
-	Data                  interface{}    `json:"data,omitempty"`
+	events.BasicDeviceInfo
+
+	AlertID string `json:"alertID"`
+
+	Type       AlertType     `json:"type"`
+	Category   AlertCategory `json:"category"`
+	Severity   AlertSeverity `json:"severity"`
+	Message    string        `json:"message"`
+	Data       interface{}   `json:"data,omitempty"`
+	IncidentID string        `json:"incident-id"`
+
 	CountBeforeResolution int            `json:"count-before-resolution"`
 	Responders            []string       `json:"responders"`
 	HelpSentAt            time.Time      `json:"help-sent-at"`
 	HelpArrivedAt         time.Time      `json:"help-arrived-at"`
 	ResolutionInfo        ResolutionInfo `json:"resolution-info"`
-	AlertTags             []string       `json:"alert-tags"`
-	RoomTags              []string       `json:"room-tags"`
-	DeviceTags            []string       `json:"device-tags"`
+
+	AlertTags  []string `json:"alert-tags"`
+	RoomTags   []string `json:"room-tags"`
+	DeviceTags []string `json:"device-tags"`
 }
 
 // AlertType is an enum of the different types of alerts
 type AlertType string
+
+// AlertCategory is an enum of the different categories of alerts
+type AlertCategory string
 
 // Here is a list of AlertTypes
 const (
