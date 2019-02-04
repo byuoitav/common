@@ -49,12 +49,13 @@ const (
 )
 
 // AlertSeverity is an enum of the different levels of severity for alerts
-type AlertSeverity int
+type AlertSeverity string
 
 // Here is a list of AlertSeverities
 const (
-	Critical AlertSeverity = iota + 1
-	Warning
+	Critical AlertSeverity = "critical"
+	Warning  AlertSeverity = "warning"
+	Low      AlertSeverity = "low"
 )
 
 // ResolutionInfo is a struct that contains the information about the resolution of the alert
