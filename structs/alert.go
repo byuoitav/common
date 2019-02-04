@@ -12,13 +12,15 @@ type Alert struct {
 
 	AlertID string `json:"_id"`
 
-	Type       AlertType     `json:"type"`
-	Category   AlertCategory `json:"category"`
-	Severity   AlertSeverity `json:"severity"`
-	Message    string        `json:"message"`
-	MessageLog []string      `json:"message-log"`
-	Data       interface{}   `json:"data,omitempty"`
-	IncidentID string        `json:"incident-id"`
+	Type     AlertType     `json:"type"`
+	Category AlertCategory `json:"category"`
+	Severity AlertSeverity `json:"severity"`
+
+	Message    string      `json:"message"`
+	MessageLog []string    `json:"message-log"`
+	Data       interface{} `json:"data,omitempty"`
+	IncidentID string      `json:"incident-id"`
+	SystemType string      `json:"system-type"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
