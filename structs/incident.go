@@ -38,7 +38,7 @@ type Incident struct {
 	ResolutionAction  string `json:"u_action,omitempty"`
 }
 type IncidentWrapper struct {
-	Result Incident `json:"result"`
+	Result []Incident `json:"result"`
 }
 
 type ReturnRoom struct {
@@ -89,4 +89,14 @@ type Category struct {
 
 type QueriedIncidents struct {
 	Result []ReceiveIncident `json:"result"`
+}
+
+type QueriedUsers struct {
+	Result []Users `json:"result"`
+}
+
+type Users struct {
+	NetID string `json:"user_name,omitempty"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"home_phone,omitempty"`
 }
