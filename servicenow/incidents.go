@@ -49,9 +49,12 @@ func main() {
 	// QueryIncidentsByGroup(GroupName)
 
 	//test query by room
-	BuildingID := "ITB"
-	RoomID := "1108"
-	QueryIncidentsByRoom(BuildingID, RoomID)
+	// BuildingID := "ITB"
+	// RoomID := "1108"
+	// QueryIncidentsByRoom(BuildingID, RoomID)
+
+	//Query all users
+	QueryAllUsers()
 	server := http.Server{
 		Addr:           port,
 		MaxHeaderBytes: 1024 * 10,
@@ -95,12 +98,13 @@ func Createincident(Alert structs.Alert) (structs.Incident, error) {
 		input, headers, 20, &output)
 	log.L.Debugf("Output JSON: %s", outputJson)
 	log.L.Debugf("Output JSON: %+v", output)
-	return output.Result, err
+	return output.Result[0], err
 }
 
 //we need to be able to access the sysID of the incident Ticket
 //TO DO: takes incident ID and string for internal notes
-func ModifyIncident(SysID string, Alert structs.Alert) (structs.ReceiveIncident, error) {
+func ModifyIncident(IncidentNumber string, Alert structs.Alert) (structs.ReceiveIncident, error) {
+	SysID, _ := GetSysID(IncidentNumber)
 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident/%s?sysparm_display_value=true", SysID)
 	log.L.Debugf("WebURL: %s", weburl)
 	var internalNotes string
@@ -155,7 +159,8 @@ func GetResolutionActions() (structs.ResolutionCategories, error) {
 	return output, err
 }
 
-func CloseIncident(SysID string, resolutionaction string, internalNotes string) (structs.ReceiveIncident, error) {
+func CloseIncident(IncidentNumber string, resolutionaction string, internalNotes string) (structs.ReceiveIncident, error) {
+	SysID, _ := GetSysID(IncidentNumber)
 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident/%s?sysparm_display_value=true", SysID)
 	log.L.Debugf("WebURL: %s", weburl)
 	state := "Closed"
@@ -217,4 +222,36 @@ func QueryIncidentsByRoom(BuildingID string, RoomID string) (structs.QueriedInci
 }
 
 //TODO query all of the users in the system (Net_id)
-//Get ticket
+
+func QueryAllUsers() (structs.QueriedUsers, error) {
+	weburl := fmt.Sprint("https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/sys_user?sysparm_query=active=true^assignment_group=javascript:getMyAssignmentGroups()")
+	var output structs.QueriedUsers
+	input := ""
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+		"Content-Type":  "application/json",
+	}
+	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("queryUsers", "GET", weburl,
+		input, headers, 500, &output)
+	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %+v", output)
+	return output, err
+}
+
+//Get ticket by INC# return the sysID
+func GetSysID(IncidentNumber string) (string, error) {
+	weburl := fmt.Sprintf("https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/incident?sysparm_query=number=%s", IncidentNumber)
+	var output structs.IncidentWrapper
+	input := ""
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+		"Content-Type":  "application/json",
+	}
+	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("queryUsers", "GET", weburl,
+		input, headers, 200, &output)
+	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %+v", output)
+	SysID := output.Result[0].SysId
+	log.L.Debugf("Output sysID: %+v", SysID)
+	return SysID, err
+}
