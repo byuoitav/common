@@ -10,7 +10,7 @@ import (
 type Alert struct {
 	events.BasicDeviceInfo
 
-	AlertID string `json:"_id,omitempty"`
+	AlertID string `json:"id,omitempty"`
 
 	Type     AlertType     `json:"type"`
 	Category AlertCategory `json:"category"`
