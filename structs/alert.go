@@ -10,7 +10,7 @@ import (
 type Alert struct {
 	events.BasicDeviceInfo
 
-	AlertID string `json:"_id"`
+	AlertID string `json:"_id,omitempty"`
 
 	Type     AlertType     `json:"type"`
 	Category AlertCategory `json:"category"`
@@ -41,13 +41,18 @@ type Alert struct {
 // AlertType is an enum of the different types of alerts
 type AlertType string
 
+const (
+	Communication AlertType = "communication"
+	Heartbeat     AlertType = "heartbeat"
+)
+
 // AlertCategory is an enum of the different categories of alerts
 type AlertCategory string
 
-// Here is a list of AlertTypes
+// Here is a list of AlertCategory
 const (
-	System AlertType = "system"
-	User   AlertType = "user"
+	System AlertCategory = "system"
+	User   AlertCategory = "user"
 )
 
 // AlertSeverity is an enum of the different levels of severity for alerts
