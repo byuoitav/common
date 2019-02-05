@@ -24,7 +24,7 @@ func main() {
 	// 	Message:    "There is an issue with the pi, it is not turning on",
 	// 	Data:       "Stuff",
 	// }
-	// Createincident(TestAlert)
+	// CreateIncident(TestAlert)
 
 	//Modify incident test
 	// ModifyAlert := structs.Alert{
@@ -63,7 +63,7 @@ func main() {
 
 }
 
-func Createincident(Alert structs.Alert) (structs.Incident, error) {
+func CreateIncident(Alert structs.Alert) (structs.Incident, error) {
 
 	weburl := "https://api.byu.edu/domains/servicenow/incident/v1.1/incident"
 	room := fmt.Sprintf("%s %s", Alert.BuildingID, Alert.RoomID)
@@ -103,23 +103,21 @@ func Createincident(Alert structs.Alert) (structs.Incident, error) {
 
 //we need to be able to access the sysID of the incident Ticket
 //TO DO: takes incident ID and string for internal notes
-func ModifyIncident(IncidentNumber string, Alert structs.Alert) (structs.ReceiveIncident, error) {
+func ModifyIncident(Alert structs.Alert) (structs.ReceiveIncident, error) {
+	IncidentNumber := Alert.IncidentID
 	SysID, _ := GetSysID(IncidentNumber)
 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident/%s?sysparm_display_value=true", SysID)
 	log.L.Debugf("WebURL: %s", weburl)
 	var internalNotes string
 	var state string
 
-	if Alert.HelpSentAt.IsZero() {
-
-	} else {
+	//if you want to pull info from the alert
+	if Alert.HelpSentAt.IsZero() == false && Alert.HelpArrivedAt.IsZero() == true {
 		internalNotes = "Help was was sent at: " + fmt.Sprintf("%s", Alert.HelpSentAt)
 		state = "Assigned"
 	}
 
-	if Alert.HelpArrivedAt.IsZero() {
-
-	} else {
+	if Alert.HelpSentAt.IsZero() == false && Alert.HelpArrivedAt.IsZero() == false {
 		internalNotes += "\n" + " Help arrived at: " + fmt.Sprintf("%s", Alert.HelpArrivedAt)
 		state = "Work In Progress"
 	}
@@ -159,8 +157,9 @@ func GetResolutionActions() (structs.ResolutionCategories, error) {
 	return output, err
 }
 
-func CloseIncident(IncidentNumber string, resolutionaction string, internalNotes string) (structs.ReceiveIncident, error) {
-	SysID, _ := GetSysID(IncidentNumber)
+func CloseIncident(Alert structs.Alert) (structs.ReceiveIncident, error) {
+	IncidentID := Alert.IncidentID
+	SysID, _ := GetSysID(IncidentID)
 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident/%s?sysparm_display_value=true", SysID)
 	log.L.Debugf("WebURL: %s", weburl)
 	state := "Closed"
@@ -169,10 +168,10 @@ func CloseIncident(IncidentNumber string, resolutionaction string, internalNotes
 
 	input := structs.Incident{
 		State:             state,
-		InternalNotes:     internalNotes,
 		ClosureCode:       closurecode,
 		ResolutionService: resolutionservice,
-		ResolutionAction:  resolutionaction,
+		ResolutionAction:  Alert.ResolutionInfo.Code,
+		WorkLog:           Alert.ResolutionInfo.Notes,
 	}
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
