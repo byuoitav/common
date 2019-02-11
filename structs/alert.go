@@ -36,6 +36,8 @@ type Alert struct {
 	AlertTags  []string `json:"alert-tags"`
 	RoomTags   []string `json:"room-tags"`
 	DeviceTags []string `json:"device-tags"`
+
+	Source string `json:"-"`
 }
 
 // AlertType is an enum of the different types of alerts
