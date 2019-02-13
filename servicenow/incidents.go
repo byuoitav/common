@@ -10,7 +10,7 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
-var token = "***REMOVED***"
+var token = os.GetEnv("WSO2_TOKEN")
 
 func main() {
 	log.SetLevel("debug")
