@@ -3,6 +3,7 @@ package servicenow
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/byuoitav/common"
 	"github.com/byuoitav/common/jsonhttp"
@@ -10,7 +11,7 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
-var token = os.GetEnv("WSO2_TOKEN")
+var token = os.Getenv("WSO2_TOKEN")
 
 func main() {
 	log.SetLevel("debug")
