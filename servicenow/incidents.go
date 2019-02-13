@@ -10,7 +10,7 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
-var token = "2936dc928c52fac8ed6eecb5f25b57f8"
+var token = os.GetEnv("WSO2_TOKEN")
 
 func main() {
 	log.SetLevel("debug")

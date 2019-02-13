@@ -69,7 +69,48 @@ const (
 
 // ResolutionInfo is a struct that contains the information about the resolution of the alert
 type ResolutionInfo struct {
-	Code       string    `json:"resolution-code"`
-	Notes      string    `json:"notes"`
-	ResolvedAt time.Time `json:"resolved-at"`
+	Code           string    `json:"resolution-code"`
+	Notes          string    `json:"notes"`
+	ResolvedAt     time.Time `json:"resolved-at"`
+	ResolutionHash string    `json:"resolution-hash"`
+}
+
+func ContainsAllTags(tagList []string, tags ...string) bool {
+	for i := range tags {
+		hasTag := false
+
+		for j := range tagList {
+			if tagList[j] == tags[i] {
+				hasTag = true
+				continue
+			}
+		}
+
+		if !hasTag {
+			return false
+		}
+	}
+
+	return true
+}
+
+func AddToTags(tagList []string, tags ...string) []string {
+	for _, t := range tags {
+		if !ContainsAllTags(tagList, t) {
+			tagList = append(tagList, t)
+		}
+	}
+	return tagList
+}
+
+func ContainsAnyTags(tagList []string, tags ...string) bool {
+	for i := range tags {
+		for j := range tagList {
+			if tagList[j] == tags[i] {
+				return true
+			}
+		}
+	}
+
+	return false
 }
