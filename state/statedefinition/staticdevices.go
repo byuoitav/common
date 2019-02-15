@@ -209,10 +209,10 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.Input, merged.Input, changes = compareString(base.Input, new.Input, changes)
 	}
 	if new.UpdateTimes["lamp-hours"].After(base.UpdateTimes["lamp-hours"]) {
-		diff.LampHours, merged.LampHours, changes = compareString(base.LampHours, new.LampHours, changes)
+		diff.LampHours, merged.LampHours, changes = compareInt(base.LampHours, new.LampHours, changes)
 	}
 	if new.UpdateTimes["temperature"].After(base.UpdateTimes["temperature"]) {
-		diff.Temperature, merged.Temperature, changes = compareString(base.Temperature, new.Temperature, changes)
+		diff.Temperature, merged.Temperature, changes = compareInt(base.Temperature, new.Temperature, changes)
 	}
 
 	if new.UpdateTimes["active-signal"].After(base.UpdateTimes["active-signal"]) {
