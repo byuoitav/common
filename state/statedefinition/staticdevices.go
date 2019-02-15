@@ -51,8 +51,8 @@ type StaticDevice struct {
 	//Display Specific Fields
 	Blanked      *bool  `json:"blanked,omitempty"`
 	Input        string `json:"input,omitempty"`
-	LampHours    string `json:"lamp-hours,omitempty"`
-	Temperature  string `json:"temperature,omitempty"`
+	LampHours    *int   `json:"lamp-hours,omitempty"`
+	Temperature  *int   `json:"temperature,omitempty"`
 	ActiveSignal *bool  `json:"active-signal,omitempty"`
 
 	//Audio Device Specific Fields
