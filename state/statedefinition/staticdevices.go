@@ -386,21 +386,3 @@ func arraysEqual(a, b []string) bool {
 
 	return true
 }
-
-func (sd *StaticDevice) GetLastHeartbeatInTimezone(timezone string) time.Time {
-	tz = time.LoadLocation(timezone)
-
-	return sd.LastHeartbeat.In(tz)
-}
-
-func (sd *StaticDevice) GetLastStateInTimezone(timezone string) time.Time {
-	tz = time.LoadLocation(timezone)
-
-	return sd.LastStateReceived.In(tz)
-}
-
-func (sd *StaticDevice) GetUnseInputInTimezone(timezone string) time.Time {
-	tz = time.LoadLocation(timezone)
-
-	return sd.LastuserInput.In(tz)
-}
