@@ -22,6 +22,9 @@ type Alert struct {
 	IncidentID string      `json:"incident-id"`
 	SystemType string      `json:"system-type"`
 
+	Notes    []string `json:"notes"`
+	LastNote string   `json:"last-notes"`
+
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
 	AlertLastUpdateTime time.Time `json:"update-time"`
