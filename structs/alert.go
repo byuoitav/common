@@ -23,8 +23,8 @@ type Alert struct {
 	SystemType string      `json:"system-type"`
 	Requester  string      `json:"requester"`
 
-	Notes    []string `json:"notes"`
-	LastNote string   `json:"last-notes"`
+	NotesLog []string `json:"notes-log"`
+	Notes    string   `json:"notes"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
