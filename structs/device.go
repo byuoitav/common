@@ -73,7 +73,11 @@ func (d *Device) Validate() error {
 
 // GetDeviceRoomID returns the room ID portion of the device ID.
 func (d *Device) GetDeviceRoomID() string {
-	idParts := strings.Split(d.ID, "-")
+	return GetRoomIDFromDevice(d.ID)
+}
+
+func GetRoomIDFromDevice(d string) string {
+	idParts := strings.Split(d, "-")
 	roomID := fmt.Sprintf("%s-%s", idParts[0], idParts[1])
 	return roomID
 }
