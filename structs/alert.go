@@ -6,6 +6,35 @@ import (
 	"github.com/byuoitav/common/v2/events"
 )
 
+type RoomIssue struct {
+	events.BasicRoomInfo
+
+	Severity AlertSeverity `json:"severity"`
+
+	RoomTags  []string `json:"room-tags"`
+	IssueTags []string `json:"issue-tags"`
+
+	AlertTypes      []AlertType     `json:"alert-types"`
+	AlertCategories []AlertCategory `json:"alert-types"`
+
+	IncidentID string `json:"incident-id"`
+	SystemType string `json:"system-type"`
+
+	NotesLog []string `json:"notes-log"`
+	Notes    string   `json:"notes"`
+
+	Responders    []string  `json:"responders"`
+	HelpSentAt    time.Time `json:"help-sent-at"`
+	HelpArrivedAt time.Time `json:"help-arrived-at"`
+
+	Resolved       bool           `json:"resolved"`
+	ResolutionInfo ResolutionInfo `json:"resolution-info"`
+
+	Source string `json:"-"`
+
+	Alerts map[string]Alert `json:"alerts"`
+}
+
 // Alert is a struct that contains the information regarding an alerting event.
 type Alert struct {
 	events.BasicDeviceInfo
@@ -19,25 +48,15 @@ type Alert struct {
 	Message    string      `json:"message"`
 	MessageLog []string    `json:"message-log"`
 	Data       interface{} `json:"data,omitempty"`
-	IncidentID string      `json:"incident-id"`
 	SystemType string      `json:"system-type"`
-
-	NotesLog []string `json:"notes-log"`
-	Notes    string   `json:"notes"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
 	AlertLastUpdateTime time.Time `json:"update-time"`
-	Active              bool      `json:"active"`
 
-	Resolved       bool           `json:"resolved"`
-	Responders     []string       `json:"responders"`
-	HelpSentAt     time.Time      `json:"help-sent-at"`
-	HelpArrivedAt  time.Time      `json:"help-arrived-at"`
-	ResolutionInfo ResolutionInfo `json:"resolution-info"`
+	Active bool `json:"active"`
 
 	AlertTags  []string `json:"alert-tags"`
-	RoomTags   []string `json:"room-tags"`
 	DeviceTags []string `json:"device-tags"`
 
 	Source string `json:"-"`
