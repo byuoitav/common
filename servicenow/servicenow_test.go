@@ -25,7 +25,7 @@ func TestServiceNow(t *testing.T) {
 		Type:       "System Communication Error",
 		Category:   "System",
 		Severity:   "Critical",
-		Message:    "has not reported any state since 2019-02-18 12:38:18.639429878 -0700 MST",
+		MessageLog: []string{"ITB-1108-CP1 has not reported any state since 2019-02-18 12:38:18.639429878 -0700 MST"},
 		SystemType: "pi",
 		Data:       "Data of the event goes here",
 	}
