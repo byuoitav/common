@@ -59,7 +59,7 @@ type ReceiveIncident struct {
 	Sensitivity      string      `json:"u_sensitivity,omitempty"`
 	WorkStatus       string      `json:"u_work_status,omitempty"`
 	Reach            string      `json:"u_reach,omitempty"`
-	AssignmentGroup  AssignGroup `json:"assignment_group,omitempty"`
+	AssignmentGroup  ServiceNowLinkValue `json:"assignment_group,omitempty"`
 	Description      string      `json:"description,omitempty"`
 	ShortDescription string      `json:"short_description,omitempty"`
 	CallerId         CallerID    `json:"caller_id,omitempty"`
@@ -74,8 +74,9 @@ type ReceiveIncidentWrapper struct {
 type CallerID struct {
 	Caller string `json:"display_value"`
 }
-type AssignGroup struct {
-	AssignGroup string `json:"display_value"`
+type ServiceNowLinkValue struct {
+	Link  string `json:link`
+	Value string `json:"value"`
 }
 
 type ResolutionCategories struct {

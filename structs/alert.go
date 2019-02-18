@@ -21,6 +21,7 @@ type Alert struct {
 	Data       interface{} `json:"data,omitempty"`
 	IncidentID string      `json:"incident-id"`
 	SystemType string      `json:"system-type"`
+	Requester  string      `json:"requester"`
 
 	Notes    []string `json:"notes"`
 	LastNote string   `json:"last-notes"`

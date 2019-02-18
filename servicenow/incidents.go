@@ -2,67 +2,16 @@ package servicenow
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
-	"github.com/byuoitav/common"
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
 )
 
-var token = os.Getenv("WSO2_TOKEN")
+var token = os.Getenv("SERVICENOW_WSO2_TOKEN")
 
-func main() {
-	log.SetLevel("debug")
-	port := ":8025"
-	router := common.NewRouter()
-	//Create incident test
-	// TestAlert := structs.Alert{
-	// 	BuildingID: "ITB",
-	// 	RoomID:     "1108",
-	// 	DeviceID:   "ITB-1108-CP5",
-	// 	Message:    "There is an issue with the pi, it is not turning on",
-	// 	Data:       "Stuff",
-	// }
-	// CreateIncident(TestAlert)
-
-	//Modify incident test
-	// ModifyAlert := structs.Alert{
-	// 	HelpSentAt:    time.Now(),
-	// 	HelpArrivedAt: time.Now().Add(5),
-	// }
-	// SysID := "89233ae61bdb674003e68622dd4bcb1b"
-	// ModifyIncident(SysID, ModifyAlert)
-
-	//query incident resolution category (for closing tickets) test
-	// table := "u_inc_resolution_cat"
-	// PrintIncidentResolutionCategory(table)
-
-	//close incident test
-	// sysID := "89233ae61bdb674003e68622dd4bcb1b"
-	// resolutionaction := "Replaced"
-	// notes := "I replaced the pi and the room is working now"
-	// CloseIncident(sysID, resolutionaction, notes)
-
-	//test Query all incidents for AV-Support
-	// GroupName := "AV-Support"
-	// QueryIncidentsByGroup(GroupName)
-
-	//test query by room
-	// BuildingID := "ITB"
-	// RoomID := "1108"
-	// QueryIncidentsByRoom(BuildingID, RoomID)
-
-	//Query all users
-	QueryAllUsers()
-	server := http.Server{
-		Addr:           port,
-		MaxHeaderBytes: 1024 * 10,
-	}
-	router.StartServer(&server)
-
-}
+const AssignmentGroup = "AV-Support"
 
 func CreateIncident(Alert structs.Alert) (structs.Incident, error) {
 
@@ -72,7 +21,7 @@ func CreateIncident(Alert structs.Alert) (structs.Incident, error) {
 	sensitivity := "Very Low"
 	severity := "Very Low"
 	reach := "Very Low"
-	assignmentGroup := "AV-Support"
+	assignmentGroup := AssignmentGroup
 	shortDescription := fmt.Sprintf("%s in room %s-%s has the following alert: %s.", Alert.DeviceID, Alert.BuildingID, Alert.RoomID, Alert.Message)
 	description := fmt.Sprintf("%s in room %s-%s has the following alert: %s.", Alert.DeviceID, Alert.BuildingID, Alert.RoomID, Alert.Message)
 	internalNotes := fmt.Sprintf("%v", Alert.Data)
@@ -207,6 +156,23 @@ func QueryIncidentsByGroup(GroupName string) (structs.QueriedIncidents, error) {
 //query all incidents by room number
 func QueryIncidentsByRoom(BuildingID string, RoomID string) (structs.QueriedIncidents, error) {
 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident?active=true&sysparm_display_value=true&u_room=%s+%s", BuildingID, RoomID)
+	log.L.Debugf("WebURL: %s", weburl)
+	var output structs.QueriedIncidents
+	input := ""
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+		"Content-Type":  "application/json",
+	}
+	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
+		input, headers, 20, &output)
+	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %+v", output)
+	return output, err
+}
+
+//query all incidents by room number and group
+func QueryIncidentsByRoomAndGroupName(BuildingID string, RoomID string, GroupName string) (structs.QueriedIncidents, error) {
+	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident?active=true&sysparm_display_value=true&u_room=%s+%s&assignment_group=%s", BuildingID, RoomID, GroupName)
 	log.L.Debugf("WebURL: %s", weburl)
 	var output structs.QueriedIncidents
 	input := ""
