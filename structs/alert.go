@@ -17,7 +17,7 @@ type RoomIssue struct {
 	IssueTags []string `json:"issue-tags"`
 
 	AlertTypes      []AlertType     `json:"alert-types"`
-	AlertCategories []AlertCategory `json:"alert-types"`
+	AlertCategories []AlertCategory `json:"alert-categories"`
 
 	IncidentID string `json:"incident-id"`
 	SystemType string `json:"system-type"`
