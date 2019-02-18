@@ -7,6 +7,8 @@ import (
 )
 
 type RoomIssue struct {
+	RoomIssueID string `json:"id"`
+
 	events.BasicRoomInfo
 
 	Severity AlertSeverity `json:"severity"`
