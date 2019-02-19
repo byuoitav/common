@@ -18,9 +18,12 @@ type RoomIssue struct {
 	AlertTypes      []AlertType     `json:"alert-types"`
 	AlertDevices    []string        `json:"alert-devices"`
 	AlertCategories []AlertCategory `json:"alert-categories"`
+	AlertCount      int             `json:'alert-count"`
 
-	AlertActiveCount int `json:'alert-active-count"`
-	AlertCount       int `json:'alert-count"`
+	ActiveAlertTypes      []AlertType     `json:"active-alert-types"`
+	ActiveAlertDevices    []string        `json:"active-alert-devices"`
+	ActiveAlertCategories []AlertCategory `json:"active-alert-categories"`
+	AlertActiveCount      int             `json:'active-alert-count"`
 
 	SystemType string `json:"system-type"`
 
@@ -61,7 +64,6 @@ type Alert struct {
 	MessageLog []string    `json:"message-log"`
 	Data       interface{} `json:"data,omitempty"`
 	SystemType string      `json:"system-type"`
-	Requester  string      `json:"requester"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
@@ -159,14 +161,45 @@ func (r *RoomIssue) CalculateAggregateInfo() {
 	activeCount := 0
 
 	for i := range r.Alerts {
-		//we don't care about inactive ones.
-		/* JK we do.
-		if !r.Alert.Active {
-			continue
-		}
-		*/
+
+		//active alert stuff
 		if r.Alerts[i].Active {
 			activeCount++
+
+			found := false
+			for j := range r.ActiveAlertTypes {
+				if r.ActiveAlertTypes[j] == r.Alerts[i].Type {
+					found = true
+					break
+				}
+			}
+			if !found {
+				r.ActiveAlertTypes = append(r.ActiveAlertTypes, r.Alerts[i].Type)
+			}
+
+			found = false
+			for j := range r.ActiveAlertCategories {
+				if r.ActiveAlertCategories[j] == r.Alerts[i].Category {
+					found = true
+					break
+				}
+
+			}
+			if !found {
+				r.ActiveAlertCategories = append(r.ActiveAlertCategories, r.Alerts[i].Category)
+			}
+
+			found = false
+			for j := range r.ActiveAlertDevices {
+				if r.ActiveAlertDevices[j] == r.Alerts[i].DeviceID {
+					found = true
+					break
+				}
+
+			}
+			if !found {
+				r.ActiveAlertDevices = append(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
+			}
 		}
 
 		found := false
