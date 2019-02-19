@@ -31,6 +31,16 @@ func getRoomIssueAlertTypeList(RoomIssue structs.RoomIssue) []structs.AlertType 
 	return output
 }
 
+func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) error {
+	if RoomIssue.Severity == "warning" {
+		_, err := SyncRepairWithRoomIssue(RoomIssue)
+		return err
+	}
+
+	_, err := SyncIncidentWithRoomIssue(RoomIssue)
+	return err
+}
+
 func QueryAllUsers() (structs.QueriedUsers, error) {
 	weburl := fmt.Sprint("https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/sys_user?sysparm_query=active=true^assignment_group=javascript:getMyAssignmentGroups()")
 	var output structs.QueriedUsers
