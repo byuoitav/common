@@ -23,28 +23,32 @@ var (
 	incidentSeverity             = "Very Low"
 	incidentReach                = "Very Low"
 	incidentDefaultContactNumber = "801-422-7671"
+	incidentClosedState          = "Closed"
 )
 
 //SyncIncidentWithRoomIssue will either create or modify the incident for the room issue
 func SyncIncidentWithRoomIssue(RoomIssue structs.RoomIssue) (structs.IncidentResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
-		findIncidents, err :=
-			QueryIncidentsByRoomAndGroupName(RoomIssue.RoomID, incidentAssignmentGroup)
 
-		if err == nil {
-			log.L.Errorf("Error searching for existing incident: %v", err)
-			return CreateIncident(RoomIssue)
-		} else {
-			if len(findIncidents) > 0 {
-				RoomIssue.IncidentID = findIncidents[0].Number
-				roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
+		if RoomIssue.IncidentID != "create" {
+			findIncidents, err :=
+				QueryIncidentsByRoomAndGroupName(RoomIssue.RoomID, incidentAssignmentGroup)
 
-				if roomIssueError != nil {
-					log.L.Errorf("Unable to update Room Issue in persistence store")
-					return findIncidents[0], roomIssueError
+			if err != nil {
+				log.L.Errorf("Error searching for existing incident: %v", err)
+				return CreateIncident(RoomIssue)
+			} else {
+				if len(findIncidents) > 0 {
+					RoomIssue.IncidentID = findIncidents[0].Number
+					roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
+
+					if roomIssueError != nil {
+						log.L.Errorf("Unable to update Room Issue in persistence store")
+						return findIncidents[0], roomIssueError
+					}
+
+					return findIncidents[0], nil
 				}
-
-				return findIncidents[0], nil
 			}
 		}
 
@@ -215,7 +219,7 @@ func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 		resolutionClosureCode = incidentClosureCode
 		resolutionService = incidentResolutionService
 		resolutionAction = RoomIssue.ResolutionInfo.Code
-		input.State = "Closed"
+		input.State = incidentClosedState
 	}
 
 	workLog = strings.TrimSpace(workLog)
@@ -252,8 +256,11 @@ func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 //QueryIncidentsByRoomAndGroupName - query all incidents by room number and group
 func QueryIncidentsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.IncidentResponse, error) {
-	roomIDreplaced := strings.Replace(RoomID, "-", " ", -1)
-	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", incidentWebURL, roomIDreplaced, GroupName)
+	roomIDreplaced := strings.Replace(RoomID, "-", "+", -1)
+	GroupName = strings.Replace(GroupName, " ", "+", -1)
+
+	weburl := fmt.Sprintf("active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", roomIDreplaced, GroupName)
+	weburl = fmt.Sprintf("%s?%s", incidentWebURL, weburl)
 
 	log.L.Debugf("WebURL: %s", weburl)
 

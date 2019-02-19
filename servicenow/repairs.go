@@ -115,23 +115,25 @@ func createRepairRequest(RoomIssue structs.RoomIssue) structs.RepairRequest {
 //SyncRepairWithRoomIssue will either create or modify the incident for the room issue
 func SyncRepairWithRoomIssue(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
-		findRepairs, err :=
-			QueryRepairsByRoomAndGroupName(RoomIssue.RoomID, repairAssignmentGroup)
+		if RoomIssue.IncidentID != "create" {
+			findRepairs, err :=
+				QueryRepairsByRoomAndGroupName(RoomIssue.RoomID, repairAssignmentGroup)
 
-		if err == nil {
-			log.L.Errorf("Error searching for existing repair: %v", err)
-			return CreateRepair(RoomIssue)
-		} else {
-			if len(findRepairs) > 0 {
-				RoomIssue.IncidentID = findRepairs[0].Number
-				roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
+			if err != nil {
+				log.L.Errorf("Error searching for existing repair: %v", err)
+				return CreateRepair(RoomIssue)
+			} else {
+				if len(findRepairs) > 0 {
+					RoomIssue.IncidentID = findRepairs[0].Number
+					roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
 
-				if roomIssueError != nil {
-					log.L.Errorf("Unable to update Room Issue in persistence store")
-					return findRepairs[0], roomIssueError
+					if roomIssueError != nil {
+						log.L.Errorf("Unable to update Room Issue in persistence store")
+						return findRepairs[0], roomIssueError
+					}
+
+					return findRepairs[0], nil
 				}
-
-				return findRepairs[0], nil
 			}
 		}
 
@@ -152,7 +154,7 @@ func CreateRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 		input.InternalNotes = fmt.Sprintf("-------Resolution Info------\n%s\n%s", resolutionInfo, input.InternalNotes)
 
 		//set state to closed
-		input.State = "closed"
+		input.State = repairClosedState
 	}
 
 	headers := map[string]string{
@@ -261,9 +263,11 @@ func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 
 //QueryRepairsByRoomAndGroupName gets a list of repairs by room assigned to specified group
 func QueryRepairsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.RepairResponse, error) {
-	roomIDreplaced := strings.Replace(RoomID, "-", " ", -1)
+	roomIDreplaced := strings.Replace(RoomID, "-", "+", -1)
+	GroupName = strings.Replace(GroupName, " ", "+", -1)
 
-	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", repairWebURL, roomIDreplaced, GroupName)
+	weburl := fmt.Sprintf("active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", roomIDreplaced, GroupName)
+	weburl = fmt.Sprintf("%s?%s", repairWebURL, weburl)
 
 	var output structs.MultiRepairResponseWrapper
 
