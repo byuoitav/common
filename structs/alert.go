@@ -13,28 +13,34 @@ type RoomIssue struct {
 
 	Severity AlertSeverity `json:"severity"`
 
-	RoomTags  []string `json:"room-tags"`
-	IssueTags []string `json:"issue-tags"`
+	RoomTags []string `json:"room-tags"`
 
 	AlertTypes      []AlertType     `json:"alert-types"`
 	AlertCategories []AlertCategory `json:"alert-types"`
 
-	IncidentID string `json:"incident-id"`
 	SystemType string `json:"system-type"`
 
-	NotesLog []string `json:"notes-log"`
-	Notes    string   `json:"notes"`
+	Source string `json:"-"`
+
+	Alerts map[string]Alert `json:"alerts"`
+
+	//Editable fields
+	IssueTags []string `json:"issue-tags"`
+
+	IncidentID string `json:"incident-id"`
+
+	Notes string `json:"notes"`
 
 	Responders    []string  `json:"responders"`
 	HelpSentAt    time.Time `json:"help-sent-at"`
 	HelpArrivedAt time.Time `json:"help-arrived-at"`
 
+	//resolution fields
 	Resolved       bool           `json:"resolved"`
 	ResolutionInfo ResolutionInfo `json:"resolution-info"`
 
-	Source string `json:"-"`
-
-	Alerts map[string]Alert `json:"alerts"`
+	//notes-log isn't editable
+	NotesLog []string `json:"notes-log"`
 }
 
 // Alert is a struct that contains the information regarding an alerting event.
@@ -60,6 +66,7 @@ type Alert struct {
 
 	AlertTags  []string `json:"alert-tags"`
 	DeviceTags []string `json:"device-tags"`
+	RoomTags   []string `json:"room-tags"`
 
 	Source string `json:"-"`
 }
@@ -137,4 +144,35 @@ func ContainsAnyTags(tagList []string, tags ...string) bool {
 	}
 
 	return false
+}
+
+func (r *RoomIssue) CalcualteTypeCategories() {
+	r.AlertTypes = []AlertType{}
+
+	r.AlertCategories = []AlertCategory{}
+
+	for i := range r.Alerts {
+		found := false
+		for j := range r.AlertTypes {
+			if r.AlertTypes[j] == r.Alerts[i].Type {
+				found = true
+				break
+			}
+		}
+		if !found {
+			r.AlertTypes = append(r.AlertTypes, r.Alerts[i].Type)
+		}
+
+		found = false
+		for j := range r.AlertCategories {
+			if r.AlertCategories[j] == r.Alerts[i].Category {
+				found = true
+				break
+			}
+
+		}
+		if !found {
+			r.AlertCategories = append(r.AlertCategories, r.Alerts[i].Category)
+		}
+	}
 }
