@@ -16,7 +16,7 @@ type RoomIssue struct {
 	RoomTags []string `json:"room-tags"`
 
 	AlertTypes      []AlertType     `json:"alert-types"`
-	AlertCategories []AlertCategory `json:"alert-types"`
+	AlertCategories []AlertCategory `json:"alert-categories"`
 
 	SystemType string `json:"system-type"`
 
@@ -57,6 +57,7 @@ type Alert struct {
 	MessageLog []string    `json:"message-log"`
 	Data       interface{} `json:"data,omitempty"`
 	SystemType string      `json:"system-type"`
+	Requester  string      `json:"requester,omitempty"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
