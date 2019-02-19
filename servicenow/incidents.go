@@ -7,6 +7,7 @@ import (
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
+	"github.com/byuoitav/shipwright/alertstore"
 )
 
 var (
@@ -27,6 +28,26 @@ var (
 //SyncIncidentWithRoomIssue will either create or modify the incident for the room issue
 func SyncIncidentWithRoomIssue(RoomIssue structs.RoomIssue) (structs.IncidentResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
+		findIncidents, err :=
+			QueryIncidentsByRoomAndGroupName(RoomIssue.RoomID, incidentAssignmentGroup)
+
+		if err == nil {
+			log.L.Errorf("Error searching for existing incident: %v", err)
+			return CreateIncident(RoomIssue)
+		} else {
+			if len(findIncidents) > 0 {
+				RoomIssue.IncidentID = findIncidents[0].Number
+				roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
+
+				if roomIssueError != nil {
+					log.L.Errorf("Unable to update Room Issue in persistence store")
+					return findIncidents[0], roomIssueError
+				}
+
+				return findIncidents[0], nil
+			}
+		}
+
 		return CreateIncident(RoomIssue)
 	}
 
@@ -230,8 +251,9 @@ func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 }
 
 //QueryIncidentsByRoomAndGroupName - query all incidents by room number and group
-func QueryIncidentsByRoomAndGroupName(BuildingID string, RoomID string, GroupName string) ([]structs.IncidentResponse, error) {
-	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s+%s&assignment_group=%s", incidentWebURL, BuildingID, RoomID, GroupName)
+func QueryIncidentsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.IncidentResponse, error) {
+	roomIDreplaced := strings.Replace(RoomID, "-", " ", -1)
+	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", incidentWebURL, roomIDreplaced, GroupName)
 
 	log.L.Debugf("WebURL: %s", weburl)
 

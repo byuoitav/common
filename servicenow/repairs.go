@@ -8,6 +8,7 @@ import (
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
+	"github.com/byuoitav/shipwright/alertstore"
 )
 
 var (
@@ -114,6 +115,26 @@ func createRepairRequest(RoomIssue structs.RoomIssue) structs.RepairRequest {
 //SyncRepairWithRoomIssue will either create or modify the incident for the room issue
 func SyncRepairWithRoomIssue(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
+		findRepairs, err :=
+			QueryRepairsByRoomAndGroupName(RoomIssue.RoomID, repairAssignmentGroup)
+
+		if err == nil {
+			log.L.Errorf("Error searching for existing repair: %v", err)
+			return CreateRepair(RoomIssue)
+		} else {
+			if len(findRepairs) > 0 {
+				RoomIssue.IncidentID = findRepairs[0].Number
+				roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
+
+				if roomIssueError != nil {
+					log.L.Errorf("Unable to update Room Issue in persistence store")
+					return findRepairs[0], roomIssueError
+				}
+
+				return findRepairs[0], nil
+			}
+		}
+
 		return CreateRepair(RoomIssue)
 	}
 
@@ -239,8 +260,10 @@ func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 // //CloseRepair will just close the repair with the specified resolution info
 
 //QueryRepairsByRoomAndGroupName gets a list of repairs by room assigned to specified group
-func QueryRepairsByRoomAndGroupName(BuildingID string, RoomID string, GroupName string) ([]structs.RepairResponse, error) {
-	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s+%s&assignment_group=%s", repairWebURL, BuildingID, RoomID, GroupName)
+func QueryRepairsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.RepairResponse, error) {
+	roomIDreplaced := strings.Replace(RoomID, "-", " ", -1)
+
+	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", repairWebURL, roomIDreplaced, GroupName)
 
 	var output structs.MultiRepairResponseWrapper
 
