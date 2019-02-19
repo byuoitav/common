@@ -31,14 +31,24 @@ func getRoomIssueAlertTypeList(RoomIssue structs.RoomIssue) []structs.AlertType 
 	return output
 }
 
-func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) error {
+func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) (string, error) {
 	if RoomIssue.Severity == "warning" {
-		_, err := SyncRepairWithRoomIssue(RoomIssue)
-		return err
+		repairResponse, err := SyncRepairWithRoomIssue(RoomIssue)
+
+		if err != nil {
+			return "", err
+		}
+
+		return repairResponse.Number, nil
 	}
 
-	_, err := SyncIncidentWithRoomIssue(RoomIssue)
-	return err
+	incidentReponse, err := SyncIncidentWithRoomIssue(RoomIssue)
+
+	if err != nil {
+		return "", err
+	}
+
+	return incidentReponse.Number, nil
 }
 
 func QueryAllUsers() (structs.QueriedUsers, error) {

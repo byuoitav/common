@@ -61,6 +61,7 @@ type Alert struct {
 	MessageLog []string    `json:"message-log"`
 	Data       interface{} `json:"data,omitempty"`
 	SystemType string      `json:"system-type"`
+	Requester  string      `json:"requester"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
