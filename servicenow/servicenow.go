@@ -32,7 +32,7 @@ func getRoomIssueAlertTypeList(RoomIssue structs.RoomIssue) []structs.AlertType 
 }
 
 func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) (string, error) {
-	if RoomIssue.Severity == "warning" {
+	if RoomIssue.Severity == structs.Warning {
 		repairResponse, err := SyncRepairWithRoomIssue(RoomIssue)
 
 		if err != nil {

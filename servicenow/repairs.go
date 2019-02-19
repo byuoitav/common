@@ -157,7 +157,45 @@ func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 	ExistingRepair, _ := GetRepair(RepairNum)
 
 	//we need to sync up the existing notes
-	internalNotes := getNotesForRoomIssueForRepair(RoomIssue)
+	internalNotes := ""
+	log.L.Debugf("Existing Notes: %s", ExistingRepair.InternalNotes)
+
+	if !strings.Contains(ExistingRepair.InternalNotes, "Help was sent at:") {
+		if RoomIssue.HelpSentAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
+		}
+	}
+
+	if !strings.Contains(ExistingRepair.InternalNotes, "Help arrived at:") {
+		if RoomIssue.HelpArrivedAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		}
+	}
+
+	if len(RoomIssue.Notes) > 0 {
+		if !strings.Contains(ExistingRepair.InternalNotes, RoomIssue.Notes) {
+			internalNotes += "\n--------Room Notes-------\n"
+			internalNotes += RoomIssue.Notes + "\n"
+		}
+	}
+
+	for _, alert := range RoomIssue.Alerts {
+		if len(alert.Message) > 0 {
+			tmpMessage := fmt.Sprintf("\n--------%s Notes-------\n%s\n", alert.DeviceID, alert.Message)
+
+			if !strings.Contains(ExistingRepair.InternalNotes, tmpMessage) {
+				internalNotes += tmpMessage
+			}
+		}
+	}
+
+	if RoomIssue.Resolved {
+		internalNotes += "\n-------Resolution Info-------\n"
+		internalNotes += RoomIssue.ResolutionInfo.Code + "\n"
+		internalNotes += RoomIssue.ResolutionInfo.Notes + "\n"
+	}
+
+	internalNotes = strings.TrimSpace(internalNotes)
 
 	weburl := fmt.Sprintf("%s/%s", repairModifyWebURL, ExistingRepair.SysID)
 
@@ -222,7 +260,7 @@ func QueryRepairsByRoomAndGroupName(BuildingID string, RoomID string, GroupName 
 
 //GetRepair Get repair ticket by the number
 func GetRepair(RepairNum string) (structs.RepairResponse, error) {
-	weburl := fmt.Sprintf("%s?sysparm_query=number=%s", repairWebURL, RepairNum)
+	weburl := fmt.Sprintf("%s?sysparm_query=number=%s&sysparm_display_value=true", repairWebURL, RepairNum)
 
 	var output structs.MultiRepairResponseWrapper
 
