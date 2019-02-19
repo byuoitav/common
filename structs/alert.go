@@ -6,6 +6,7 @@ import (
 	"github.com/byuoitav/common/v2/events"
 )
 
+// RoomIssue .
 type RoomIssue struct {
 	RoomIssueID string `json:"id"`
 
@@ -109,10 +110,9 @@ const (
 
 // ResolutionInfo is a struct that contains the information about the resolution of the alert
 type ResolutionInfo struct {
-	Code           string    `json:"resolution-code"`
-	Notes          string    `json:"notes"`
-	ResolvedAt     time.Time `json:"resolved-at"`
-	ResolutionHash string    `json:"resolution-hash"`
+	Code       string    `json:"resolution-code"`
+	Notes      string    `json:"notes"`
+	ResolvedAt time.Time `json:"resolved-at"`
 }
 
 func ContainsAllTags(tagList []string, tags ...string) bool {
