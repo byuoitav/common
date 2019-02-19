@@ -16,13 +16,13 @@ type RoomIssue struct {
 	RoomTags []string `json:"room-tags"`
 
 	AlertTypes      []AlertType     `json:"alert-types"`
-	AlertCategories []AlertCategory `json:"alert-categories"`
+	AlertCategories []AlertCategory `json:"alert-types"`
 
 	SystemType string `json:"system-type"`
 
 	Source string `json:"-"`
 
-	Alerts map[string]Alert `json:"alerts"`
+	Alerts []Alert `json:"alerts"`
 
 	//Editable fields
 	IssueTags []string `json:"issue-tags"`
@@ -57,7 +57,6 @@ type Alert struct {
 	MessageLog []string    `json:"message-log"`
 	Data       interface{} `json:"data,omitempty"`
 	SystemType string      `json:"system-type"`
-	Requester  string      `json:"requester,omitempty"`
 
 	AlertStartTime      time.Time `json:"start-time"`
 	AlertEndTime        time.Time `json:"end-time"`
@@ -147,7 +146,7 @@ func ContainsAnyTags(tagList []string, tags ...string) bool {
 	return false
 }
 
-func (r *RoomIssue) CalcualteTypeCategories() {
+func (r *RoomIssue) CalculateTypeCategories() {
 	r.AlertTypes = []AlertType{}
 
 	r.AlertCategories = []AlertCategory{}
