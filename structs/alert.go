@@ -75,7 +75,7 @@ type Alert struct {
 	DeviceTags []string `json:"device-tags"`
 	RoomTags   []string `json:"room-tags"`
 
-	Requestor string `json:"requestor,omitempty"`
+	Requester string `json:"requester,omitempty"`
 
 	Source string `json:"-"`
 }
