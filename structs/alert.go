@@ -16,7 +16,11 @@ type RoomIssue struct {
 	RoomTags []string `json:"room-tags"`
 
 	AlertTypes      []AlertType     `json:"alert-types"`
-	AlertCategories []AlertCategory `json:"alert-types"`
+	AlertDevices    []string        `json:"alert-devices"`
+	AlertCategories []AlertCategory `json:"alert-categories"`
+
+	AlertActiveCount int `json:'alert-active-count"`
+	AlertCount       int `json:'alert-count"`
 
 	SystemType string `json:"system-type"`
 
@@ -146,12 +150,24 @@ func ContainsAnyTags(tagList []string, tags ...string) bool {
 	return false
 }
 
-func (r *RoomIssue) CalculateTypeCategories() {
+func (r *RoomIssue) CalculateAggregateInfo() {
 	r.AlertTypes = []AlertType{}
 
 	r.AlertCategories = []AlertCategory{}
 
+	activeCount := 0
+
 	for i := range r.Alerts {
+		//we don't care about inactive ones.
+		/* JK we do.
+		if !r.Alert.Active {
+			continue
+		}
+		*/
+		if r.Alerts[i].Active {
+			activeCount++
+		}
+
 		found := false
 		for j := range r.AlertTypes {
 			if r.AlertTypes[j] == r.Alerts[i].Type {
@@ -174,5 +190,19 @@ func (r *RoomIssue) CalculateTypeCategories() {
 		if !found {
 			r.AlertCategories = append(r.AlertCategories, r.Alerts[i].Category)
 		}
+
+		found = false
+		for j := range r.AlertDevices {
+			if r.AlertDevices[j] == r.Alerts[i].DeviceID {
+				found = true
+				break
+			}
+
+		}
+		if !found {
+			r.AlertDevices = append(r.AlertDevices, r.Alerts[i].DeviceID)
+		}
 	}
+	r.AlertActiveCount = activeCount
+	r.AlertCount = len(r.Alerts)
 }
