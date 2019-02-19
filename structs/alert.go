@@ -19,8 +19,8 @@ type RoomIssue struct {
 	AlertDevices    []string        `json:"alert-devices"`
 	AlertCategories []AlertCategory `json:"alert-categories"`
 
-	AlertActiveCount int `json:'alert-active-count"`
-	AlertCount       int `json:'alert-count"`
+	AlertActiveCount int `json:"alert-active-count"`
+	AlertCount       int `json:"alert-count"`
 
 	SystemType string `json:"system-type"`
 
