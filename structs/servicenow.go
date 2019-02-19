@@ -1,7 +1,7 @@
 package structs
 
 type ServiceNowLinkValue struct {
-	Link  string `json:link`
+	Link  string `json:"link"`
 	Value string `json:"value"`
 }
 
