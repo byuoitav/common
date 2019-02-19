@@ -156,22 +156,6 @@ func CreateIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 // }
 
-// func GetResolutionActions() (structs.ResolutionCategories, error) {
-// 	weburl := "https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/u_inc_resolution_cat?sysparm_query=active%3Dtrue%5Eassignment_group%3Djavascript%3AgetMyAssignmentGroups()"
-// 	log.L.Debugf("WebURL: %s", weburl)
-// 	var output structs.ResolutionCategories
-// 	input := ""
-// 	headers := map[string]string{
-// 		"Authorization": "Bearer " + token,
-// 		"Content-Type":  "application/json",
-// 	}
-// 	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
-// 		input, headers, 20, &output)
-// 	log.L.Debugf("Output JSON: %s", outputJson)
-// 	log.L.Debugf("Output JSON: %+v", output)
-// 	return output, err
-// }
-
 // func CloseIncident(Alert structs.Alert) (structs.ReceiveIncident, error) {
 // 	IncidentID := Alert.IncidentID
 // 	SysID, _ := GetSysID(IncidentID)
@@ -201,88 +185,52 @@ func CreateIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 // 	return output.Result, err
 // }
 
-// //query all incidents for a given assignment group
-// func QueryIncidentsByGroup(GroupName string) (structs.QueriedIncidents, error) {
-// 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident?active=true&assignment_group=%s&sysparm_display_value=true", GroupName)
-// 	log.L.Debugf("WebURL: %s", weburl)
-// 	var output structs.QueriedIncidents
-// 	input := ""
-// 	headers := map[string]string{
-// 		"Authorization": "Bearer " + token,
-// 		"Content-Type":  "application/json",
-// 	}
-// 	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
-// 		input, headers, 20, &output)
-// 	log.L.Debugf("Output JSON: %s", outputJson)
-// 	log.L.Debugf("Output JSON: %+v", output)
-// 	return output, err
-// }
+//QueryIncidentsByRoomAndGroupName - query all incidents by room number and group
+func QueryIncidentsByRoomAndGroupName(BuildingID string, RoomID string, GroupName string) ([]structs.IncidentResponse, error) {
+	weburl := fmt.Sprintf("%s?active=true&sysparm_display_value=true&u_room=%s+%s&assignment_group=%s", incidentWebURL, BuildingID, RoomID, GroupName)
 
-// //query all incidents by room number
-// func QueryIncidentsByRoom(BuildingID string, RoomID string) (structs.QueriedIncidents, error) {
-// 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident?active=true&sysparm_display_value=true&u_room=%s+%s", BuildingID, RoomID)
-// 	log.L.Debugf("WebURL: %s", weburl)
-// 	var output structs.QueriedIncidents
-// 	input := ""
-// 	headers := map[string]string{
-// 		"Authorization": "Bearer " + token,
-// 		"Content-Type":  "application/json",
-// 	}
-// 	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
-// 		input, headers, 20, &output)
-// 	log.L.Debugf("Output JSON: %s", outputJson)
-// 	log.L.Debugf("Output JSON: %+v", output)
-// 	return output, err
-// }
+	log.L.Debugf("WebURL: %s", weburl)
 
-// //query all incidents by room number and group
-// func QueryIncidentsByRoomAndGroupName(BuildingID string, RoomID string, GroupName string) (structs.QueriedIncidents, error) {
-// 	weburl := fmt.Sprintf("https://api.byu.edu/domains/servicenow/incident/v1.1/incident?active=true&sysparm_display_value=true&u_room=%s+%s&assignment_group=%s", BuildingID, RoomID, GroupName)
-// 	log.L.Debugf("WebURL: %s", weburl)
-// 	var output structs.QueriedIncidents
-// 	input := ""
-// 	headers := map[string]string{
-// 		"Authorization": "Bearer " + token,
-// 		"Content-Type":  "application/json",
-// 	}
-// 	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
-// 		input, headers, 20, &output)
-// 	log.L.Debugf("Output JSON: %s", outputJson)
-// 	log.L.Debugf("Output JSON: %+v", output)
-// 	return output, err
-// }
+	var output structs.QueriedIncidents
 
-// //TODO query all of the users in the system (Net_id)
+	input := ""
 
-// func QueryAllUsers() (structs.QueriedUsers, error) {
-// 	weburl := fmt.Sprint("https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/sys_user?sysparm_query=active=true^assignment_group=javascript:getMyAssignmentGroups()")
-// 	var output structs.QueriedUsers
-// 	input := ""
-// 	headers := map[string]string{
-// 		"Authorization": "Bearer " + token,
-// 		"Content-Type":  "application/json",
-// 	}
-// 	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("queryUsers", "GET", weburl,
-// 		input, headers, 500, &output)
-// 	log.L.Debugf("Output JSON: %s", outputJson)
-// 	log.L.Debugf("Output JSON: %+v", output)
-// 	return output, err
-// }
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+		"Content-Type":  "application/json",
+	}
 
-// //Get ticket by INC# return the sysID
-// func GetSysID(IncidentNumber string) (string, error) {
-// 	weburl := fmt.Sprintf("https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/incident?sysparm_query=number=%s", IncidentNumber)
-// 	var output structs.IncidentWrapper
-// 	input := ""
-// 	headers := map[string]string{
-// 		"Authorization": "Bearer " + token,
-// 		"Content-Type":  "application/json",
-// 	}
-// 	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("queryUsers", "GET", weburl,
-// 		input, headers, 200, &output)
-// 	log.L.Debugf("Output JSON: %s", outputJson)
-// 	log.L.Debugf("Output JSON: %+v", output)
-// 	SysID := output.Result[0].SysId
-// 	log.L.Debugf("Output sysID: %+v", SysID)
-// 	return SysID, err
-// }
+	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
+		input, headers, 20, &output)
+
+	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %+v", output)
+	return output.Result, err
+}
+
+//GetIncident - Get ticket by INC#
+func GetIncident(IncidentNumber string) (structs.IncidentResponse, error) {
+
+	weburl := fmt.Sprintf("%s?sysparm_query=number=%s", incidentWebURL, IncidentNumber)
+
+	var output structs.IncidentResponseWrapper
+
+	input := ""
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+		"Content-Type":  "application/json",
+	}
+
+	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("Get Incident By ID", "GET", weburl,
+		input, headers, 200, &output)
+
+	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %+v", output)
+
+	SysID := output.Result.SysID
+
+	log.L.Debugf("Output sysID: %+v", SysID)
+
+	return output.Result, err
+}
