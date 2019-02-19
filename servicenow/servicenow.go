@@ -3,6 +3,7 @@ package servicenow
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
@@ -10,6 +11,11 @@ import (
 )
 
 var token = os.Getenv("SERVICENOW_WSO2_TOKEN")
+
+func init() {
+	mutexMap = make(map[string]*sync.Mutex)
+	mutexMapMutex = sync.Mutex{}
+}
 
 func getRoomIssueAlertTypeList(RoomIssue structs.RoomIssue) []structs.AlertType {
 	var output []structs.AlertType
@@ -31,7 +37,25 @@ func getRoomIssueAlertTypeList(RoomIssue structs.RoomIssue) []structs.AlertType 
 	return output
 }
 
+var mutexMap map[string]*sync.Mutex
+var mutexMapMutex sync.Mutex
+
 func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) (string, error) {
+	key := string(RoomIssue.Severity) + "-" + RoomIssue.RoomID
+
+	mutexMapMutex.Lock()
+	mutie, ok := mutexMap[key]
+
+	if !ok {
+		mutie = &sync.Mutex{}
+		mutexMap[key] = mutie
+	}
+
+	mutexMapMutex.Unlock()
+
+	mutie.Lock()
+	defer mutie.Unlock()
+
 	if RoomIssue.Severity == structs.Warning {
 		repairResponse, err := SyncRepairWithRoomIssue(RoomIssue)
 
