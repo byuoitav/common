@@ -25,14 +25,33 @@ func TestServiceNow(t *testing.T) {
 		Type:       "System Communication Error",
 		Category:   "System",
 		Severity:   "Critical",
-		MessageLog: []string{"ITB-1108-CP1 has not reported any state since 2019-02-18 12:38:18.639429878 -0700 MST"},
+		Message:    "ITB-1108-CP1 has not reported any state since 2019-02-18 13:38:18.639429878 -0700 MST",
 		SystemType: "pi",
 		Data:       "Data of the event goes here",
 	}
 
+	TestRoomIssue := structs.RoomIssue{
+		BasicRoomInfo: events.BasicRoomInfo{
+			BuildingID: "ITB",
+			RoomID:     "ITB-1108",
+		},
+		Alerts:   map[string]structs.Alert{TestAlert.AlertID: TestAlert},
+		Severity: "Critical",
+		// IncidentID:    "RPR0005378",
+		// NotesLog:      []string{"After consulting with Xuther, it seems that we should reboot"},
+		// HelpSentAt:    time.Now(),
+		// Responders:    []string{"Joe", "Danny", "John"},
+		// HelpArrivedAt: time.Now(),
+		// Resolved:      true,
+		// ResolutionInfo: structs.ResolutionInfo{
+		// 	Code:  "Fixed | The | Problem",
+		// 	Notes: "Mike had to replace the tv and then everything was fine",
+		// },
+	}
+
 	log.L.Debugf("Test alert %v", TestAlert)
 
-	repair, err := CreateRepair(TestAlert)
+	repair, err := CreateIncident(TestRoomIssue)
 
 	if err != nil {
 		log.L.Debugf("Error creating repair: %v", err)

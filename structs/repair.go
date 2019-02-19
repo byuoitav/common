@@ -23,8 +23,10 @@ type RepairRequest struct {
 }
 
 type RepairResponse struct {
-	SysID  string `json:"sys_id,omitempty"`
-	Number string `json:"number,omitempty"`
+	SysID         string `json:"sys_id,omitempty"`
+	Number        string `json:"number,omitempty"`
+	InternalNotes string `json:"work_notes,omitempty"`
+
 	//we are commenting these out because they don't come back consistent (sometimes "", sometimes a struct)
 	//and that doesn't play nice with GO
 	// Service            ServiceNowLinkValue `json:"u_service,omitempty"`
@@ -41,9 +43,6 @@ type RepairResponse struct {
 
 	// DateNeeded      string `json:"u_completion_asap_or_date,omitempty"`
 	// EquipmentReturn string `json:"u_pickup_or_delivery,omitempty"`
-
-	InternalNotes string `json:"work_notes,omitempty"`
-	WorkLog       string `json:"comments,omitempty"`
 }
 
 type RepairResponseWrapper struct {
