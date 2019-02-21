@@ -240,7 +240,10 @@ func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 		outputJSON, outputResponse, err := jsonhttp.CreateAndExecuteJSONRequest("ModifyIncident", "PUT", weburl,
 			input, headers, 20, &output)
-
+		if err != nil {
+			log.L.Errorf("Could not create and execute JSON request: %v", err)
+			return output.Result, err
+		}
 		tries++
 
 		log.L.Debugf("%v-%v", outputResponse.StatusCode, outputResponse.Status)
