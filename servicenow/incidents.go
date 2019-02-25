@@ -276,10 +276,15 @@ func QueryIncidentsByRoomAndGroupName(RoomID string, GroupName string) ([]struct
 		"Content-Type":  "application/json",
 	}
 
-	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
+	outputJSON, _, err := jsonhttp.CreateAndExecuteJSONRequest("querycategory", "GET", weburl,
 		input, headers, 20, &output)
 
-	log.L.Debugf("Output JSON: %s", outputJson)
+	if err != nil {
+		log.L.Errorf("Could not create and execute JSON request: %v", err)
+		return output.Result, err
+	}
+
+	log.L.Debugf("Output JSON: %s", outputJSON)
 	log.L.Debugf("Output JSON: %+v", output)
 	return output.Result, err
 }
