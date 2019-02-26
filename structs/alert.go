@@ -157,8 +157,9 @@ func ContainsAnyTags(tagList []string, tags ...string) bool {
 
 func (r *RoomIssue) CalculateAggregateInfo() {
 	r.AlertTypes = []AlertType{}
-
+	r.ActiveAlertTypes = []AlertType{}
 	r.AlertCategories = []AlertCategory{}
+	r.ActiveAlertCategories = []AlertCategory{}
 
 	activeCount := 0
 
