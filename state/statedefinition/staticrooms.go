@@ -29,12 +29,15 @@ type StaticRoom struct {
 	RoomID     string `json:"roomID,omitempty"`
 
 	//State fields
-	MaintenenceMode        *bool     `json:"maintenence-mode,omitempty"`       //if the system is in maintenence mode.
-	MaintenenceModeEndTime time.Time `json:"maintenence-mode-until,omitempty"` //if the system is in maintenence mode, when to put it back in monitoring.
-	Monitoring             *bool     `json:"monitoring,omitempty"`             //if the system is in monitoring currently.
+	MaintenenceMode        *bool     `json:"maintenence-mode,omitempty"`		//if the system is in maintenence mode.
+	MaintenenceModeEndTime time.Time `json:"maintenence-mode-until,omitempty"`	//if the system is in maintenence mode, when to put it back in monitoring.
+	Monitoring             *bool     `json:"monitoring,omitempty"`              //if the system is in monitoring currently.
 
 	Designation string   `json:"designation,omitempty"`
-	SystemType  []string `json:"system-type,omitempty"` //pi, dmps, scheduling, timeclock. If a room has more than one there may be multiple entries into this field.
+	SystemType  []string `json:"system-type,omitempty"`							//pi, dmps, scheduling, timeclock. If a room has more than one there may be multiple entries into this field.
+
+	AlertingDevices []string `json:"alerting-devices,omitempty"`				//List of devices that have alerts
+	AlertingDeviceCount *int `json:"alerting-device-count,omitempty"`
 
 	Tags []string `json:"tags,omitempty"`
 
@@ -57,6 +60,15 @@ func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, 
 	if new.UpdateTimes["designation"].After(base.UpdateTimes["designation"]) {
 		diff.Designation, merged.Designation, changes = compareString(base.Designation, new.Designation, changes)
 	}
+	if new.UpdateTimes["system-type"].After(base.UpdateTimes["system-type"]) {
+		diff.SystemType, merged.SystemType, changes = compareTags(base.SystemType, new.SystemType, changes)
+	}
+	if new.UpdateTimes["alerting-devices"].After(base.UpdateTimes["alerting-devices"]) {
+		diff.AlertingDevices, merged.AlertingDevices, changes = compareTags(base.AlertingDevices, new.AlertingDevices, changes)
+	}
+	if new.UpdateTimes["alerting-device-count"].After(base.UpdateTimes["alerting-device-count"]) {
+		diff.AlertingDeviceCount, merged.AlertingDeviceCount, changes = compareInt(base.AlertingDeviceCount, new.AlertingDeviceCount, changes)
+	}
 
 	//bool fields
 	if new.UpdateTimes["maintenence-mode"].After(base.UpdateTimes["maintenence-mode"]) {
@@ -74,9 +86,7 @@ func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, 
 	if new.UpdateTimes["tags"].After(base.UpdateTimes["tags"]) {
 		diff.Tags, merged.Tags, changes = compareTags(base.Tags, new.Tags, changes)
 	}
-	if new.UpdateTimes["system-type"].After(base.UpdateTimes["system-type"]) {
-		diff.SystemType, merged.SystemType, changes = compareTags(base.SystemType, new.SystemType, changes)
-	}
+
 
 	return
 }

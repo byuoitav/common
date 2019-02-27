@@ -108,6 +108,12 @@ const (
 	Low      AlertSeverity = "low"
 )
 
+var AlertSeverities = [...]string{
+	"critical",
+	"warning",
+	"low",
+}
+
 // ResolutionInfo is a struct that contains the information about the resolution of the alert
 type ResolutionInfo struct {
 	Code       string    `json:"resolution-code"`
