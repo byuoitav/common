@@ -80,7 +80,7 @@ func (d *Device) GetDeviceRoomID() string {
 
 func GetRoomIDFromDevice(d string) string {
 	idParts := strings.Split(d, "-")
-	if len(idpars) < 3 {
+	if len(idParts) < 3 {
 		log.L.Debugf("invalid ID %v", d)
 		return d
 	}
