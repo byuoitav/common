@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/byuoitav/common/log"
 )
 
 // Device - a representation of a device involved in a TEC Pi system.
@@ -78,6 +80,11 @@ func (d *Device) GetDeviceRoomID() string {
 
 func GetRoomIDFromDevice(d string) string {
 	idParts := strings.Split(d, "-")
+	if len(idpars) < 3 {
+		log.L.Debugf("invalid ID %v", d)
+		return d
+	}
+
 	roomID := fmt.Sprintf("%s-%s", idParts[0], idParts[1])
 	return roomID
 }
