@@ -26,8 +26,7 @@ type RoomIssue struct {
 	ActiveAlertCategories []AlertCategory `json:"active-alert-categories"`
 	AlertActiveCount      int             `json:"active-alert-count"`
 
-	SystemType    string `json:"system-type"`
-	ManualResolve bool   `json:"manual-resolve"`
+	SystemType string `json:"system-type"`
 
 	Source string `json:"-"`
 
@@ -80,6 +79,8 @@ type Alert struct {
 	Requester string `json:"requester,omitempty"`
 
 	Source string `json:"-"`
+
+	ManualResolve bool `json:"manual-resolve"`
 }
 
 // AlertType is an enum of the different types of alerts
