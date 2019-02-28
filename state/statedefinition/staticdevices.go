@@ -114,9 +114,6 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.Alerting, merged.Alerting, changes = compareBool(base.Alerting, new.Alerting, changes)
 	}
 
-	//handle alerts special case - it's alerts.<name>
-	diff.Alerts, merged.Alerts, changes = compareAlerts(base.Alerts, new.Alerts, base.UpdateTimes, new.UpdateTimes, changes)
-
 	if new.UpdateTimes["notifications-suppressed"].After(base.UpdateTimes["notifications-suppressed"]) {
 		diff.NotificationsSuppressed, merged.NotificationsSuppressed, changes = compareBool(base.NotificationsSuppressed, new.NotificationsSuppressed, changes)
 	}
@@ -143,7 +140,6 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 
 	if new.UpdateTimes["tags"].After(base.UpdateTimes["tags"]) {
 		diff.Tags, merged.Tags, changes = compareTags(base.Tags, new.Tags, changes)
-
 	}
 
 	//semi-common fields
@@ -306,6 +302,12 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	}
 	if new.UpdateTimes["view-dashboard"].After(base.UpdateTimes["view-dashboard"]) {
 		diff.ViewDashboard, merged.ViewDashboard, changes = compareString(base.ViewDashboard, new.ViewDashboard, changes)
+	}
+
+	for k, v := range new.UpdateTimes {
+		if v.After(base.UpdateTimes[k]) {
+			merged.UpdateTimes[k] = v
+		}
 	}
 
 	return
