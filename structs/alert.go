@@ -12,7 +12,8 @@ type RoomIssue struct {
 
 	events.BasicRoomInfo
 
-	Severity AlertSeverity `json:"severity"`
+	Severity       []AlertSeverity `json:"severity"`
+	ActiveSeverity []AlertSeverity `json:"active-severity"`
 
 	RoomTags []string `json:"room-tags"`
 
@@ -35,7 +36,7 @@ type RoomIssue struct {
 	//Editable fields
 	IssueTags []string `json:"issue-tags"`
 
-	IncidentID string `json:"incident-id"`
+	IncidentID []string `json:"incident-id"`
 
 	Notes string `json:"notes"`
 
@@ -168,6 +169,8 @@ func (r *RoomIssue) CalculateAggregateInfo() {
 	r.ActiveAlertTypes = []AlertType{}
 	r.AlertCategories = []AlertCategory{}
 	r.ActiveAlertCategories = []AlertCategory{}
+	r.Severity = []AlertSeverity{}
+	r.ActiveSeverity = []AlertSeverity{}
 
 	activeCount := 0
 
@@ -176,77 +179,33 @@ func (r *RoomIssue) CalculateAggregateInfo() {
 		//active alert stuff
 		if r.Alerts[i].Active {
 			activeCount++
+		}
 
-			found := false
-			for j := range r.ActiveAlertTypes {
-				if r.ActiveAlertTypes[j] == r.Alerts[i].Type {
-					found = true
-					break
-				}
-			}
-			if !found {
+		if ContainsAnyTags(r.ActiveAlertTypes, r.Alerts[i].Type) {
+			if r.Alerts[i].Active {
 				r.ActiveAlertTypes = append(r.ActiveAlertTypes, r.Alerts[i].Type)
 			}
-
-			found = false
-			for j := range r.ActiveAlertCategories {
-				if r.ActiveAlertCategories[j] == r.Alerts[i].Category {
-					found = true
-					break
-				}
-
-			}
-			if !found {
-				r.ActiveAlertCategories = append(r.ActiveAlertCategories, r.Alerts[i].Category)
-			}
-
-			found = false
-			for j := range r.ActiveAlertDevices {
-				if r.ActiveAlertDevices[j] == r.Alerts[i].DeviceID {
-					found = true
-					break
-				}
-
-			}
-			if !found {
-				r.ActiveAlertDevices = append(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
-			}
-		}
-
-		found := false
-		for j := range r.AlertTypes {
-			if r.AlertTypes[j] == r.Alerts[i].Type {
-				found = true
-				break
-			}
-		}
-		if !found {
 			r.AlertTypes = append(r.AlertTypes, r.Alerts[i].Type)
 		}
-
-		found = false
-		for j := range r.AlertCategories {
-			if r.AlertCategories[j] == r.Alerts[i].Category {
-				found = true
-				break
+		if ContainsAnyTags(r.ActiveAlertCategories, r.Alerts[i].Category) {
+			if r.Alerts[i].Active {
+				r.ActiveAlertCategories = append(r.ActiveAlertCategories, r.Alerts[i].Category)
 			}
-
-		}
-		if !found {
 			r.AlertCategories = append(r.AlertCategories, r.Alerts[i].Category)
 		}
-
-		found = false
-		for j := range r.AlertDevices {
-			if r.AlertDevices[j] == r.Alerts[i].DeviceID {
-				found = true
-				break
+		if ContainsAnyTags(r.ActiveAlertDevices, r.Alerts[i].DeviceID) {
+			if r.Alerts[i].Active {
+				r.ActiveAlertDevices = append(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
 			}
-
-		}
-		if !found {
 			r.AlertDevices = append(r.AlertDevices, r.Alerts[i].DeviceID)
 		}
+		if ContainsAnyTags(r.ActiveSeverity, r.Alerts[i].Severity) {
+			if r.Alerts[i].Active {
+				r.ActiveSeverity = append(r.ActiveSeverity, r.Alerts[i].Severity)
+			}
+			r.Severity = append(r.Severity, r.Alerts[i].Severity)
+		}
+
 	}
 	r.AlertActiveCount = activeCount
 	r.AlertCount = len(r.Alerts)
