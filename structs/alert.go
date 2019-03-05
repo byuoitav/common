@@ -12,19 +12,18 @@ type RoomIssue struct {
 
 	events.BasicRoomInfo
 
-	Severity       []AlertSeverity `json:"severity"`
-	ActiveSeverity []AlertSeverity `json:"active-severity"`
-
 	RoomTags []string `json:"room-tags"`
 
 	AlertTypes      []AlertType     `json:"alert-types"`
 	AlertDevices    []string        `json:"alert-devices"`
 	AlertCategories []AlertCategory `json:"alert-categories"`
+	AlertSeverities []AlertSeverity `json:"alert-severities"`
 	AlertCount      int             `json:"alert-count"`
 
 	ActiveAlertTypes      []AlertType     `json:"active-alert-types"`
 	ActiveAlertDevices    []string        `json:"active-alert-devices"`
 	ActiveAlertCategories []AlertCategory `json:"active-alert-categories"`
+	ActiveAlertSeverities []AlertSeverity `json:"active-alert-severities"`
 	AlertActiveCount      int             `json:"active-alert-count"`
 
 	SystemType string `json:"system-type"`
@@ -111,10 +110,10 @@ const (
 	Low      AlertSeverity = "low"
 )
 
-var AlertSeverities = [...]string{
-	"critical",
-	"warning",
-	"low",
+var AlertSeverities = []AlertSeverity{
+	Critical,
+	Warning,
+	Low,
 }
 
 // ResolutionInfo is a struct that contains the information about the resolution of the alert
@@ -164,13 +163,69 @@ func ContainsAnyTags(tagList []string, tags ...string) bool {
 	return false
 }
 
+func AddToSeverity(list []AlertSeverity, toAdd ...AlertSeverity) []AlertSeverity {
+	for i := range toAdd {
+		found := false
+		for j := range list {
+			if toAdd[i] == list[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			list = append(list, toAdd[i])
+		}
+	}
+
+	return list
+}
+
+func AddToType(list []AlertType, toAdd ...AlertType) []AlertType {
+	for i := range toAdd {
+		found := false
+		for j := range list {
+			if toAdd[i] == list[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			list = append(list, toAdd[i])
+		}
+	}
+
+	return list
+}
+
+func AddToCategory(list []AlertCategory, toAdd ...AlertCategory) []AlertCategory {
+	for i := range toAdd {
+		found := false
+		for j := range list {
+			if toAdd[i] == list[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			list = append(list, toAdd[i])
+		}
+	}
+
+	return list
+}
+
 func (r *RoomIssue) CalculateAggregateInfo() {
 	r.AlertTypes = []AlertType{}
 	r.ActiveAlertTypes = []AlertType{}
+
 	r.AlertCategories = []AlertCategory{}
 	r.ActiveAlertCategories = []AlertCategory{}
-	r.Severity = []AlertSeverity{}
-	r.ActiveSeverity = []AlertSeverity{}
+
+	r.AlertSeverities = []AlertSeverity{}
+	r.ActiveAlertSeverities = []AlertSeverity{}
+
+	r.AlertDevices = []string{}
+	r.ActiveAlertDevices = []string{}
 
 	activeCount := 0
 
@@ -179,33 +234,16 @@ func (r *RoomIssue) CalculateAggregateInfo() {
 		//active alert stuff
 		if r.Alerts[i].Active {
 			activeCount++
+			r.ActiveAlertDevices = AddToTags(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
+			r.ActiveAlertTypes = AddToType(r.ActiveAlertTypes, r.Alerts[i].Type)
+			r.ActiveAlertCategories = AddToCategory(r.ActiveAlertCategories, r.Alerts[i].Category)
+			r.ActiveAlertSeverities = AddToSeverity(r.ActiveAlertSeverities, r.Alerts[i].Severity)
 		}
 
-		if ContainsAnyTags(r.ActiveAlertTypes, r.Alerts[i].Type) {
-			if r.Alerts[i].Active {
-				r.ActiveAlertTypes = append(r.ActiveAlertTypes, r.Alerts[i].Type)
-			}
-			r.AlertTypes = append(r.AlertTypes, r.Alerts[i].Type)
-		}
-		if ContainsAnyTags(r.ActiveAlertCategories, r.Alerts[i].Category) {
-			if r.Alerts[i].Active {
-				r.ActiveAlertCategories = append(r.ActiveAlertCategories, r.Alerts[i].Category)
-			}
-			r.AlertCategories = append(r.AlertCategories, r.Alerts[i].Category)
-		}
-		if ContainsAnyTags(r.ActiveAlertDevices, r.Alerts[i].DeviceID) {
-			if r.Alerts[i].Active {
-				r.ActiveAlertDevices = append(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
-			}
-			r.AlertDevices = append(r.AlertDevices, r.Alerts[i].DeviceID)
-		}
-		if ContainsAnyTags(r.ActiveSeverity, r.Alerts[i].Severity) {
-			if r.Alerts[i].Active {
-				r.ActiveSeverity = append(r.ActiveSeverity, r.Alerts[i].Severity)
-			}
-			r.Severity = append(r.Severity, r.Alerts[i].Severity)
-		}
-
+		r.AlertDevices = AddToTags(r.AlertDevices, r.Alerts[i].DeviceID)
+		r.AlertTypes = AddToType(r.AlertTypes, r.Alerts[i].Type)
+		r.AlertCategories = AddToCategory(r.AlertCategories, r.Alerts[i].Category)
+		r.AlertSeverities = AddToSeverity(r.AlertSeverities, r.Alerts[i].Severity)
 	}
 	r.AlertActiveCount = activeCount
 	r.AlertCount = len(r.Alerts)
