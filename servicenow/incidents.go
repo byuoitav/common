@@ -1,6 +1,7 @@
 package servicenow
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -30,7 +31,7 @@ var (
 func SyncIncidentWithRoomIssue(RoomIssue structs.RoomIssue) (structs.IncidentResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
 
-		if RoomIssue.IncidentID != "create" {
+		if !structs.ContainsAllTags(RoomIssue.IncidentID, "create") {
 			findIncidents, err :=
 				QueryIncidentsByRoomAndGroupName(RoomIssue.RoomID, incidentAssignmentGroup)
 
@@ -39,7 +40,7 @@ func SyncIncidentWithRoomIssue(RoomIssue structs.RoomIssue) (structs.IncidentRes
 				return CreateIncident(RoomIssue)
 			} else {
 				if len(findIncidents) > 0 {
-					RoomIssue.IncidentID = findIncidents[0].Number
+					RoomIssue.IncidentID = append(RoomIssue.IncidentID, findIncidents[0].Number)
 					roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
 
 					if roomIssueError != nil {
@@ -160,9 +161,13 @@ func CreateIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 //ModifyIncident to close or post notes to an existing incident
 func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, error) {
+	var nullResponse structs.IncidentResponse
+	if len(RoomIssue.IncidentID) == 0 {
+		return nullResponse, errors.New("No Incident IDs on Room Issue")
+	}
 
 	IncidentNumber := RoomIssue.IncidentID
-	ExistingIncident, _ := GetIncident(IncidentNumber)
+	ExistingIncident, _ := GetIncident(IncidentNumber[0])
 
 	weburl := fmt.Sprintf("%s/%s?sysparm_display_value=true", incidentModifyWebURL, ExistingIncident.SysID)
 
