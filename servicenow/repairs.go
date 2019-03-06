@@ -1,6 +1,7 @@
 package servicenow
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -32,12 +33,15 @@ func getNotesForRoomIssueForRepair(RoomIssue structs.RoomIssue) string {
 		internalNotes += RoomIssue.ResolutionInfo.Notes
 	}
 
-	if RoomIssue.HelpSentAt.IsZero() == false {
-		internalNotes += fmt.Sprintf("\nHelp %s was sent at: %s\n", RoomIssue.Responders, RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
-	}
+	for _, roomResponse := range RoomIssue.RoomIssueResponses {
 
-	if RoomIssue.HelpSentAt.IsZero() == false {
-		internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		if roomResponse.HelpSentAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp %s was sent at: %s\n", roomResponse.Responders, roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
+		}
+
+		if roomResponse.HelpSentAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		}
 	}
 
 	if len(RoomIssue.NotesLog) > 0 {
@@ -115,7 +119,7 @@ func createRepairRequest(RoomIssue structs.RoomIssue) structs.RepairRequest {
 //SyncRepairWithRoomIssue will either create or modify the incident for the room issue
 func SyncRepairWithRoomIssue(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
-		if RoomIssue.IncidentID != "create" {
+		if !structs.ContainsAllTags(RoomIssue.IncidentID, "create") {
 			findRepairs, err :=
 				QueryRepairsByRoomAndGroupName(RoomIssue.RoomID, repairAssignmentGroup)
 
@@ -124,7 +128,7 @@ func SyncRepairWithRoomIssue(RoomIssue structs.RoomIssue) (structs.RepairRespons
 				return CreateRepair(RoomIssue)
 			} else {
 				if len(findRepairs) > 0 {
-					RoomIssue.IncidentID = findRepairs[0].Number
+					RoomIssue.IncidentID = append(RoomIssue.IncidentID, findRepairs[0].Number)
 					roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
 
 					if roomIssueError != nil {
@@ -175,7 +179,13 @@ func CreateRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 
 //ModifyRepair updates the notes on a repair ticket
 func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
-	RepairNum := RoomIssue.IncidentID
+	var nullResponse structs.RepairResponse
+
+	if len(RoomIssue.IncidentID) == 0 {
+		return nullResponse, errors.New("No incidents on modify repair")
+	}
+
+	RepairNum := RoomIssue.IncidentID[0]
 
 	ExistingRepair, _ := GetRepair(RepairNum)
 
@@ -183,15 +193,17 @@ func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 	internalNotes := ""
 	log.L.Debugf("Existing Notes: %s", ExistingRepair.InternalNotes)
 
-	if !strings.Contains(ExistingRepair.InternalNotes, "Help was sent at:") {
-		if RoomIssue.HelpSentAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
+	for _, roomResponse := range RoomIssue.RoomIssueResponses {
+		if !strings.Contains(ExistingRepair.InternalNotes, "Help was sent at:") {
+			if roomResponse.HelpSentAt.IsZero() == false {
+				internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
+			}
 		}
-	}
 
-	if !strings.Contains(ExistingRepair.InternalNotes, "Help arrived at:") {
-		if RoomIssue.HelpArrivedAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		if !strings.Contains(ExistingRepair.InternalNotes, "Help arrived at:") {
+			if roomResponse.HelpArrivedAt.IsZero() == false {
+				internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+			}
 		}
 	}
 

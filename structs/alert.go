@@ -39,9 +39,7 @@ type RoomIssue struct {
 
 	Notes string `json:"notes"`
 
-	Responders    []string  `json:"responders"`
-	HelpSentAt    time.Time `json:"help-sent-at"`
-	HelpArrivedAt time.Time `json:"help-arrived-at"`
+	RoomIssueResponses []RoomIssueResponse `json:"responses"`
 
 	//resolution fields
 	Resolved       bool           `json:"resolved"`
@@ -49,6 +47,13 @@ type RoomIssue struct {
 
 	//notes-log isn't editable
 	NotesLog []string `json:"notes-log"`
+}
+
+//RoomIssueResponse represents information about a tech being dispatched on a room issue
+type RoomIssueResponse struct {
+	Responders    []string  `json:"responders"`
+	HelpSentAt    time.Time `json:"help-sent-at"`
+	HelpArrivedAt time.Time `json:"help-arrived-at"`
 }
 
 // Alert is a struct that contains the information regarding an alerting event.

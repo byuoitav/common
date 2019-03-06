@@ -68,12 +68,14 @@ func CreateIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 	internalNotes := ""
 
-	if RoomIssue.HelpSentAt.IsZero() == false {
-		internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
-	}
+	for _, roomResponse := range RoomIssue.RoomIssueResponses {
+		if roomResponse.HelpSentAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
+		}
 
-	if RoomIssue.HelpArrivedAt.IsZero() == false {
-		internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		if roomResponse.HelpArrivedAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		}
 	}
 
 	if len(RoomIssue.Notes) > 0 {
@@ -179,15 +181,17 @@ func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 	log.L.Debugf("Existing Notes: %s", ExistingIncident.InternalNotes)
 
-	if !strings.Contains(ExistingIncident.InternalNotes, "Help was sent at:") {
-		if RoomIssue.HelpSentAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
+	for _, roomResponse := range RoomIssue.RoomIssueResponses {
+		if !strings.Contains(ExistingIncident.InternalNotes, "Help was sent at:") {
+			if roomResponse.HelpSentAt.IsZero() == false {
+				internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
+			}
 		}
-	}
 
-	if !strings.Contains(ExistingIncident.InternalNotes, "Help arrived at:") {
-		if RoomIssue.HelpArrivedAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		if !strings.Contains(ExistingIncident.InternalNotes, "Help arrived at:") {
+			if roomResponse.HelpArrivedAt.IsZero() == false {
+				internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+			}
 		}
 	}
 
