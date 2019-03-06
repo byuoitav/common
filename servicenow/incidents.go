@@ -303,14 +303,14 @@ func GetIncident(IncidentNumber string) (structs.IncidentResponse, error) {
 		"Content-Type":  "application/json",
 	}
 
-	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("Get Incident By ID", "GET", weburl,
+	outputJSON, _, err := jsonhttp.CreateAndExecuteJSONRequest("Get Incident By ID", "GET", weburl,
 		input, headers, 200, &output)
 	if err != nil {
 		log.L.Errorf("Problem getting the incident: %v", err.Error())
 		return structs.IncidentResponse{}, fmt.Errorf("Problem getting the incident: %v", err.Error())
 	}
 
-	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %s", outputJSON)
 	log.L.Debugf("Output JSON: %+v", output)
 
 	SysID := output.Result[0].SysID
