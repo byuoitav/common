@@ -8,84 +8,84 @@ import (
 
 // RoomIssue .
 type RoomIssue struct {
-	RoomIssueID string `json:"id"`
+	RoomIssueID string `json:"id,omitempty"`
 
 	events.BasicRoomInfo
 
-	RoomTags []string `json:"room-tags"`
+	RoomTags []string `json:"room-tags,omitempty"`
 
-	AlertTypes      []AlertType     `json:"alert-types"`
-	AlertDevices    []string        `json:"alert-devices"`
-	AlertCategories []AlertCategory `json:"alert-categories"`
-	AlertSeverities []AlertSeverity `json:"alert-severities"`
-	AlertCount      int             `json:"alert-count"`
+	AlertTypes      []AlertType     `json:"alert-types,omitempty"`
+	AlertDevices    []string        `json:"alert-devices,omitempty"`
+	AlertCategories []AlertCategory `json:"alert-categories,omitempty"`
+	AlertSeverities []AlertSeverity `json:"alert-severities,omitempty"`
+	AlertCount      int             `json:"alert-count,omitempty"`
 
-	ActiveAlertTypes      []AlertType     `json:"active-alert-types"`
-	ActiveAlertDevices    []string        `json:"active-alert-devices"`
-	ActiveAlertCategories []AlertCategory `json:"active-alert-categories"`
-	ActiveAlertSeverities []AlertSeverity `json:"active-alert-severities"`
-	AlertActiveCount      int             `json:"active-alert-count"`
+	ActiveAlertTypes      []AlertType     `json:"active-alert-types,omitempty"`
+	ActiveAlertDevices    []string        `json:"active-alert-devices,omitempty"`
+	ActiveAlertCategories []AlertCategory `json:"active-alert-categories,omitempty"`
+	ActiveAlertSeverities []AlertSeverity `json:"active-alert-severities,omitempty"`
+	AlertActiveCount      int             `json:"active-alert-count,omitempty"`
 
-	SystemType string `json:"system-type"`
+	SystemType string `json:"system-type,omitempty"`
 
 	Source string `json:"-"`
 
-	Alerts []Alert `json:"alerts"`
+	Alerts []Alert `json:"alerts,omitempty"`
 
 	//Editable fields
-	IssueTags []string `json:"issue-tags"`
+	IssueTags []string `json:"issue-tags,omitempty"`
 
-	IncidentID []string `json:"incident-id"`
+	IncidentID []string `json:"incident-id,omitempty"`
 
-	Notes string `json:"notes"`
+	Notes string `json:"notes,omitempty"`
 
-	RoomIssueResponses []RoomIssueResponse `json:"responses"`
+	RoomIssueResponses []RoomIssueResponse `json:"responses,omitempty"`
 
 	//resolution fields
-	Resolved       bool           `json:"resolved"`
-	ResolutionInfo ResolutionInfo `json:"resolution-info"`
+	Resolved       bool           `json:"resolved,omitempty"`
+	ResolutionInfo ResolutionInfo `json:"resolution-info,omitempty"`
 
 	//notes-log isn't editable
-	NotesLog []string `json:"notes-log"`
+	NotesLog []string `json:"notes-log,omitempty"`
 }
 
 //RoomIssueResponse represents information about a tech being dispatched on a room issue
 type RoomIssueResponse struct {
-	Responders    []string  `json:"responders"`
-	HelpSentAt    time.Time `json:"help-sent-at"`
-	HelpArrivedAt time.Time `json:"help-arrived-at"`
+	Responders    []string  `json:"responders,omitempty"`
+	HelpSentAt    time.Time `json:"help-sent-at,omitempty"`
+	HelpArrivedAt time.Time `json:"help-arrived-at,omitempty"`
 }
 
 // Alert is a struct that contains the information regarding an alerting event.
 type Alert struct {
 	events.BasicDeviceInfo
 
-	AlertID string `json:"id,omitempty"`
+	AlertID string `json:"id,omitempty,omitempty"`
 
-	Type     AlertType     `json:"type"`
-	Category AlertCategory `json:"category"`
-	Severity AlertSeverity `json:"severity"`
+	Type     AlertType     `json:"type,omitempty"`
+	Category AlertCategory `json:"category,omitempty"`
+	Severity AlertSeverity `json:"severity,omitempty"`
 
-	Message    string      `json:"message"`
-	MessageLog []string    `json:"message-log"`
+	Message    string      `json:"message,omitempty"`
+	MessageLog []string    `json:"message-log,omitempty"`
 	Data       interface{} `json:"data,omitempty"`
-	SystemType string      `json:"system-type"`
+	SystemType string      `json:"system-type,omitempty"`
 
-	AlertStartTime      time.Time `json:"start-time"`
-	AlertEndTime        time.Time `json:"end-time"`
-	AlertLastUpdateTime time.Time `json:"update-time"`
+	AlertStartTime      time.Time `json:"start-time,omitempty"`
+	AlertEndTime        time.Time `json:"end-time,omitempty"`
+	AlertLastUpdateTime time.Time `json:"update-time,omitempty"`
 
-	Active bool `json:"active"`
+	Active bool `json:"active,omitempty"`
 
-	AlertTags  []string `json:"alert-tags"`
-	DeviceTags []string `json:"device-tags"`
-	RoomTags   []string `json:"room-tags"`
+	AlertTags  []string `json:"alert-tags,omitempty"`
+	DeviceTags []string `json:"device-tags,omitempty"`
+	RoomTags   []string `json:"room-tags,omitempty"`
 
 	Requester string `json:"requester,omitempty"`
 
 	Source string `json:"-"`
 
-	ManualResolve bool `json:"manual-resolve"`
+	ManualResolve bool `json:"manual-resolve,omitempty"`
 }
 
 // AlertType is an enum of the different types of alerts
