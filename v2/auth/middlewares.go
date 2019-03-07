@@ -155,6 +155,9 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 			HttpOnly: false,
 			Secure:   false,
 		}
+		if os.Getenv("COOKIE_DOMAIN") != "" {
+			cook.Domain = os.Getenv("COOKIE_DOMAIN")
+		}
 
 		log.L.Debugf("Setting cookie")
 		http.SetCookie(w, &cook)
