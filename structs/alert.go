@@ -88,6 +88,12 @@ type Alert struct {
 	ManualResolve bool `json:"manual-resolve,omitempty"`
 }
 
+// TimeToResolve .
+func (a Alert) TimeToResolve() string {
+	diff := a.AlertEndTime.Sub(a.AlertStartTime)
+	return diff.Truncate(time.Second).String()
+}
+
 // AlertType is an enum of the different types of alerts
 type AlertType string
 
