@@ -41,7 +41,7 @@ var mutexMap map[string]*sync.Mutex
 var mutexMapMutex sync.Mutex
 
 func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) (string, error) {
-	key := string(RoomIssue.Severity) + "-" + RoomIssue.RoomID
+	key := RoomIssue.RoomID //no more severity
 
 	mutexMapMutex.Lock()
 	mutie, ok := mutexMap[key]
@@ -56,23 +56,26 @@ func SyncServiceNowWithRoomIssue(RoomIssue structs.RoomIssue) (string, error) {
 	mutie.Lock()
 	defer mutie.Unlock()
 
-	if RoomIssue.Severity == structs.Warning {
-		repairResponse, err := SyncRepairWithRoomIssue(RoomIssue)
+	//fot now
+	return "", nil
 
-		if err != nil {
-			return "", err
-		}
+	// if structs.ContainsAllTags(RoomIssue.AlertSeverities, structs.Warning) {
+	// 	repairResponse, err := SyncRepairWithRoomIssue(RoomIssue)
 
-		return repairResponse.Number, nil
-	}
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
 
-	incidentReponse, err := SyncIncidentWithRoomIssue(RoomIssue)
+	// 	return repairResponse.Number, nil
+	// }
 
-	if err != nil {
-		return "", err
-	}
+	// incidentReponse, err := SyncIncidentWithRoomIssue(RoomIssue)
 
-	return incidentReponse.Number, nil
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// return incidentReponse.Number, nil
 }
 
 func QueryAllUsers() (structs.QueriedUsers, error) {

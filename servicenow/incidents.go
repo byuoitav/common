@@ -1,6 +1,7 @@
 package servicenow
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -30,7 +31,7 @@ var (
 func SyncIncidentWithRoomIssue(RoomIssue structs.RoomIssue) (structs.IncidentResponse, error) {
 	if len(RoomIssue.IncidentID) == 0 {
 
-		if RoomIssue.IncidentID != "create" {
+		if !structs.ContainsAllTags(RoomIssue.IncidentID, "create") {
 			findIncidents, err :=
 				QueryIncidentsByRoomAndGroupName(RoomIssue.RoomID, incidentAssignmentGroup)
 
@@ -39,7 +40,7 @@ func SyncIncidentWithRoomIssue(RoomIssue structs.RoomIssue) (structs.IncidentRes
 				return CreateIncident(RoomIssue)
 			} else {
 				if len(findIncidents) > 0 {
-					RoomIssue.IncidentID = findIncidents[0].Number
+					RoomIssue.IncidentID = append(RoomIssue.IncidentID, findIncidents[0].Number)
 					roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
 
 					if roomIssueError != nil {
@@ -67,12 +68,14 @@ func CreateIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 	internalNotes := ""
 
-	if RoomIssue.HelpSentAt.IsZero() == false {
-		internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
-	}
+	for _, roomResponse := range RoomIssue.RoomIssueResponses {
+		if roomResponse.HelpSentAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
+		}
 
-	if RoomIssue.HelpArrivedAt.IsZero() == false {
-		internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		if roomResponse.HelpArrivedAt.IsZero() == false {
+			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		}
 	}
 
 	if len(RoomIssue.Notes) > 0 {
@@ -160,9 +163,13 @@ func CreateIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 //ModifyIncident to close or post notes to an existing incident
 func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, error) {
+	var nullResponse structs.IncidentResponse
+	if len(RoomIssue.IncidentID) == 0 {
+		return nullResponse, errors.New("No Incident IDs on Room Issue")
+	}
 
 	IncidentNumber := RoomIssue.IncidentID
-	ExistingIncident, _ := GetIncident(IncidentNumber)
+	ExistingIncident, _ := GetIncident(IncidentNumber[0])
 
 	weburl := fmt.Sprintf("%s/%s?sysparm_display_value=true", incidentModifyWebURL, ExistingIncident.SysID)
 
@@ -174,15 +181,17 @@ func ModifyIncident(RoomIssue structs.RoomIssue) (structs.IncidentResponse, erro
 
 	log.L.Debugf("Existing Notes: %s", ExistingIncident.InternalNotes)
 
-	if !strings.Contains(ExistingIncident.InternalNotes, "Help was sent at:") {
-		if RoomIssue.HelpSentAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", RoomIssue.HelpSentAt.Format("01/02/2006 3:04 PM"))
+	for _, roomResponse := range RoomIssue.RoomIssueResponses {
+		if !strings.Contains(ExistingIncident.InternalNotes, "Help was sent at:") {
+			if roomResponse.HelpSentAt.IsZero() == false {
+				internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
+			}
 		}
-	}
 
-	if !strings.Contains(ExistingIncident.InternalNotes, "Help arrived at:") {
-		if RoomIssue.HelpArrivedAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", RoomIssue.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+		if !strings.Contains(ExistingIncident.InternalNotes, "Help arrived at:") {
+			if roomResponse.HelpArrivedAt.IsZero() == false {
+				internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
+			}
 		}
 	}
 
@@ -303,14 +312,14 @@ func GetIncident(IncidentNumber string) (structs.IncidentResponse, error) {
 		"Content-Type":  "application/json",
 	}
 
-	outputJson, _, err := jsonhttp.CreateAndExecuteJSONRequest("Get Incident By ID", "GET", weburl,
+	outputJSON, _, err := jsonhttp.CreateAndExecuteJSONRequest("Get Incident By ID", "GET", weburl,
 		input, headers, 200, &output)
 	if err != nil {
 		log.L.Errorf("Problem getting the incident: %v", err.Error())
 		return structs.IncidentResponse{}, fmt.Errorf("Problem getting the incident: %v", err.Error())
 	}
 
-	log.L.Debugf("Output JSON: %s", outputJson)
+	log.L.Debugf("Output JSON: %s", outputJSON)
 	log.L.Debugf("Output JSON: %+v", output)
 
 	SysID := output.Result[0].SysID

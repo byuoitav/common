@@ -8,80 +8,84 @@ import (
 
 // RoomIssue .
 type RoomIssue struct {
-	RoomIssueID string `json:"id"`
+	RoomIssueID string `json:"id,omitempty"`
 
 	events.BasicRoomInfo
 
-	Severity       []AlertSeverity `json:"severity"`
-	ActiveSeverity []AlertSeverity `json:"active-severity"`
+	RoomTags []string `json:"room-tags,omitempty"`
 
-	RoomTags []string `json:"room-tags"`
+	AlertTypes      []AlertType     `json:"alert-types,omitempty"`
+	AlertDevices    []string        `json:"alert-devices,omitempty"`
+	AlertCategories []AlertCategory `json:"alert-categories,omitempty"`
+	AlertSeverities []AlertSeverity `json:"alert-severities,omitempty"`
+	AlertCount      int             `json:"alert-count,omitempty"`
 
-	AlertTypes      []AlertType     `json:"alert-types"`
-	AlertDevices    []string        `json:"alert-devices"`
-	AlertCategories []AlertCategory `json:"alert-categories"`
-	AlertCount      int             `json:"alert-count"`
+	ActiveAlertTypes      []AlertType     `json:"active-alert-types,omitempty"`
+	ActiveAlertDevices    []string        `json:"active-alert-devices,omitempty"`
+	ActiveAlertCategories []AlertCategory `json:"active-alert-categories,omitempty"`
+	ActiveAlertSeverities []AlertSeverity `json:"active-alert-severities,omitempty"`
+	AlertActiveCount      int             `json:"active-alert-count,omitempty"`
 
-	ActiveAlertTypes      []AlertType     `json:"active-alert-types"`
-	ActiveAlertDevices    []string        `json:"active-alert-devices"`
-	ActiveAlertCategories []AlertCategory `json:"active-alert-categories"`
-	AlertActiveCount      int             `json:"active-alert-count"`
-
-	SystemType string `json:"system-type"`
+	SystemType string `json:"system-type,omitempty"`
 
 	Source string `json:"-"`
 
-	Alerts []Alert `json:"alerts"`
+	Alerts []Alert `json:"alerts,omitempty"`
 
 	//Editable fields
-	IssueTags []string `json:"issue-tags"`
+	IssueTags []string `json:"issue-tags,omitempty"`
 
-	IncidentID []string `json:"incident-id"`
+	IncidentID []string `json:"incident-id,omitempty"`
 
-	Notes string `json:"notes"`
+	Notes string `json:"notes,omitempty"`
 
-	Responders    []string  `json:"responders"`
-	HelpSentAt    time.Time `json:"help-sent-at"`
-	HelpArrivedAt time.Time `json:"help-arrived-at"`
+	RoomIssueResponses []RoomIssueResponse `json:"responses,omitempty"`
 
 	//resolution fields
-	Resolved       bool           `json:"resolved"`
-	ResolutionInfo ResolutionInfo `json:"resolution-info"`
+	Resolved       bool           `json:"resolved,omitempty"`
+	ResolutionInfo ResolutionInfo `json:"resolution-info,omitempty"`
 
 	//notes-log isn't editable
-	NotesLog []string `json:"notes-log"`
+	NotesLog []string `json:"notes-log,omitempty"`
+}
+
+//RoomIssueResponse represents information about a tech being dispatched on a room issue
+type RoomIssueResponse struct {
+	Responders    []string  `json:"responders,omitempty"`
+	HelpSentAt    time.Time `json:"help-sent-at,omitempty"`
+	HelpArrivedAt time.Time `json:"help-arrived-at,omitempty"`
 }
 
 // Alert is a struct that contains the information regarding an alerting event.
 type Alert struct {
 	events.BasicDeviceInfo
 
-	AlertID string `json:"id,omitempty"`
+	AlertID string `json:"id,omitempty,omitempty"`
 
-	Type     AlertType     `json:"type"`
-	Category AlertCategory `json:"category"`
-	Severity AlertSeverity `json:"severity"`
+	Type     AlertType     `json:"type,omitempty"`
+	Category AlertCategory `json:"category,omitempty"`
+	Severity AlertSeverity `json:"severity,omitempty"`
 
-	Message    string      `json:"message"`
-	MessageLog []string    `json:"message-log"`
+	Message    string      `json:"message,omitempty"`
+	MessageLog []string    `json:"message-log,omitempty"`
 	Data       interface{} `json:"data,omitempty"`
-	SystemType string      `json:"system-type"`
+	SystemType string      `json:"system-type,omitempty"`
 
-	AlertStartTime      time.Time `json:"start-time"`
-	AlertEndTime        time.Time `json:"end-time"`
-	AlertLastUpdateTime time.Time `json:"update-time"`
+	AlertStartTime      time.Time `json:"start-time,omitempty"`
+	AlertEndTime        time.Time `json:"end-time,omitempty"`
+	AlertLastUpdateTime time.Time `json:"update-time,omitempty"`
 
-	Active bool `json:"active"`
+	Active bool `json:"active,omitempty"`
 
-	AlertTags  []string `json:"alert-tags"`
-	DeviceTags []string `json:"device-tags"`
-	RoomTags   []string `json:"room-tags"`
+	AlertTags  []string `json:"alert-tags,omitempty"`
+	DeviceTags []string `json:"device-tags,omitempty"`
+	RoomTags   []string `json:"room-tags,omitempty"`
 
 	Requester string `json:"requester,omitempty"`
 
 	Source string `json:"-"`
 
-	ManualResolve bool `json:"manual-resolve"`
+	ManualResolve bool `json:"manual-resolve,omitempty"`
 }
 
 // AlertType is an enum of the different types of alerts
@@ -111,10 +115,10 @@ const (
 	Low      AlertSeverity = "low"
 )
 
-var AlertSeverities = [...]string{
-	"critical",
-	"warning",
-	"low",
+var AlertSeverities = []AlertSeverity{
+	Critical,
+	Warning,
+	Low,
 }
 
 // ResolutionInfo is a struct that contains the information about the resolution of the alert
@@ -164,13 +168,69 @@ func ContainsAnyTags(tagList []string, tags ...string) bool {
 	return false
 }
 
+func AddToSeverity(list []AlertSeverity, toAdd ...AlertSeverity) []AlertSeverity {
+	for i := range toAdd {
+		found := false
+		for j := range list {
+			if toAdd[i] == list[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			list = append(list, toAdd[i])
+		}
+	}
+
+	return list
+}
+
+func AddToType(list []AlertType, toAdd ...AlertType) []AlertType {
+	for i := range toAdd {
+		found := false
+		for j := range list {
+			if toAdd[i] == list[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			list = append(list, toAdd[i])
+		}
+	}
+
+	return list
+}
+
+func AddToCategory(list []AlertCategory, toAdd ...AlertCategory) []AlertCategory {
+	for i := range toAdd {
+		found := false
+		for j := range list {
+			if toAdd[i] == list[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			list = append(list, toAdd[i])
+		}
+	}
+
+	return list
+}
+
 func (r *RoomIssue) CalculateAggregateInfo() {
 	r.AlertTypes = []AlertType{}
 	r.ActiveAlertTypes = []AlertType{}
+
 	r.AlertCategories = []AlertCategory{}
 	r.ActiveAlertCategories = []AlertCategory{}
-	r.Severity = []AlertSeverity{}
-	r.ActiveSeverity = []AlertSeverity{}
+
+	r.AlertSeverities = []AlertSeverity{}
+	r.ActiveAlertSeverities = []AlertSeverity{}
+
+	r.AlertDevices = []string{}
+	r.ActiveAlertDevices = []string{}
 
 	activeCount := 0
 
@@ -179,33 +239,16 @@ func (r *RoomIssue) CalculateAggregateInfo() {
 		//active alert stuff
 		if r.Alerts[i].Active {
 			activeCount++
+			r.ActiveAlertDevices = AddToTags(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
+			r.ActiveAlertTypes = AddToType(r.ActiveAlertTypes, r.Alerts[i].Type)
+			r.ActiveAlertCategories = AddToCategory(r.ActiveAlertCategories, r.Alerts[i].Category)
+			r.ActiveAlertSeverities = AddToSeverity(r.ActiveAlertSeverities, r.Alerts[i].Severity)
 		}
 
-		if ContainsAnyTags(r.ActiveAlertTypes, r.Alerts[i].Type) {
-			if r.Alerts[i].Active {
-				r.ActiveAlertTypes = append(r.ActiveAlertTypes, r.Alerts[i].Type)
-			}
-			r.AlertTypes = append(r.AlertTypes, r.Alerts[i].Type)
-		}
-		if ContainsAnyTags(r.ActiveAlertCategories, r.Alerts[i].Category) {
-			if r.Alerts[i].Active {
-				r.ActiveAlertCategories = append(r.ActiveAlertCategories, r.Alerts[i].Category)
-			}
-			r.AlertCategories = append(r.AlertCategories, r.Alerts[i].Category)
-		}
-		if ContainsAnyTags(r.ActiveAlertDevices, r.Alerts[i].DeviceID) {
-			if r.Alerts[i].Active {
-				r.ActiveAlertDevices = append(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
-			}
-			r.AlertDevices = append(r.AlertDevices, r.Alerts[i].DeviceID)
-		}
-		if ContainsAnyTags(r.ActiveSeverity, r.Alerts[i].Severity) {
-			if r.Alerts[i].Active {
-				r.ActiveSeverity = append(r.ActiveSeverity, r.Alerts[i].Severity)
-			}
-			r.Severity = append(r.Severity, r.Alerts[i].Severity)
-		}
-
+		r.AlertDevices = AddToTags(r.AlertDevices, r.Alerts[i].DeviceID)
+		r.AlertTypes = AddToType(r.AlertTypes, r.Alerts[i].Type)
+		r.AlertCategories = AddToCategory(r.AlertCategories, r.Alerts[i].Category)
+		r.AlertSeverities = AddToSeverity(r.AlertSeverities, r.Alerts[i].Severity)
 	}
 	r.AlertActiveCount = activeCount
 	r.AlertCount = len(r.Alerts)
