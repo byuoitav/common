@@ -1,7 +1,6 @@
 package statedefinition
 
 import (
-	"strings"
 	"time"
 
 	"github.com/byuoitav/common/nerr"
@@ -23,28 +22,26 @@ const (
 	Timeclock  = "timeclock"
 )
 
+//StaticRoom represents the same information that is in the static index
 type StaticRoom struct {
 	//information fields
 	BuildingID string `json:"buildingID,omitempty"`
 	RoomID     string `json:"roomID,omitempty"`
 
 	//State fields
-	MaintenenceMode        *bool     `json:"maintenence-mode,omitempty"`		//if the system is in maintenence mode.
-	MaintenenceModeEndTime time.Time `json:"maintenence-mode-until,omitempty"`	//if the system is in maintenence mode, when to put it back in monitoring.
-	Monitoring             *bool     `json:"monitoring,omitempty"`              //if the system is in monitoring currently.
+	MaintenenceMode        *bool     `json:"maintenence-mode,omitempty"`       //if the system is in maintenence mode.
+	MaintenenceModeEndTime time.Time `json:"maintenence-mode-until,omitempty"` //if the system is in maintenence mode, when to put it back in monitoring.
+	Monitoring             *bool     `json:"monitoring,omitempty"`             //if the system is in monitoring currently.
 
 	Designation string   `json:"designation,omitempty"`
-	SystemType  []string `json:"system-type,omitempty"`							//pi, dmps, scheduling, timeclock. If a room has more than one there may be multiple entries into this field.
-
-	AlertingDevices []string `json:"alerting-devices,omitempty"`				//List of devices that have alerts
-	AlertingDeviceCount *int `json:"alerting-device-count,omitempty"`
+	SystemType  []string `json:"system-type,omitempty"` //pi, dmps, scheduling, timeclock. If a room has more than one there may be multiple entries into this field.
 
 	Tags []string `json:"tags,omitempty"`
 
 	UpdateTimes map[string]time.Time `json:"update-times"`
 }
 
-//Compare rooms takes two rooms and compares them, changes from new to base will only be included if they have a timestamp in UpdateTimes later than that in base for the same field
+//CompareRooms takes two rooms and compares them, changes from new to base will only be included if they have a timestamp in UpdateTimes later than that in base for the same field
 func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, err *nerr.E) {
 
 	merged = base
@@ -62,12 +59,6 @@ func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, 
 	}
 	if new.UpdateTimes["system-type"].After(base.UpdateTimes["system-type"]) {
 		diff.SystemType, merged.SystemType, changes = compareTags(base.SystemType, new.SystemType, changes)
-	}
-	if new.UpdateTimes["alerting-devices"].After(base.UpdateTimes["alerting-devices"]) {
-		diff.AlertingDevices, merged.AlertingDevices, changes = compareTags(base.AlertingDevices, new.AlertingDevices, changes)
-	}
-	if new.UpdateTimes["alerting-device-count"].After(base.UpdateTimes["alerting-device-count"]) {
-		diff.AlertingDeviceCount, merged.AlertingDeviceCount, changes = compareInt(base.AlertingDeviceCount, new.AlertingDeviceCount, changes)
 	}
 
 	//bool fields
@@ -87,7 +78,6 @@ func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, 
 		diff.Tags, merged.Tags, changes = compareTags(base.Tags, new.Tags, changes)
 	}
 
-
 	return
 }
 
@@ -98,27 +88,4 @@ func (r *StaticRoom) HasSystemType(s string) bool {
 		}
 	}
 	return false
-}
-
-func IsDefaultSystemType(t string) bool {
-	return t == DMPS || t == Pi
-}
-
-func IsDeviceOfType(d, t string) bool {
-	switch t {
-	case DMPS:
-		return GetSuffix(d) == "DMPS"
-	case Pi:
-		return GetSuffix(d) == "CP"
-	case Scheduling:
-		return GetSuffix(d) == "SP"
-	case Timeclock:
-		return GetSuffix(d) == "TC"
-	}
-	return false
-}
-
-func GetSuffix(d string) string {
-	t := d[strings.LastIndex(d, "-")+1:]
-	return strings.TrimRight(t, "0123456789")
 }
