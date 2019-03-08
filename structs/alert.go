@@ -1,7 +1,9 @@
 package structs
 
 import (
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/byuoitav/common/v2/events"
 )
@@ -91,7 +93,18 @@ type Alert struct {
 // TimeToResolve .
 func (a Alert) TimeToResolve() string {
 	diff := a.AlertEndTime.Sub(a.AlertStartTime)
-	return diff.Truncate(time.Second).String()
+	str := diff.Truncate(time.Second).String()
+	ret := strings.Builder{}
+
+	for _, r := range str {
+		ret.WriteRune(r)
+
+		if unicode.IsLetter(r) {
+			ret.WriteRune(' ')
+		}
+	}
+
+	return strings.TrimSpace(ret.String())
 }
 
 // AlertType is an enum of the different types of alerts
