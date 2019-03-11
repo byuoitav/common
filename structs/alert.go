@@ -20,13 +20,13 @@ type RoomIssue struct {
 	AlertDevices    []string        `json:"alert-devices,omitempty"`
 	AlertCategories []AlertCategory `json:"alert-categories,omitempty"`
 	AlertSeverities []AlertSeverity `json:"alert-severities,omitempty"`
-	AlertCount      int             `json:"alert-count,omitempty"`
+	AlertCount      int             `json:"alert-count"`
 
 	ActiveAlertTypes      []AlertType     `json:"active-alert-types,omitempty"`
 	ActiveAlertDevices    []string        `json:"active-alert-devices,omitempty"`
 	ActiveAlertCategories []AlertCategory `json:"active-alert-categories,omitempty"`
 	ActiveAlertSeverities []AlertSeverity `json:"active-alert-severities,omitempty"`
-	AlertActiveCount      int             `json:"active-alert-count,omitempty"`
+	AlertActiveCount      int             `json:"active-alert-count"`
 
 	SystemType string `json:"system-type,omitempty"`
 
@@ -44,7 +44,7 @@ type RoomIssue struct {
 	RoomIssueResponses []RoomIssueResponse `json:"responses,omitempty"`
 
 	//resolution fields
-	Resolved       bool           `json:"resolved,omitempty"`
+	Resolved       bool           `json:"resolved"`
 	ResolutionInfo ResolutionInfo `json:"resolution-info,omitempty"`
 
 	//notes-log isn't editable
@@ -77,7 +77,7 @@ type Alert struct {
 	AlertEndTime        time.Time `json:"end-time,omitempty"`
 	AlertLastUpdateTime time.Time `json:"update-time,omitempty"`
 
-	Active bool `json:"active,omitempty"`
+	Active bool `json:"active"`
 
 	AlertTags  []string `json:"alert-tags,omitempty"`
 	DeviceTags []string `json:"device-tags,omitempty"`
@@ -87,7 +87,7 @@ type Alert struct {
 
 	Source string `json:"-"`
 
-	ManualResolve bool `json:"manual-resolve,omitempty"`
+	ManualResolve bool `json:"manual-resolve"`
 }
 
 // TimeToResolve .
@@ -254,7 +254,6 @@ func (r *RoomIssue) CalculateAggregateInfo() {
 	activeCount := 0
 
 	for i := range r.Alerts {
-
 		//active alert stuff
 		if r.Alerts[i].Active {
 			activeCount++
