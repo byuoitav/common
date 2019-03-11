@@ -53,7 +53,7 @@ type RoomIssue struct {
 
 //RoomIssueResponse represents information about a tech being dispatched on a room issue
 type RoomIssueResponse struct {
-	Responders    []string  `json:"responders,omitempty"`
+	Responders    []Person  `json:"responders,omitempty"`
 	HelpSentAt    time.Time `json:"help-sent-at,omitempty"`
 	HelpArrivedAt time.Time `json:"help-arrived-at,omitempty"`
 }
