@@ -75,7 +75,7 @@ func getNotesForRoomIssueForRepair(RoomIssue structs.RoomIssue) string {
 
 func createRepairRequest(RoomIssue structs.RoomIssue) structs.RepairRequest {
 
-	alertTypes := getRoomIssueAlertTypeList(RoomIssue)
+	alertTypes := "";//getRoomIssueAlertTypeList(RoomIssue)
 
 	shortDescription := fmt.Sprintf("%s is alerting with %v Alerts of type %s.", RoomIssue.RoomID, len(RoomIssue.Alerts), alertTypes)
 
