@@ -51,8 +51,8 @@ type StaticDevice struct {
 	//Display Specific Fields
 	Blanked      *bool  `json:"blanked,omitempty"`
 	Input        string `json:"input,omitempty"`
-	LampHours    string `json:"lamp-hours,omitempty"`
-	Temperature  string `json:"temperature,omitempty"`
+	LampHours    *int   `json:"lamp-hours,omitempty"`
+	Temperature  *int   `json:"temperature,omitempty"`
 	ActiveSignal *bool  `json:"active-signal,omitempty"`
 
 	//Audio Device Specific Fields
@@ -114,9 +114,6 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.Alerting, merged.Alerting, changes = compareBool(base.Alerting, new.Alerting, changes)
 	}
 
-	//handle alerts special case - it's alerts.<name>
-	diff.Alerts, merged.Alerts, changes = compareAlerts(base.Alerts, new.Alerts, base.UpdateTimes, new.UpdateTimes, changes)
-
 	if new.UpdateTimes["notifications-suppressed"].After(base.UpdateTimes["notifications-suppressed"]) {
 		diff.NotificationsSuppressed, merged.NotificationsSuppressed, changes = compareBool(base.NotificationsSuppressed, new.NotificationsSuppressed, changes)
 	}
@@ -143,7 +140,6 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 
 	if new.UpdateTimes["tags"].After(base.UpdateTimes["tags"]) {
 		diff.Tags, merged.Tags, changes = compareTags(base.Tags, new.Tags, changes)
-
 	}
 
 	//semi-common fields
@@ -209,10 +205,10 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 		diff.Input, merged.Input, changes = compareString(base.Input, new.Input, changes)
 	}
 	if new.UpdateTimes["lamp-hours"].After(base.UpdateTimes["lamp-hours"]) {
-		diff.LampHours, merged.LampHours, changes = compareString(base.LampHours, new.LampHours, changes)
+		diff.LampHours, merged.LampHours, changes = compareInt(base.LampHours, new.LampHours, changes)
 	}
 	if new.UpdateTimes["temperature"].After(base.UpdateTimes["temperature"]) {
-		diff.Temperature, merged.Temperature, changes = compareString(base.Temperature, new.Temperature, changes)
+		diff.Temperature, merged.Temperature, changes = compareInt(base.Temperature, new.Temperature, changes)
 	}
 
 	if new.UpdateTimes["active-signal"].After(base.UpdateTimes["active-signal"]) {
@@ -306,6 +302,12 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	}
 	if new.UpdateTimes["view-dashboard"].After(base.UpdateTimes["view-dashboard"]) {
 		diff.ViewDashboard, merged.ViewDashboard, changes = compareString(base.ViewDashboard, new.ViewDashboard, changes)
+	}
+
+	for k, v := range new.UpdateTimes {
+		if v.After(base.UpdateTimes[k]) {
+			merged.UpdateTimes[k] = v
+		}
 	}
 
 	return
