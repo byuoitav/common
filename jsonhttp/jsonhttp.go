@@ -139,6 +139,9 @@ func CreateAndExecuteJSONRequest(processTitle string, method string, url string,
 	}
 
 	log.L.Debugf("Response [%v] received for %s", string(b), processTitle)
+	if resp.StatusCode/100 != 2 {
+		return string(b), resp, fmt.Errorf("Non 200 response received: %s", b)
+	}
 
 	//otherwise we unmarshal
 	if output != nil {

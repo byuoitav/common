@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/byuoitav/common/log"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-
-	cas "gopkg.in/cas.v2"
+	"gopkg.in/cas.v2"
 )
 
 var JWTConfig middleware.JWTConfig
@@ -72,7 +72,7 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 		}
 
 		//check to see if we've already passed an auth check
-		if checkPassedAuthCheck {
+		if checkPassedAuthCheck(r) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -152,9 +152,11 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 		cook := http.Cookie{
 			Name:     "JWT-TOKEN",
 			Value:    tokenString,
-			Domain:   ".byu.edu",
 			HttpOnly: false,
 			Secure:   false,
+		}
+		if os.Getenv("COOKIE_DOMAIN") != "" {
+			cook.Domain = os.Getenv("COOKIE_DOMAIN")
 		}
 
 		log.L.Debugf("Setting cookie")
@@ -167,28 +169,84 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 		return
 	})
 }
-
-func checkPassedAuthCheck(r *http.Request) bool {
-
-	pass := r.Context().Value("passed-auth-check")
-	if pass != nil {
-		if v, ok := pass.(string); ok {
-			if v == "true" {
-				log.L.Debugf("Pre-passed auth check, passing CAS check")
-				return true
-			}
+func CheckHeaderBasedAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		if len(bypassAuth) > 0 {
+			log.L.Debugf("Bypassing auth check")
+			return next(ctx)
 		}
-	}
 
-	return false
+		accessKeyFromRequest := ctx.Request().Header.Get("x-av-access-key")
+		userFromRequest := ctx.Request().Header.Get("x-av-user")
+
+		if len(accessKeyFromRequest) == 0 || len(userFromRequest) == 0 {
+			//we don't have the access key. Skip to next handler.
+			return next(ctx)
+		}
+		newReqCtx := context.WithValue(ctx.Request().Context(), "user", userFromRequest)
+		newReqCtx = context.WithValue(newReqCtx, "access-key", accessKeyFromRequest)
+		newReqCtx = context.WithValue(newReqCtx, "passed-auth-check", "true")
+		//otherwise we add things to the context
+		ctx.SetRequest(ctx.Request().WithContext(newReqCtx))
+		return next(ctx)
+	}
 }
 
-//given the user and client token, we'll get all the groups that the user is a part of and include that in the context.
-func generateContext(r *http.Request, clientToken *jwt.Token, username string) context.Context {
-	ctx := context.WithValue(r.Context(), "client", clientToken)
-	ctx = context.WithValue(ctx, "user", username)
-	ctx = context.WithValue(ctx, "passed-auth-check", "true")
+// AuthorizeRequest is an echo middleware function that will check the authorization of a user for a specific resource.
+func AuthorizeRequest(role, resourceType string, resourceID func(echo.Context) string) func(echo.HandlerFunc) echo.HandlerFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			if len(os.Getenv("BYPASS_AUTH")) > 0 {
+				log.L.Debugf("Bypassing auth check")
+				return next(ctx)
+			}
 
-	//Get the user groups
-	return ctx
+			if !checkPassedAuthCheck(ctx.Request()) {
+				return ctx.String(http.StatusUnauthorized, "unauthorized")
+			}
+
+			var user string
+			var ok bool
+			//get the user (this should at least be filled in).
+			userint := ctx.Request().Context().Value("user")
+			if userint != nil {
+				if user, ok = userint.(string); ok {
+					if len(user) == 0 {
+						log.L.Errorf("No user on passed auth check...")
+						return ctx.String(http.StatusInternalServerError, "Something went wrong")
+					}
+				}
+			}
+
+			var authkey string
+			authkeyint := ctx.Request().Context().Value("access-key")
+			if userint != nil {
+				authkey = accessKey
+			} else {
+				if authkey, ok = authkeyint.(string); ok {
+					if len(authkey) == 0 {
+						authkey = accessKey
+					}
+				} else {
+					authkey = accessKey
+
+				}
+			}
+
+			resource := resourceID(ctx)
+
+			log.L.Debugf("Resource ID for this auth check is %s (request from %s)", resource, ctx.Path())
+
+			ok, err := CheckRolesForUser(user, accessKey, role, resource, resourceType)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, fmt.Sprintf("unable to authorize request: %s", err))
+			}
+
+			if !ok {
+				return ctx.String(http.StatusUnauthorized, "Not authorized")
+			}
+
+			return next(ctx)
+		}
+	}
 }

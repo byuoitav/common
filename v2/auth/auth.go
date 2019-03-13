@@ -1,18 +1,23 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/endpoint-authorization-controller/base"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 )
 
-var internalPermissionCache = make(map[string][]base.Response)
+var internalPermissionCache = make(map[string]base.Response)
+
+var cacheLock sync.RWMutex
 
 //bypass - :0
 var bypassAuth = os.Getenv("BYPASS_AUTH")
@@ -36,51 +41,13 @@ func AddAuthToRequestForUser(request *http.Request, userName string) {
 	request.Header.Add("x-av-user", userName)
 }
 
-// AuthorizeRequest is an echo middleware function that will check the authorization of a user for a specific resource.
-func AuthorizeRequest(role, resourceType string, resourceID func(echo.Context) string) func(echo.HandlerFunc) echo.HandlerFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
-			if len(bypassAuth) > 0 {
-				log.L.Debugf("Bypassing auth check")
-				return next(ctx)
-			}
-			log.L.Debugf("Checking auth for endpoint %s, which requires the role '%s' for resource type '%s'. This request is from %s", ctx.Path(), role, resourceType, ctx.RealIP())
-
-			accessKeyFromRequest := ctx.Request().Header.Get("x-av-access-key")
-			userFromRequest := ctx.Request().Header.Get("x-av-user")
-
-			if len(accessKeyFromRequest) == 0 || len(userFromRequest) == 0 {
-				return ctx.String(http.StatusBadRequest, "must include 'x-av-access-key' and 'x-av-user' headers")
-			}
-
-			resource := resourceID(ctx)
-			if len(resource) == 0 {
-				return ctx.String(http.StatusInternalServerError, "unable to get resource from request")
-			}
-
-			log.L.Debugf("Resource ID for this auth check is %s (request from %s)", resource, ctx.Path())
-
-			ok, err := CheckRolesForUser(userFromRequest, accessKeyFromRequest, role, resource, resourceType)
-			if err != nil {
-				return ctx.String(http.StatusInternalServerError, fmt.Sprintf("unable to authorize request: %s", err))
-			}
-
-			if !ok {
-				return ctx.String(http.StatusUnauthorized, "Not authorized")
-			}
-
-			return next(ctx)
-		}
-	}
-}
-
 // LookupResourceFromAddress uses the ":address" parameter from the endpoint and returns the resourceID requested.
 func LookupResourceFromAddress(ctx echo.Context) string {
 	// TODO this should rip out :address and either use the hostname
 	// or do a reverse DNS lookup to decide what it's hostname is,
 	// and then return the resourceID of the address requested
 	// should be used on device communication microservices (sony-control, etc)
-	return ""
+	return "all"
 }
 
 //CheckRolesForUser to check authorization of a user for a specific resource.  For use in an endpoint receiving requests
@@ -122,33 +89,31 @@ func CheckRolesForUser(user string, accessKey string, role string, resourceID st
 	log.L.Debugf("Auth response received: ", authResponse)
 
 	//add to cache
-	internalPermissionCache[user] = append(internalPermissionCache[user], authResponse)
+	cacheLock.Lock()
+	internalPermissionCache[user] = authResponse
+	cacheLock.Unlock()
 
 	//recheck cache
 	return checkCacheForAuth(user, accessKey, role, resourceID, resourceType), nil
 }
 
 func checkCacheForAuth(user string, accessKey string, role string, resourceID string, resourceType string) bool {
-	if responseArray, ok := internalPermissionCache[user]; ok {
+	cacheLock.RLock()
+	defer cacheLock.RUnlock()
+	if oneResponse, ok := internalPermissionCache[user]; ok {
 		//this user has something cached - check there first
-		log.L.Debugf("User %v has %v cached permissions", user, len(responseArray))
+		log.L.Debugf("User %v has cached permissions", user)
 
-		for i := 0; i < len(responseArray); i++ {
-			var oneResponse = responseArray[i]
-			if time.Now().After(oneResponse.TTL) {
-				//remove this response
-				log.L.Debugf("Response %v has expired as of %v, removing", oneResponse, oneResponse.TTL)
-				responseArray = append(responseArray[:i], responseArray[i+1:]...)
-				i--
-			} else {
-				//check and see if this one matches
-				log.L.Debugf("Response %v is still valid", oneResponse)
-				if thisResourcePermission, ok := responseArray[i].Permissions[resourceID]; ok {
-					//check that the roles contains the target role
-					for _, oneRole := range thisResourcePermission {
-						if oneRole == role {
-							return true
-						}
+		if time.Now().After(oneResponse.TTL) {
+			delete(internalPermissionCache, user)
+		} else {
+			//check and see if this one matches
+			log.L.Debugf("Response %v is still valid", oneResponse)
+			if thisResourcePermission, ok := oneResponse.Permissions[resourceID]; ok {
+				//check that the roles contains the target role
+				for _, oneRole := range thisResourcePermission {
+					if oneRole == role {
+						return true
 					}
 				}
 			}
@@ -156,4 +121,29 @@ func checkCacheForAuth(user string, accessKey string, role string, resourceID st
 	}
 
 	return false
+}
+
+func checkPassedAuthCheck(r *http.Request) bool {
+
+	pass := r.Context().Value("passed-auth-check")
+	if pass != nil {
+		if v, ok := pass.(string); ok {
+			if v == "true" {
+				log.L.Debugf("Pre-passed auth check, passing CAS check")
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+//given the user and client token, we'll get all the groups that the user is a part of and include that in the context.
+func generateContext(r *http.Request, clientToken *jwt.Token, username string) context.Context {
+	ctx := context.WithValue(r.Context(), "client", clientToken)
+	ctx = context.WithValue(ctx, "user", username)
+	ctx = context.WithValue(ctx, "passed-auth-check", "true")
+
+	//Get the user groups
+	return ctx
 }

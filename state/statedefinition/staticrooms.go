@@ -6,32 +6,45 @@ import (
 	"github.com/byuoitav/common/nerr"
 )
 
+//Designations
+const (
+	Production = "production"
+	Stage      = "stage"
+	Test       = "test"
+	Dev        = "development"
+)
+
+//SystemTypes
+const (
+	DMPS       = "dmps"
+	Pi         = "pi"
+	Scheduling = "scheduling"
+	Timeclock  = "timeclock"
+)
+
+//StaticRoom represents the same information that is in the static index
 type StaticRoom struct {
 	//information fields
 	BuildingID string `json:"buildingID,omitempty"`
 	RoomID     string `json:"roomID,omitempty"`
 
 	//State fields
-	NotificationsSuppressed *bool `json:"notifications-suppressed,omitempty"`
-	Alerting                *bool `json:"alerting,omitempty"`
+	MaintenenceMode        *bool     `json:"maintenence-mode,omitempty"`       //if the system is in maintenence mode.
+	MaintenenceModeEndTime time.Time `json:"maintenence-mode-until,omitempty"` //if the system is in maintenence mode, when to put it back in monitoring.
+	Monitoring             *bool     `json:"monitoring,omitempty"`             //if the system is in monitoring currently.
 
-	LastStateReceived time.Time `json:"last-state-received,omitempty"`
-	LastHeartbeat     time.Time `json:"last-heartbeat,omitempty"`
-	LastUserInput     time.Time `json:"last-user-input,omitempty"`
+	Designation string   `json:"designation,omitempty"`
+	SystemType  []string `json:"system-type,omitempty"` //pi, dmps, scheduling, timeclock. If a room has more than one there may be multiple entries into this field.
 
-	Power string `json:"power,omitempty"`
+	Tags []string `json:"tags,omitempty"`
 
-	//meta fields for Kibana
-	ViewDevices           string `json:"view-devices"`
-	ViewAlerts            string `json:"view-alerts"`
-	EnableNotifications   string `json:"enable-notifications,omitempty"`   //the Hostname - used in a URL
-	SuppressNotifications string `json:"suppress-notifications,omitempty"` //the Hostname - used in a URL
-
-	UpdateTimes map[string]time.Time `json:"field-update-times"`
+	UpdateTimes map[string]time.Time `json:"update-times"`
 }
 
-//Compare rooms takes two rooms and compares them, changes from new to base will only be included if they have a timestamp in UpdateTimes later than that in base for the same field
+//CompareRooms takes two rooms and compares them, changes from new to base will only be included if they have a timestamp in UpdateTimes later than that in base for the same field
 func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, err *nerr.E) {
+
+	merged = base
 
 	//information fields
 	if new.UpdateTimes["building"].After(base.UpdateTimes["building"]) {
@@ -41,46 +54,38 @@ func CompareRooms(base, new StaticRoom) (diff, merged StaticRoom, changes bool, 
 		diff.RoomID, merged.RoomID, changes = compareString(base.RoomID, new.RoomID, changes)
 	}
 
-	//state fields
-
-	//bool fields
-	if new.UpdateTimes["notifications-suppressed"].After(base.UpdateTimes["notifications-suppressed"]) {
-		diff.NotificationsSuppressed, merged.NotificationsSuppressed, changes = compareBool(base.NotificationsSuppressed, new.NotificationsSuppressed, changes)
+	if new.UpdateTimes["designation"].After(base.UpdateTimes["designation"]) {
+		diff.Designation, merged.Designation, changes = compareString(base.Designation, new.Designation, changes)
+	}
+	if new.UpdateTimes["system-type"].After(base.UpdateTimes["system-type"]) {
+		diff.SystemType, merged.SystemType, changes = compareTags(base.SystemType, new.SystemType, changes)
 	}
 
-	if new.UpdateTimes["alerting"].After(base.UpdateTimes["alerting"]) {
-		diff.Alerting, merged.Alerting, changes = compareBool(base.Alerting, new.Alerting, changes)
+	//bool fields
+	if new.UpdateTimes["maintenence-mode"].After(base.UpdateTimes["maintenence-mode"]) {
+		diff.MaintenenceMode, merged.MaintenenceMode, changes = compareBool(base.MaintenenceMode, new.MaintenenceMode, changes)
+	}
+	if new.UpdateTimes["monitoring"].After(base.UpdateTimes["monitoring"]) {
+		diff.Monitoring, merged.Monitoring, changes = compareBool(base.Monitoring, new.Monitoring, changes)
 	}
 
 	//time fields
-	if new.UpdateTimes["last-state-receieved"].After(base.UpdateTimes["last-state-receieved"]) {
-		diff.LastStateReceived, merged.LastStateReceived, changes = compareTime(base.LastStateReceived, new.LastStateReceived, changes)
-	}
-	if new.UpdateTimes["last-heartbeat"].After(base.UpdateTimes["last-heartbeat"]) {
-		diff.LastHeartbeat, merged.LastHeartbeat, changes = compareTime(base.LastHeartbeat, new.LastHeartbeat, changes)
-	}
-	if new.UpdateTimes["last-user-input"].After(base.UpdateTimes["last-user-input"]) {
-		diff.LastUserInput, merged.LastUserInput, changes = compareTime(base.LastUserInput, new.LastUserInput, changes)
+	if new.UpdateTimes["maintenence-mode-until"].After(base.UpdateTimes["maintenence-mode-until"]) {
+		diff.MaintenenceModeEndTime, merged.MaintenenceModeEndTime, changes = compareTime(base.MaintenenceModeEndTime, new.MaintenenceModeEndTime, changes)
 	}
 
-	//string
-	if new.UpdateTimes["power"].After(base.UpdateTimes["power"]) {
-		diff.Power, merged.Power, changes = compareString(base.Power, new.Power, changes)
-	}
-
-	//meta fields
-	if new.UpdateTimes["view-devices"].After(base.UpdateTimes["view-devices"]) {
-		diff.ViewDevices, merged.ViewDevices, changes = compareString(base.ViewDevices, new.ViewDevices, changes)
-	}
-	if new.UpdateTimes["view-alerts"].After(base.UpdateTimes["view-alerts"]) {
-		diff.ViewAlerts, merged.ViewAlerts, changes = compareString(base.ViewAlerts, new.ViewAlerts, changes)
-	}
-	if new.UpdateTimes["enable-notifications"].After(base.UpdateTimes["enable-notifications"]) {
-		diff.EnableNotifications, merged.EnableNotifications, changes = compareString(base.EnableNotifications, new.EnableNotifications, changes)
-	}
-	if new.UpdateTimes["suppress-notifications"].After(base.UpdateTimes["suppress-notifications"]) {
-		diff.SuppressNotifications, merged.SuppressNotifications, changes = compareString(base.SuppressNotifications, new.SuppressNotifications, changes)
+	if new.UpdateTimes["tags"].After(base.UpdateTimes["tags"]) {
+		diff.Tags, merged.Tags, changes = compareTags(base.Tags, new.Tags, changes)
 	}
 
 	return
+}
+
+func (r *StaticRoom) HasSystemType(s string) bool {
+	for i := range r.SystemType {
+		if r.SystemType[i] == s {
+			return true
+		}
+	}
+	return false
 }
