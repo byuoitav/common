@@ -1,165 +1,28 @@
 package servicenow
 
 import (
-	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/structs"
-	"github.com/byuoitav/shipwright/alertstore"
 )
 
-var (
-	repairWebURL             = "https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/u_maint_repair"
-	repairModifyWebURL       = "https://api.byu.edu:443/domains/servicenow/apiTable/v1/table/u_maint_repair"
-	repairAssignmentGroup    = "OIT-AV Support"
-	repairRequestOrigination = "On-Site"
-	repairEquipmentReturn    = "On-Site"
-	repairService            = "TEC Room"
-	repairDefaultRequestor   = "AV Metrics Web Service"
-	repairDateNeeded         = "ASAP"
-	repairClosedState        = "Closed Complete"
+const (
+	RepairWebURL             = "https://api.byu.edu:443/domains/servicenow/tableapi/v1/table/u_maint_repair"
+	RepairModifyWebURL       = "https://api.byu.edu:443/domains/servicenow/apiTable/v1/table/u_maint_repair"
+	RepairAssignmentGroup    = "OIT-AV Support"
+	RepairRequestOrigination = "On-Site"
+	RepairEquipmentReturn    = "On-Site"
+	RepairService            = "TEC Room"
+	RepairDefaultRequestor   = "AV Metrics Web Service"
+	RepairDateNeeded         = "ASAP"
+	RepairClosedState        = "Closed Complete"
 )
-
-func getNotesForRoomIssueForRepair(RoomIssue structs.RoomIssue) string {
-	internalNotes := ""
-
-	if RoomIssue.Resolved {
-		internalNotes += "\n---------Resolution Info-----------\n"
-		internalNotes += fmt.Sprintf("Resolution Code: %s\n", RoomIssue.ResolutionInfo.Code)
-		internalNotes += RoomIssue.ResolutionInfo.Notes
-	}
-
-	for _, roomResponse := range RoomIssue.RoomIssueResponses {
-
-		if roomResponse.HelpSentAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp %s was sent at: %s\n", roomResponse.Responders, roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
-		}
-
-		if roomResponse.HelpSentAt.IsZero() == false {
-			internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
-		}
-	}
-
-	if len(RoomIssue.NotesLog) > 0 {
-		internalNotes += "\n-----Room Notes-----\n"
-
-		for _, note := range RoomIssue.NotesLog {
-			internalNotes += note + "\n"
-		}
-	}
-
-	for _, alert := range RoomIssue.Alerts {
-		if len(alert.MessageLog) > 0 {
-			internalNotes += fmt.Sprintf("\n-----System Messages for %s-----\n", alert.DeviceID)
-
-			for _, note := range alert.MessageLog {
-				internalNotes += note + "\n"
-			}
-		}
-
-		dataStr := fmt.Sprintf("%s", alert.Data)
-		if len(dataStr) > 0 {
-			internalNotes += fmt.Sprintf("\n-----Alert Data for for %s-----\n", alert.DeviceID)
-			internalNotes += dataStr
-		}
-	}
-
-	internalNotes = strings.TrimSpace(internalNotes)
-
-	return internalNotes
-}
-
-func createRepairRequest(RoomIssue structs.RoomIssue) structs.RepairRequest {
-
-	alertTypes := "";//getRoomIssueAlertTypeList(RoomIssue)
-
-	shortDescription := fmt.Sprintf("%s is alerting with %v Alerts of type %s.", RoomIssue.RoomID, len(RoomIssue.Alerts), alertTypes)
-
-	internalNotes := getNotesForRoomIssueForRepair(RoomIssue)
-
-	year, month, day := time.Now().Date()
-
-	requestdate := fmt.Sprintf("%v-%v-%v", year, int(month), day)
-
-	roomIDreplaced := strings.Replace(RoomIssue.RoomID, "-", " ", -1)
-
-	requester := ""
-
-	for _, alert := range RoomIssue.Alerts {
-		if len(alert.Requester) > 0 {
-			requester = alert.Requester
-		}
-	}
-
-	if len(requester) == 0 {
-		requester = repairDefaultRequestor
-	}
-
-	input := structs.RepairRequest{
-		Service:            repairService,
-		Building:           RoomIssue.BuildingID,
-		Room:               roomIDreplaced,
-		AssignmentGroup:    repairAssignmentGroup,
-		ShortDescription:   shortDescription,
-		InternalNotes:      internalNotes,
-		RequestOriginator:  requester,
-		RequestDate:        requestdate,
-		DateNeeded:         repairDateNeeded,
-		RequestOrigination: repairRequestOrigination,
-		EquipmentReturn:    repairEquipmentReturn,
-	}
-
-	return input
-}
-
-//SyncRepairWithRoomIssue will either create or modify the incident for the room issue
-func SyncRepairWithRoomIssue(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
-	if len(RoomIssue.IncidentID) == 0 {
-		if !structs.ContainsAllTags(RoomIssue.IncidentID, "create") {
-			findRepairs, err :=
-				QueryRepairsByRoomAndGroupName(RoomIssue.RoomID, repairAssignmentGroup)
-
-			if err != nil {
-				log.L.Errorf("Error searching for existing repair: %v", err)
-				return CreateRepair(RoomIssue)
-			} else {
-				if len(findRepairs) > 0 {
-					RoomIssue.IncidentID = append(RoomIssue.IncidentID, findRepairs[0].Number)
-					roomIssueError := alertstore.UpdateRoomIssue(RoomIssue)
-
-					if roomIssueError != nil {
-						log.L.Errorf("Unable to update Room Issue in persistence store")
-						return findRepairs[0], roomIssueError
-					}
-
-					return findRepairs[0], nil
-				}
-			}
-		}
-
-		return CreateRepair(RoomIssue)
-	}
-
-	return ModifyRepair(RoomIssue)
-}
 
 //CreateRepair is to create a new repair ticket from a new room issue
-func CreateRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
-
-	input := createRepairRequest(RoomIssue)
-
-	if RoomIssue.Resolved {
-		//update notes with resolution info
-		resolutionInfo := RoomIssue.ResolutionInfo.Code + "\n" + RoomIssue.ResolutionInfo.Notes
-		input.InternalNotes = fmt.Sprintf("-------Resolution Info------\n%s\n%s", resolutionInfo, input.InternalNotes)
-
-		//set state to closed
-		input.State = repairClosedState
-	}
+func CreateRepair(input structs.RepairRequest) (structs.RepairResponse, error) {
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
@@ -168,7 +31,7 @@ func CreateRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 
 	var output structs.RepairResponseWrapper
 
-	outputJSON, _, err := jsonhttp.CreateAndExecuteJSONRequest("CreateRequest", "POST", repairWebURL,
+	outputJSON, _, err := jsonhttp.CreateAndExecuteJSONRequest("CreateRequest", "POST", RepairWebURL,
 		input, headers, 20, &output)
 
 	log.L.Debugf("Output JSON: %s", outputJSON)
@@ -178,72 +41,9 @@ func CreateRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 }
 
 //ModifyRepair updates the notes on a repair ticket
-func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
-	var nullResponse structs.RepairResponse
+func ModifyRepair(input structs.RepairRequest, id string) (structs.RepairResponse, error) {
 
-	if len(RoomIssue.IncidentID) == 0 {
-		return nullResponse, errors.New("No incidents on modify repair")
-	}
-
-	RepairNum := RoomIssue.IncidentID[0]
-
-	ExistingRepair, _ := GetRepair(RepairNum)
-
-	//we need to sync up the existing notes
-	internalNotes := ""
-	log.L.Debugf("Existing Notes: %s", ExistingRepair.InternalNotes)
-
-	for _, roomResponse := range RoomIssue.RoomIssueResponses {
-		if !strings.Contains(ExistingRepair.InternalNotes, "Help was sent at:") {
-			if roomResponse.HelpSentAt.IsZero() == false {
-				internalNotes += fmt.Sprintf("\nHelp was sent at: %s\n", roomResponse.HelpSentAt.Format("01/02/2006 3:04 PM"))
-			}
-		}
-
-		if !strings.Contains(ExistingRepair.InternalNotes, "Help arrived at:") {
-			if roomResponse.HelpArrivedAt.IsZero() == false {
-				internalNotes += fmt.Sprintf("\nHelp arrived at: %s\n", roomResponse.HelpArrivedAt.Format("01/02/2006 3:04 PM"))
-			}
-		}
-	}
-
-	if len(RoomIssue.Notes) > 0 {
-		if !strings.Contains(ExistingRepair.InternalNotes, RoomIssue.Notes) {
-			internalNotes += "\n--------Room Notes-------\n"
-			internalNotes += RoomIssue.Notes + "\n"
-		}
-	}
-
-	for _, alert := range RoomIssue.Alerts {
-		if len(alert.Message) > 0 {
-			tmpMessage := fmt.Sprintf("\n--------%s Notes-------\n%s\n", alert.DeviceID, alert.Message)
-
-			if !strings.Contains(ExistingRepair.InternalNotes, tmpMessage) {
-				internalNotes += tmpMessage
-			}
-		}
-	}
-
-	if RoomIssue.Resolved {
-		internalNotes += "\n-------Resolution Info-------\n"
-		internalNotes += RoomIssue.ResolutionInfo.Code + "\n"
-		internalNotes += RoomIssue.ResolutionInfo.Notes + "\n"
-	}
-
-	internalNotes = strings.TrimSpace(internalNotes)
-
-	weburl := fmt.Sprintf("%s/%s", repairModifyWebURL, ExistingRepair.SysID)
-
-	log.L.Debugf("Web URL %v", weburl)
-
-	input := structs.RepairRequest{
-		InternalNotes: internalNotes,
-	}
-
-	//check for resolution
-	if RoomIssue.Resolved {
-		input.State = repairClosedState
-	}
+	weburl := fmt.Sprintf("%s/%s", RepairModifyWebURL, id)
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
@@ -271,15 +71,13 @@ func ModifyRepair(RoomIssue structs.RoomIssue) (structs.RepairResponse, error) {
 	}
 }
 
-// //CloseRepair will just close the repair with the specified resolution info
-
 //QueryRepairsByRoomAndGroupName gets a list of repairs by room assigned to specified group
 func QueryRepairsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.RepairResponse, error) {
 	roomIDreplaced := strings.Replace(RoomID, "-", "+", -1)
 	GroupName = strings.Replace(GroupName, " ", "+", -1)
 
 	weburl := fmt.Sprintf("active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", roomIDreplaced, GroupName)
-	weburl = fmt.Sprintf("%s?%s", repairWebURL, weburl)
+	weburl = fmt.Sprintf("%s?%s", RepairWebURL, weburl)
 
 	var output structs.MultiRepairResponseWrapper
 
@@ -299,7 +97,7 @@ func QueryRepairsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.
 
 //GetRepair Get repair ticket by the number
 func GetRepair(RepairNum string) (structs.RepairResponse, error) {
-	weburl := fmt.Sprintf("%s?sysparm_query=number=%s&sysparm_display_value=true", repairWebURL, RepairNum)
+	weburl := fmt.Sprintf("%s?sysparm_query=number=%s&sysparm_display_value=true", RepairWebURL, RepairNum)
 
 	var output structs.MultiRepairResponseWrapper
 
