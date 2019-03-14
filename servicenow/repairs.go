@@ -71,10 +71,10 @@ func ModifyRepair(input structs.RepairRequest, id string) (structs.RepairRespons
 	}
 }
 
-//QueryRepairsByRoomAndGroupName gets a list of repairs by room assigned to specified group
-func QueryRepairsByRoomAndGroupName(RoomID string, GroupName string) ([]structs.RepairResponse, error) {
+//QueryRepairsByRoom gets a list of repairs by room assigned to specified group
+func QueryRepairsByRoom(RoomID string) ([]structs.RepairResponse, error) {
 	roomIDreplaced := strings.Replace(RoomID, "-", "+", -1)
-	GroupName = strings.Replace(GroupName, " ", "+", -1)
+	GroupName := strings.Replace(RepairAssignmentGroup, " ", "+", -1)
 
 	weburl := fmt.Sprintf("active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", roomIDreplaced, GroupName)
 	weburl = fmt.Sprintf("%s?%s", RepairWebURL, weburl)
