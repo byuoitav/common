@@ -29,7 +29,7 @@ type ReachableRoomConfig struct {
 
 var debug = true
 
-func BuildGraph(devs []structs.Device) (InputGraph, error) {
+func BuildGraph(devs []structs.Device, tag string) (InputGraph, error) {
 	ig := InputGraph{
 		AdjacencyMap: make(map[string][]string),
 		DeviceMap:    make(map[string]*Node),
@@ -49,6 +49,11 @@ func BuildGraph(devs []structs.Device) (InputGraph, error) {
 
 		// add each entry in the adjancy map
 		for _, port := range device.Ports {
+			//we only do video ports
+			if !structs.ContainsAnyTags(port.Tags, tag) {
+				continue
+			}
+
 			log.L.Debugf("[inputgraph] Adding %v to the adjecency for %v based on port %v", port.SourceDevice, port.DestinationDevice, port.ID)
 
 			if _, ok := ig.AdjacencyMap[port.DestinationDevice]; ok {
@@ -194,7 +199,7 @@ func GetVideoDeviceReachability(room structs.Room) (ReachableRoomConfig, *nerr.E
 
 	reachabilityMap := make(map[string][]string)
 
-	graph, err := BuildGraph(room.Devices)
+	graph, err := BuildGraph(room.Devices, "video")
 	if err != nil {
 		return ReachableRoomConfig{Room: room}, nerr.Translate(err).Addf("Couldn't build reachability graph")
 	}

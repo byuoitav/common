@@ -54,7 +54,7 @@ func ModifyIncident(input structs.IncidentRequest, sysID string) (structs.Incide
 
 	weburl := fmt.Sprintf("%s/%s?sysparm_display_value=true", IncidentModifyWebURL, sysID)
 
-	log.L.Debugf("WebURL: %s", weburl)
+	log.L.Infof("WebURL: %s", weburl)
 
 	for {
 		var output structs.IncidentResponseWrapper
@@ -81,7 +81,7 @@ func ModifyIncident(input structs.IncidentRequest, sysID string) (structs.Incide
 //QueryIncidentsByRoom - query all incidents by room number for the incident assignment group
 func QueryIncidentsByRoom(RoomID string) ([]structs.IncidentResponse, error) {
 	roomIDreplaced := strings.Replace(RoomID, "-", "+", -1)
-	GroupName := IncidentAssignmentGroup
+	GroupName := strings.Replace(IncidentAssignmentGroup, " ", "+", -1)
 
 	weburl := fmt.Sprintf("active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", roomIDreplaced, GroupName)
 	weburl = fmt.Sprintf("%s?%s", IncidentWebURL, weburl)
