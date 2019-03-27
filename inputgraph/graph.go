@@ -30,6 +30,7 @@ type ReachableRoomConfig struct {
 var debug = true
 
 func BuildGraph(devs []structs.Device, tag string) (InputGraph, error) {
+	log.L.Debugf("Building a %v signal path graph for room %v", tag, devs[0].ID)
 	ig := InputGraph{
 		AdjacencyMap: make(map[string][]string),
 		DeviceMap:    make(map[string]*Node),
@@ -49,8 +50,9 @@ func BuildGraph(devs []structs.Device, tag string) (InputGraph, error) {
 
 		// add each entry in the adjancy map
 		for _, port := range device.Ports {
-			//we only do video ports
-			if !structs.ContainsAnyTags(port.Tags, tag) {
+
+			//if nothing is there, we default to video ports
+			if !structs.ContainsAnyTags(port.Tags, tag) && !(tag == "video" && len(port.Tags) == 0) {
 				continue
 			}
 
@@ -75,7 +77,7 @@ func BuildGraph(devs []structs.Device, tag string) (InputGraph, error) {
 
 			if structs.HasRole(device, "NetworkSwitch") {
 				//network swtich ports are bi-drectional, so we need to go the other direction here, too.
-				log.L.Debugf("[inputgraph] Network swtich, adding ports as bi-directional", port.SourceDevice, port.DestinationDevice, port.ID)
+				log.L.Debugf("[inputgraph] Network swtich, adding ports as bi-directional")
 				log.L.Debugf("[inputgraph] Adding %v to the adjecency for %v based on port %v", port.DestinationDevice, port.SourceDevice, port.ID)
 
 				if _, ok := ig.AdjacencyMap[port.SourceDevice]; ok {
