@@ -58,6 +58,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 
 		go func() {
 			defer func() {
+				close(reqs)
 				log.L.Infof("Closing connection for %s", key)
 
 				// finish up remaining requests
