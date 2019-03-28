@@ -59,6 +59,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 		go func() {
 			defer func() {
 				log.L.Infof("Closing connection for %s", key)
+
 				// finish up remaining requests
 				for req := range reqs {
 					req.resp <- req.work(conn)
@@ -71,13 +72,13 @@ func (m *Map) Do(key interface{}, work Work) error {
 			for {
 				select {
 				case req := <-reqs:
+					req.resp <- req.work(conn)
+
 					// reset the timer
 					if !timer.Stop() {
 						<-timer.C
 					}
 					timer.Reset(m.ttl)
-
-					req.resp <- req.work(conn)
 				case <-timer.C:
 					m.mu.Lock()
 					delete(m.m, key)
