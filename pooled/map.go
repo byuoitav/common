@@ -4,6 +4,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/byuoitav/common/log"
 )
 
 // NewConnection .
@@ -43,6 +45,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 	m.mu.Lock()
 	if reqs, ok = m.m[key]; !ok {
 		// open a new connection
+		log.L.Infof("Opening new connection for %s", key)
 		conn, err := m.newConn(key)
 		if err != nil {
 			m.mu.Unlock()
@@ -50,10 +53,12 @@ func (m *Map) Do(key interface{}, work Work) error {
 		}
 
 		reqs = make(chan request, 10)
+		m.m[key] = reqs
 		m.mu.Unlock()
 
 		go func() {
 			defer func() {
+				log.L.Infof("Closing connection for %s", key)
 				// finish up remaining requests
 				for req := range reqs {
 					req.resp <- req.work(conn)
@@ -63,7 +68,6 @@ func (m *Map) Do(key interface{}, work Work) error {
 			}()
 
 			timer := time.NewTimer(m.ttl)
-
 			for {
 				select {
 				case req := <-reqs:
@@ -82,9 +86,11 @@ func (m *Map) Do(key interface{}, work Work) error {
 				}
 			}
 		}()
+	} else {
+		log.L.Infof("Reusing already open connection for %s", key)
+		m.mu.Unlock()
 	}
 
-	m.mu.Lock()
 	req := request{
 		work: work,
 		resp: make(chan error),
