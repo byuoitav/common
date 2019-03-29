@@ -1,7 +1,7 @@
 package pooled
 
 import (
-	"net"
+	"fmt"
 	"sync"
 	"time"
 
@@ -9,7 +9,7 @@ import (
 )
 
 // NewConnection .
-type NewConnection func(key interface{}) (net.Conn, error)
+type NewConnection func(key interface{}) (Conn, error)
 
 // Work .
 type Work func(Conn) error
@@ -45,37 +45,43 @@ func (m *Map) Do(key interface{}, work Work) error {
 	m.mu.Lock()
 	if reqs, ok = m.m[key]; !ok {
 		// open a new connection
-		log.L.Infof("Opening new connection for %s", key)
+		l := log.L.Named(fmt.Sprintf("%s", key))
+		l.Infof("Opening new connection")
 		conn, err := m.newConn(key)
 		if err != nil {
 			m.mu.Unlock()
-			return err
+			return fmt.Errorf("failed to open new connection for %s: %s", key, err)
 		}
 
-		pconn := wrapConn(conn)
+		if conn == nil {
+			m.mu.Unlock()
+			return fmt.Errorf("got nil connection from new connection function")
+		}
 
 		reqs = make(chan request, 10)
 		m.m[key] = reqs
 		m.mu.Unlock()
 
+		l.Infof("Successfully opened new connection")
+
 		go func() {
 			defer func() {
+				l.Infof("Closing connection")
 				close(reqs)
-				log.L.Infof("Closing connection for %s", key)
 
 				// finish up remaining requests
 				for req := range reqs {
-					req.resp <- req.work(pconn)
+					req.resp <- req.work(conn)
 				}
 
-				conn.Close()
+				conn.netconn().Close()
 			}()
 
 			timer := time.NewTimer(m.ttl)
 			for {
 				select {
 				case req := <-reqs:
-					req.resp <- req.work(pconn)
+					req.resp <- req.work(conn)
 
 					// reset the timer
 					if !timer.Stop() {
