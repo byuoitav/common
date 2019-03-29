@@ -42,10 +42,11 @@ func (m *Map) Do(key interface{}, work Work) error {
 	var reqs chan request
 	var ok bool
 
+	l := log.L.Named(fmt.Sprintf("%s", key))
+
 	m.mu.Lock()
 	if reqs, ok = m.m[key]; !ok {
 		// open a new connection
-		l := log.L.Named(fmt.Sprintf("%s", key))
 		l.Infof("Opening new connection")
 		conn, err := m.newConn(key)
 		if err != nil {
@@ -97,7 +98,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 			}
 		}()
 	} else {
-		log.L.Infof("Reusing already open connection for %s", key)
+		l.Infof("Reusing already open connection")
 		m.mu.Unlock()
 	}
 
