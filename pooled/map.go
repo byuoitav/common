@@ -12,7 +12,7 @@ import (
 type NewConnection func(key interface{}) (net.Conn, error)
 
 // Work .
-type Work func(net.Conn) error
+type Work func(Conn) error
 
 // Map .
 type Map struct {
@@ -52,6 +52,8 @@ func (m *Map) Do(key interface{}, work Work) error {
 			return err
 		}
 
+		pconn := wrapConn(conn)
+
 		reqs = make(chan request, 10)
 		m.m[key] = reqs
 		m.mu.Unlock()
@@ -63,7 +65,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 
 				// finish up remaining requests
 				for req := range reqs {
-					req.resp <- req.work(conn)
+					req.resp <- req.work(pconn)
 				}
 
 				conn.Close()
@@ -73,7 +75,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 			for {
 				select {
 				case req := <-reqs:
-					req.resp <- req.work(conn)
+					req.resp <- req.work(pconn)
 
 					// reset the timer
 					if !timer.Stop() {
