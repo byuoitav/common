@@ -67,6 +67,10 @@ func (m *Map) Do(key interface{}, work Work) error {
 
 		go func() {
 			defer func() {
+				m.mu.Lock()
+				delete(m.m, key)
+				m.mu.Unlock()
+
 				l.Infof("Closing connection")
 				close(reqs)
 
@@ -97,9 +101,6 @@ func (m *Map) Do(key interface{}, work Work) error {
 					}
 					timer.Reset(m.ttl)
 				case <-timer.C:
-					m.mu.Lock()
-					delete(m.m, key)
-					m.mu.Unlock()
 					return
 				}
 			}
