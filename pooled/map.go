@@ -2,8 +2,6 @@ package pooled
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 	"sync"
 	"time"
 
@@ -81,8 +79,6 @@ func (m *Map) Do(key interface{}, work Work) error {
 			}()
 
 			timer := time.NewTimer(m.ttl)
-			sig := make(chan os.Signal, 1)
-			signal.Notify(sig, os.Interrupt, os.Kill)
 
 			for {
 				select {
@@ -99,9 +95,6 @@ func (m *Map) Do(key interface{}, work Work) error {
 					delete(m.m, key)
 					m.mu.Unlock()
 					return
-				case s := <-sig:
-					l.Infof("%s captured, closing connection", s.String())
-					conn.netconn().Close()
 				}
 			}
 		}()
