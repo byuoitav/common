@@ -83,7 +83,13 @@ func (m *Map) Do(key interface{}, work Work) error {
 			for {
 				select {
 				case req := <-reqs:
-					req.resp <- req.work(conn)
+					err := req.work(conn)
+					req.resp <- err
+
+					if err != nil {
+						l.Warnf("closing connection due to detected error: %s", err)
+						return
+					}
 
 					// reset the timer
 					if !timer.Stop() {
