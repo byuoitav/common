@@ -108,13 +108,13 @@ type templateQueryResponse struct {
 	Warning  string     `json:"warning"`
 }
 
-type jobs struct {
-	Rev string `json:"_rev,omitempty"`
-	*structs.Jobs
-}
+// type jobs struct {
+// Rev string `json:"_rev,omitempty"`
+// *structs.Jobs
+// }
 
-type jobsQueryResponse struct {
-	Docs     []template `json:"docs"`
-	Bookmark string     `json:"bookmark"`
-	Warning  string     `json:"warning"`
-}
+// type jobsQueryResponse struct {
+// 	Docs     []template `json:"docs"`
+// 	Bookmark string     `json:"bookmark"`
+// 	Warning  string     `json:"warning"`
+// }

@@ -192,11 +192,13 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	toAdd.Type = structs.DeviceType{ID: deviceType.ID}
 
 	// check that each of the ports are valid
-	for _, port := range toAdd.Ports {
-		if err = c.checkPort(port, toAdd); err != nil {
-			return toReturn, fmt.Errorf("unable to create device: %s", err)
+	/*
+		for _, port := range toAdd.Ports {
+				if err = c.checkPort(port, toAdd); err != nil {
+					return toReturn, fmt.Errorf("unable to create device: %s", err)
+				}
 		}
-	}
+	*/
 
 	// marshal the device
 	b, err := json.Marshal(toAdd)
