@@ -103,7 +103,7 @@ func CreateAndExecuteJSONRequest(processTitle string, method string, url string,
 			return "", nil, err
 		}
 	}
-	log.L.Debugf("Request body: %s", bodyBytes)
+	log.L.Infof("Request body: %s", bodyBytes)
 
 	// start building the request
 	requestToReturn, err := http.NewRequest(method, url, bytes.NewReader(bodyBytes))
@@ -138,9 +138,9 @@ func CreateAndExecuteJSONRequest(processTitle string, method string, url string,
 		return "", resp, err
 	}
 
-	log.L.Debugf("Response [%v] received for %s", string(b), processTitle)
+	log.L.Infof("Response [%v] received for %s", string(b), processTitle)
 	if resp.StatusCode/100 != 2 {
-		return string(b), resp, fmt.Errorf("Non 200 response received: %s", b)
+		return string(b), resp, fmt.Errorf("Non 200 response received: %v %s", resp.StatusCode, b)
 	}
 
 	//otherwise we unmarshal

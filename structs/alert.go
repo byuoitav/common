@@ -129,9 +129,9 @@ type AlertSeverity string
 
 // Here is a list of AlertSeverities
 const (
-	Critical AlertSeverity = "critical"
-	Warning  AlertSeverity = "warning"
-	Low      AlertSeverity = "low"
+	Critical AlertSeverity = "Critical"
+	Warning  AlertSeverity = "Warning"
+	Low      AlertSeverity = "Low"
 )
 
 var AlertSeverities = []AlertSeverity{

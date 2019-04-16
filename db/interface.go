@@ -92,7 +92,7 @@ type DB interface {
 	UpdateTags(newTags []string) ([]string, error)
 
 	// for device-monitoring service
-	GetDMJobs(deviceID string) (structs.Jobs, error)
+	// GetDMActions(deviceID string) ([]*actions.Actions, error)
 
 	GetAuth() (structs.Auth, error)
 

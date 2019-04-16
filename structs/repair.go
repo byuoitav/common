@@ -1,5 +1,7 @@
 package structs
 
+import "time"
+
 type RepairRequest struct {
 	SysID              string `json:"sys_id,omitempty"`
 	Number             string `json:"number,omitempty"`
@@ -51,4 +53,15 @@ type RepairResponseWrapper struct {
 
 type MultiRepairResponseWrapper struct {
 	Result []RepairResponse `json:"result"`
+}
+
+// ClassHalfHourBlock defines the information needed for a 30 min block of a class
+type ClassHalfHourBlock struct {
+	BlockStart     string    `json:"block-start"`
+	ClassName      string    `json:"class-name"`
+	ClassTime      string    `json:"class-time"`
+	Teacher        Person    `json:"teacher"`
+	Days           string    `json:"days"`
+	ClassStartTime time.Time `json:"class-start-time"`
+	ClassEndTime   time.Time `json:"class-end-time"`
 }

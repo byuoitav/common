@@ -39,6 +39,8 @@ type StaticRoom struct {
 	Tags []string `json:"tags,omitempty"`
 
 	UpdateTimes map[string]time.Time `json:"update-times"`
+
+	AlertsToSupress []string `json:"alerts-to-supress"`
 }
 
 //CompareRooms takes two rooms and compares them, changes from new to base will only be included if they have a timestamp in UpdateTimes later than that in base for the same field
