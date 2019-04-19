@@ -92,6 +92,11 @@ type roomDesignations struct {
 	DesigList []string `json:"designations"`
 }
 
+type closureCodes struct {
+	Rev   string   `json:"_rev,omitempty"`
+	Codes []string `json:"closure_codes"`
+}
+
 type tags struct {
 	Rev     string   `json:"_rev,omitempty"`
 	TagList []string `json:"tags"`

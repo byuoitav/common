@@ -27,6 +27,7 @@ const (
 	ICONS               = "Icons"
 	ROLES               = "DeviceRoles"
 	ROOM_DESIGNATIONS   = "RoomDesignations"
+	CLOSURE_CODES       = "ClosureCodes"
 	TAGS                = "Tags"
 	DMPSLIST            = "dmps"
 
