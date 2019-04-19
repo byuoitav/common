@@ -92,6 +92,7 @@ type DB interface {
 	UpdateClosureCodes(desigs []string) ([]string, error)
 	GetTags() ([]string, error)
 	UpdateTags(newTags []string) ([]string, error)
+	GetAttributeSets() (map[string][]structs.AttributeSet, error)
 
 	// for device-monitoring service
 	// GetDMActions(deviceID string) ([]*actions.Actions, error)

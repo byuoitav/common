@@ -32,6 +32,7 @@ const (
 	DMPSLIST            = "dmps"
 
 	deviceMonitoring = "device-monitoring"
+	ATTRIBUTES       = "DeviceTypeAttributePresets"
 )
 
 // CouchDB .

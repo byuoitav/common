@@ -342,3 +342,20 @@ func (c *CouchDB) UpdateTags(newTags []string) ([]string, error) {
 
 	return toReturn, nil
 }
+
+// GetAttributeSets returns a list of attribute sets from the database
+func (c *CouchDB) GetAttributeSets() (map[string][]structs.AttributeSet, error) {
+	a, err := c.getAttributeSets()
+	return a.Presets, err
+}
+
+func (c *CouchDB) getAttributeSets() (attributes, error) {
+	var toReturn attributes
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ATTRIBUTES), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get the attribute sets : %s", err)
+	}
+
+	return toReturn, err
+}

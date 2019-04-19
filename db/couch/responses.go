@@ -113,6 +113,11 @@ type templateQueryResponse struct {
 	Warning  string     `json:"warning"`
 }
 
+type attributes struct {
+	Rev     string                            `json:"_rev,omitempty"`
+	Presets map[string][]structs.AttributeSet `json:"presets"`
+}
+
 // type jobs struct {
 // Rev string `json:"_rev,omitempty"`
 // *structs.Jobs
