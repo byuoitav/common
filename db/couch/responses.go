@@ -92,6 +92,11 @@ type roomDesignations struct {
 	DesigList []string `json:"designations"`
 }
 
+type closureCodes struct {
+	Rev   string   `json:"_rev,omitempty"`
+	Codes []string `json:"closure_codes"`
+}
+
 type tags struct {
 	Rev     string   `json:"_rev,omitempty"`
 	TagList []string `json:"tags"`
@@ -106,6 +111,11 @@ type templateQueryResponse struct {
 	Docs     []template `json:"docs"`
 	Bookmark string     `json:"bookmark"`
 	Warning  string     `json:"warning"`
+}
+
+type attributes struct {
+	Rev     string                            `json:"_rev,omitempty"`
+	Presets map[string][]structs.AttributeSet `json:"presets"`
 }
 
 // type jobs struct {

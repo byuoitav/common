@@ -213,7 +213,7 @@ func (c *CouchDB) UpdateDeviceRoles(roles []structs.Role) ([]structs.Role, error
 
 // DESIGNATIONS
 
-// GetRoomDesignations returns a list of the device roles.
+// GetRoomDesignations returns a list of the room designations.
 func (c *CouchDB) GetRoomDesignations() ([]string, error) {
 	d, err := c.getRoomDesignations()
 	return d.DesigList, err
@@ -250,6 +250,50 @@ func (c *CouchDB) UpdateRoomDesignations(desigs []string) ([]string, error) {
 	err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, ROOM_DESIGNATIONS, oldList.Rev), "application/json", b, &toReturn)
 	if err != nil {
 		return toReturn, fmt.Errorf("failed to update the room designation list : %s", err)
+	}
+
+	return toReturn, nil
+}
+
+// CLOSURE CODES
+
+// GetClosureCodes returns a list of the possible closure codes for ServiceNow.
+func (c *CouchDB) GetClosureCodes() ([]string, error) {
+	codes, err := c.getClosureCodes()
+	return codes.Codes, err
+}
+
+func (c *CouchDB) getClosureCodes() (closureCodes, error) {
+	var toReturn closureCodes
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, CLOSURE_CODES), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get closure codes : %s", err)
+	}
+
+	return toReturn, err
+}
+
+// UpdateClosureCodes puts an updated list of closure codes in the database.
+func (c *CouchDB) UpdateClosureCodes(codes []string) ([]string, error) {
+	var toReturn []string
+
+	// get the rev of the closure code list
+	oldList, err := c.getClosureCodes()
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to get the closure code list to update: %s", err)
+	}
+
+	// marshal the new closure code list
+	b, err := json.Marshal(codes)
+	if err != nil {
+		return toReturn, fmt.Errorf("unable to marshal new closure code list: %s", err)
+	}
+
+	// update the closure codes list
+	err = c.MakeRequest("PUT", fmt.Sprintf("%s/%s?rev=%v", OPTIONS, CLOSURE_CODES, oldList.Rev), "application/json", b, &toReturn)
+	if err != nil {
+		return toReturn, fmt.Errorf("failed to update the closure code list : %s", err)
 	}
 
 	return toReturn, nil
@@ -297,4 +341,21 @@ func (c *CouchDB) UpdateTags(newTags []string) ([]string, error) {
 	}
 
 	return toReturn, nil
+}
+
+// GetAttributeSets returns a list of attribute sets from the database
+func (c *CouchDB) GetAttributeSets() (map[string][]structs.AttributeSet, error) {
+	a, err := c.getAttributeSets()
+	return a.Presets, err
+}
+
+func (c *CouchDB) getAttributeSets() (attributes, error) {
+	var toReturn attributes
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ATTRIBUTES), "", nil, &toReturn)
+	if err != nil {
+		err = fmt.Errorf("failed to get the attribute sets : %s", err)
+	}
+
+	return toReturn, err
 }

@@ -27,10 +27,12 @@ const (
 	ICONS               = "Icons"
 	ROLES               = "DeviceRoles"
 	ROOM_DESIGNATIONS   = "RoomDesignations"
+	CLOSURE_CODES       = "ClosureCodes"
 	TAGS                = "Tags"
 	DMPSLIST            = "dmps"
 
 	deviceMonitoring = "device-monitoring"
+	ATTRIBUTES       = "DeviceTypeAttributePresets"
 )
 
 // CouchDB .
@@ -57,6 +59,7 @@ func (c *CouchDB) req(method, endpoint, contentType string, body []byte) (string
 	}
 
 	url := fmt.Sprintf("%s/%s", c.address, endpoint)
+	url = strings.TrimSpace(url)
 
 	// build request
 	req, err := http.NewRequest(method, url, bytes.NewReader(body))
@@ -100,7 +103,6 @@ func (c *CouchDB) req(method, endpoint, contentType string, body []byte) (string
 			return "", nil, fmt.Errorf("%s: received a non-200 response from %s. body: %s", errMsg, url, b)
 		}
 
-		log.L.Warnf("non-200 response from couch: %s", ce.Error)
 		return "", nil, CheckCouchErrors(ce)
 	}
 

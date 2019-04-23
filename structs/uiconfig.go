@@ -34,8 +34,10 @@ type Panel struct {
 
 // Commands - a representation of commands to be sent through the UI.
 type Commands struct {
-	PowerOn  []ConfigCommand `json:"powerOn,omitempty"`
-	PowerOff []ConfigCommand `json:"powerOff,omitempty"`
+	PowerOn        []ConfigCommand `json:"powerOn,omitempty"`
+	PowerOff       []ConfigCommand `json:"powerOff,omitempty"`
+	InputSame      []ConfigCommand `json:"inputSame,omitempty"`
+	InputDifferent []ConfigCommand `json:"inputDifferent,omitempty"`
 }
 
 // ConfigCommand - ...I dunno, ask Danny.
