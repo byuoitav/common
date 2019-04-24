@@ -5,3 +5,8 @@ type AttributeSet struct {
 	Name       string                 `json:"name"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
+
+// AttributePresets is the wrapper object that I don't like but have to deal with anyway
+type AttributePresets struct {
+	Presets map[string][]AttributeSet `json:"presets"`
+}
