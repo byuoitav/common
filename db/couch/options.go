@@ -344,9 +344,9 @@ func (c *CouchDB) UpdateTags(newTags []string) ([]string, error) {
 }
 
 // GetAttributeSets returns a list of attribute sets from the database
-func (c *CouchDB) GetAttributeSets() (map[string][]structs.AttributeSet, error) {
+func (c *CouchDB) GetAttributeSets() (structs.MenuTree, error) {
 	a, err := c.getAttributeSets()
-	return a.Presets, err
+	return a.MenuTree, err
 }
 
 func (c *CouchDB) getAttributeSets() (attributes, error) {
