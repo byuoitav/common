@@ -88,11 +88,14 @@ type DB interface {
 	UpdateDeviceRoles(roles []structs.Role) ([]structs.Role, error)
 	GetRoomDesignations() ([]string, error)
 	UpdateRoomDesignations(desigs []string) ([]string, error)
+	GetClosureCodes() ([]string, error)
+	UpdateClosureCodes(desigs []string) ([]string, error)
 	GetTags() ([]string, error)
 	UpdateTags(newTags []string) ([]string, error)
+	GetAttributeSets() (structs.MenuTree, error)
 
 	// for device-monitoring service
-	GetDMJobs(deviceID string) (structs.Jobs, error)
+	// GetDMActions(deviceID string) ([]*actions.Actions, error)
 
 	GetAuth() (structs.Auth, error)
 

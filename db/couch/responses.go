@@ -92,6 +92,11 @@ type roomDesignations struct {
 	DesigList []string `json:"designations"`
 }
 
+type closureCodes struct {
+	Rev   string   `json:"_rev,omitempty"`
+	Codes []string `json:"closure_codes"`
+}
+
 type tags struct {
 	Rev     string   `json:"_rev,omitempty"`
 	TagList []string `json:"tags"`
@@ -108,13 +113,18 @@ type templateQueryResponse struct {
 	Warning  string     `json:"warning"`
 }
 
-type jobs struct {
+type attributes struct {
 	Rev string `json:"_rev,omitempty"`
-	*structs.Jobs
+	structs.MenuTree
 }
 
-type jobsQueryResponse struct {
-	Docs     []template `json:"docs"`
-	Bookmark string     `json:"bookmark"`
-	Warning  string     `json:"warning"`
-}
+// type jobs struct {
+// Rev string `json:"_rev,omitempty"`
+// *structs.Jobs
+// }
+
+// type jobsQueryResponse struct {
+// 	Docs     []template `json:"docs"`
+// 	Bookmark string     `json:"bookmark"`
+// 	Warning  string     `json:"warning"`
+// }

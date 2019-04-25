@@ -3,6 +3,7 @@ package servicenow
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
@@ -54,7 +55,7 @@ func ModifyIncident(input structs.IncidentRequest, sysID string) (structs.Incide
 
 	weburl := fmt.Sprintf("%s/%s?sysparm_display_value=true", IncidentModifyWebURL, sysID)
 
-	log.L.Debugf("WebURL: %s", weburl)
+	log.L.Infof("WebURL: %s", weburl)
 
 	for {
 		var output structs.IncidentResponseWrapper
@@ -63,7 +64,7 @@ func ModifyIncident(input structs.IncidentRequest, sysID string) (structs.Incide
 			input, headers, 20, &output)
 		if err != nil {
 			log.L.Errorf("Could not create and execute JSON request: %v", err)
-			return output.Result, err
+			//return output.Result, err
 		}
 		tries++
 
@@ -81,7 +82,7 @@ func ModifyIncident(input structs.IncidentRequest, sysID string) (structs.Incide
 //QueryIncidentsByRoom - query all incidents by room number for the incident assignment group
 func QueryIncidentsByRoom(RoomID string) ([]structs.IncidentResponse, error) {
 	roomIDreplaced := strings.Replace(RoomID, "-", "+", -1)
-	GroupName := IncidentAssignmentGroup
+	GroupName := strings.Replace(IncidentAssignmentGroup, " ", "+", -1)
 
 	weburl := fmt.Sprintf("active=true&sysparm_display_value=true&u_room=%s&assignment_group=%s", roomIDreplaced, GroupName)
 	weburl = fmt.Sprintf("%s?%s", IncidentWebURL, weburl)
@@ -107,6 +108,9 @@ func QueryIncidentsByRoom(RoomID string) ([]structs.IncidentResponse, error) {
 
 	log.L.Debugf("Output JSON: %s", outputJSON)
 	log.L.Debugf("Output JSON: %+v", output)
+
+	//if we make another request too fast we get a 400
+	time.Sleep(2 * time.Second)
 	return output.Result, err
 }
 
@@ -133,6 +137,7 @@ func GetIncident(IncidentNumber string) (structs.IncidentResponse, error) {
 
 	log.L.Debugf("Output JSON: %s", outputJSON)
 	log.L.Debugf("Output JSON: %+v", output)
+	time.Sleep(2 * time.Second)
 
 	SysID := output.Result[0].SysID
 

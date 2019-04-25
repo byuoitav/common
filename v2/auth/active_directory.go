@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/byuoitav/common/structs"
 
@@ -22,11 +23,19 @@ func init() {
 	ldapSearchScope = os.Getenv("LDAP_SEARCH_SCOPE")
 
 	if len(ldapUsername) == 0 || len(ldapPassword) == 0 || len(ldapURL) == 0 || len(ldapSearchScope) == 0 {
-		log.L.Fatalf("LDAP username, password, search scope, or URL not set.")
+		log.L.Warnf("LDAP username, password, search scope, or URL not set.")
 	}
 }
 
+var on sync.Once
+
 func executeLDAPRequest(queryString string, attributes ...string) (*ldap.SearchResult, *nerr.E) {
+
+	on.Do(func() {
+		if len(ldapUsername) == 0 || len(ldapPassword) == 0 || len(ldapURL) == 0 || len(ldapSearchScope) == 0 {
+			log.L.Fatalf("LDAP username, password, search scope, or URL not set.")
+		}
+	})
 
 	// connect to ldap server
 	l, err := ldap.Dial("tcp", ldapURL)
