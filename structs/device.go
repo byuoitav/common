@@ -12,15 +12,16 @@ import (
 
 // Device - a representation of a device involved in a TEC Pi system.
 type Device struct {
-	ID          string     `json:"_id"`
-	Name        string     `json:"name"`
-	Address     string     `json:"address"`
-	Description string     `json:"description"`
-	DisplayName string     `json:"display_name"`
-	Type        DeviceType `json:"type,omitempty"`
-	Roles       []Role     `json:"roles"`
-	Ports       []Port     `json:"ports"`
-	Tags        []string   `json:"tags,omitempty"`
+	ID          string                 `json:"_id"`
+	Name        string                 `json:"name"`
+	Address     string                 `json:"address"`
+	Description string                 `json:"description"`
+	DisplayName string                 `json:"display_name"`
+	Type        DeviceType             `json:"type,omitempty"`
+	Roles       []Role                 `json:"roles"`
+	Ports       []Port                 `json:"ports"`
+	Tags        []string               `json:"tags,omitempty"`
+	Attributes  map[string]interface{} `json:"attributes,omitempty"`
 }
 
 // DeviceIDValidationRegex is our regular expression for validating the correct naming scheme.
