@@ -147,6 +147,8 @@ type DeviceType struct {
 	Ports       []Port       `json:"ports,omitempty"`
 	PowerStates []PowerState `json:"power_states,omitempty"`
 	Commands    []Command    `json:"commands,omitempty"`
+	DefaultName string       `json:"default-name,omitempty"`
+	DefaultIcon string       `json:"default-icon,omitempty"`
 	Tags        []string     `json:"tags,omitempty"`
 }
 

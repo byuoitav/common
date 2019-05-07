@@ -17,5 +17,6 @@ type Group struct {
 type AttributeSet struct {
 	Name       string                 `json:"name"`
 	DeviceType string                 `json:"device-type"`
+	DeviceName string                 `json:"device-name"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
