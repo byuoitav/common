@@ -11,4 +11,5 @@ type DMPS struct {
 	Hostname       string `json:"hostname"`
 	Address        string `json:"address"`
 	CommandToQuery string `json:"commandToQuery,omitempty"`
+	Port           string `json:"port,omitempty"`
 }
