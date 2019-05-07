@@ -22,6 +22,9 @@ type Device struct {
 	Ports       []Port                 `json:"ports"`
 	Tags        []string               `json:"tags,omitempty"`
 	Attributes  map[string]interface{} `json:"attributes,omitempty"`
+
+	// Proxy is a map of regex (matching command id's) to the host:port of the proxy
+	Proxy map[string]string `json:"proxy,omitempty"`
 }
 
 // DeviceIDValidationRegex is our regular expression for validating the correct naming scheme.
@@ -79,6 +82,7 @@ func (d *Device) GetDeviceRoomID() string {
 	return GetRoomIDFromDevice(d.ID)
 }
 
+// GetRoomIDFromDevice .
 func GetRoomIDFromDevice(d string) string {
 	idParts := strings.Split(d, "-")
 	if len(idParts) < 3 {
@@ -100,6 +104,17 @@ func (d *Device) GetCommandByID(id string) Command {
 
 	// No command found.
 	return Command{}
+}
+
+// HasCommand .
+func (d *Device) HasCommand(id string) bool {
+	for i := range d.Type.Commands {
+		if d.Type.Commands[i].ID == id {
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetPortFromSrc returns the port going to me from src, and nil if one doesn't exist
@@ -289,13 +304,7 @@ func (e *Endpoint) Validate() error {
 
 // HasRole checks to see if the given device has the given role.
 func HasRole(device Device, role string) bool {
-	role = strings.ToLower(role)
-	for i := range device.Roles {
-		if strings.EqualFold(strings.ToLower(device.Roles[i].ID), role) {
-			return true
-		}
-	}
-	return false
+	return device.HasRole(role)
 }
 
 // HasRole checks to see if the given device has the given role.
