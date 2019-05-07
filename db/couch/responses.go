@@ -113,9 +113,20 @@ type templateQueryResponse struct {
 	Warning  string     `json:"warning"`
 }
 
-type attributes struct {
+type menu struct {
+	Rev   string   `json:"_rev,omitempty"`
+	Order []string `json:"order"`
+}
+
+type attributeGroup struct {
 	Rev string `json:"_rev,omitempty"`
-	structs.MenuTree
+	structs.Group
+}
+
+type attributeQueryResponse struct {
+	Docs     []attributeGroup `json:"docs"`
+	Bookmark string           `json:"bookmark"`
+	Warning  string           `json:"warning"`
 }
 
 // type jobs struct {

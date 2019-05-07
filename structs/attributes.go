@@ -7,7 +7,7 @@ type MenuTree struct {
 
 // Group is a collection of attribute presets to create devices that fall into this group
 type Group struct {
-	Name      string         `json:"name"`
+	ID        string         `json:"_id"`
 	Icon      string         `json:"icon,omitempty"`
 	Subgroups []Group        `json:"sub-groups,omitempty"`
 	Presets   []AttributeSet `json:"presets,omitempty"`
@@ -17,6 +17,7 @@ type Group struct {
 type AttributeSet struct {
 	Name       string                 `json:"name"`
 	DeviceType string                 `json:"device-type"`
-	DeviceName string                 `json:"device-name"`
+	DeviceName string                 `json:"device-name,omitempty"`
+	DeviceIcon string                 `json:"device-icon,omitempty"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
