@@ -32,7 +32,8 @@ const (
 	DMPSLIST            = "dmps"
 
 	deviceMonitoring = "device-monitoring"
-	ATTRIBUTES       = "DeviceTypeAttributePresets"
+	MENUTREE         = "MenuTree"
+	ATTRIBUTES       = "attributes"
 )
 
 // CouchDB .

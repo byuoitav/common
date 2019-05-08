@@ -8,6 +8,8 @@ type DMPSList struct {
 
 // DMPS - a single DMPS to connect to and pull events
 type DMPS struct {
-	Hostname string `json:"hostname"`
-	Address  string `json:"address"`
+	Hostname       string `json:"hostname"`
+	Address        string `json:"address"`
+	CommandToQuery string `json:"commandToQuery,omitempty"`
+	Port           string `json:"port,omitempty"`
 }
