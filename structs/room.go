@@ -8,13 +8,14 @@ import (
 
 // Room - a representation of a room containing a TEC Pi system.
 type Room struct {
-	ID            string            `json:"_id"`
-	Name          string            `json:"name"`
-	Description   string            `json:"description"`
-	Configuration RoomConfiguration `json:"configuration"`
-	Designation   string            `json:"designation"`
-	Devices       []Device          `json:"devices,omitempty"`
-	Tags          []string          `json:"tags,omitempty"`
+	ID            string                 `json:"_id"`
+	Name          string                 `json:"name"`
+	Description   string                 `json:"description"`
+	Configuration RoomConfiguration      `json:"configuration"`
+	Designation   string                 `json:"designation"`
+	Devices       []Device               `json:"devices,omitempty"`
+	Tags          []string               `json:"tags,omitempty"`
+	Attributes    map[string]interface{} `json:"attributes,omitempty"`
 }
 
 var roomValidationRegex = regexp.MustCompile(`([A-z,0-9]{2,})-[A-z,0-9]+`)

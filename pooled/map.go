@@ -2,6 +2,7 @@ package pooled
 
 import (
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -63,7 +64,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 		m.m[key] = reqs
 		m.mu.Unlock()
 
-		l.Infof("Successfully opened new connection")
+		conn.Log().Infof("Successfully opened new connection")
 
 		go func() {
 			defer func() {
@@ -71,7 +72,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 				delete(m.m, key)
 				m.mu.Unlock()
 
-				l.Infof("Closing connection")
+				conn.Log().Infof("Closing connection")
 				close(reqs)
 
 				// finish up remaining requests
@@ -85,13 +86,26 @@ func (m *Map) Do(key interface{}, work Work) error {
 			timer := time.NewTimer(m.ttl)
 
 			for {
+				// reset the buffer by reading everything currently in it
+				bytes, err := conn.EmptyReadBuffer(m.ttl)
+				if err != nil {
+					conn.Log().Warnf("failed to empty buffer: %s", err)
+					return
+				}
+				if len(bytes) > 0 {
+					conn.Log().Debugf("Read %v leftover bytes: 0x%x", len(bytes), bytes)
+				}
+
+				// reset the deadlines
+				conn.netconn().SetDeadline(time.Time{})
+
 				select {
 				case req := <-reqs:
 					err := req.work(conn)
 					req.resp <- err
-
-					if err != nil {
-						l.Warnf("closing connection due to detected error: %s", err)
+					if err, ok := err.(net.Error); ok && (!err.Temporary() || err.Timeout()) {
+						// if it was a timeout error, close the connection
+						conn.Log().Warnf("closing connection due to non-temporary or timeout error: %s", err.Error())
 						return
 					}
 

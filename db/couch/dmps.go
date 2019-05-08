@@ -1,7 +1,6 @@
 package couch
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/byuoitav/common/structs"
@@ -14,7 +13,20 @@ func (c *CouchDB) GetDMPSList() (structs.DMPSList, error) {
 	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", DMPSLIST, "dmps_list"), "", nil, &toReturn)
 
 	if err != nil {
-		err = errors.New(fmt.Sprintf("failed to get DMPSList: %s", err))
+		err = fmt.Errorf("failed to get DMPSList: %s", err)
+	}
+
+	return toReturn, err
+}
+
+// GetOtherCrestronList - get the list of other crestron devices to monitor
+func (c *CouchDB) GetOtherCrestronList() (structs.DMPSList, error) {
+	var toReturn structs.DMPSList
+
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", DMPSLIST, "CrstCustom"), "", nil, &toReturn)
+
+	if err != nil {
+		err = fmt.Errorf("failed to get CrstCustom: %s", err)
 	}
 
 	return toReturn, err

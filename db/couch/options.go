@@ -343,18 +343,18 @@ func (c *CouchDB) UpdateTags(newTags []string) ([]string, error) {
 	return toReturn, nil
 }
 
-// GetAttributeSets returns a list of attribute sets from the database
-func (c *CouchDB) GetAttributeSets() (structs.MenuTree, error) {
-	a, err := c.getAttributeSets()
-	return a.MenuTree, err
+// GetMenuTree returns a list of attribute sets from the database
+func (c *CouchDB) GetMenuTree() ([]string, error) {
+	i, err := c.getMenuTree()
+	return i.Order, err
 }
 
-func (c *CouchDB) getAttributeSets() (attributes, error) {
-	var toReturn attributes
+func (c *CouchDB) getMenuTree() (menu, error) {
+	var toReturn menu
 
-	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, ATTRIBUTES), "", nil, &toReturn)
+	err := c.MakeRequest("GET", fmt.Sprintf("%v/%v", OPTIONS, MENUTREE), "", nil, &toReturn)
 	if err != nil {
-		err = fmt.Errorf("failed to get the attribute sets : %s", err)
+		err = fmt.Errorf("failed to get menu tree order : %s", err)
 	}
 
 	return toReturn, err
