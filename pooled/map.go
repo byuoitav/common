@@ -19,6 +19,7 @@ type Work func(Conn) error
 type Map struct {
 	newConn NewConnection
 	ttl     time.Duration
+	delay   time.Duration
 
 	m  map[interface{}]chan request
 	mu sync.Mutex
@@ -30,7 +31,7 @@ type request struct {
 }
 
 // NewMap .
-func NewMap(ttl time.Duration, newConn NewConnection) *Map {
+func NewMap(ttl, delay time.Duration, newConn NewConnection) *Map {
 	return &Map{
 		m:       make(map[interface{}]chan request),
 		newConn: newConn,
@@ -78,6 +79,7 @@ func (m *Map) Do(key interface{}, work Work) error {
 				// finish up remaining requests
 				for req := range reqs {
 					req.resp <- req.work(conn)
+					time.Sleep(m.delay)
 				}
 
 				conn.netconn().Close()
@@ -98,6 +100,9 @@ func (m *Map) Do(key interface{}, work Work) error {
 
 				// reset the deadlines
 				conn.netconn().SetDeadline(time.Time{})
+
+				// delay before the next command is sent
+				time.Sleep(m.delay)
 
 				select {
 				case req := <-reqs:
