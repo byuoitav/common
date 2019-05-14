@@ -41,6 +41,8 @@ type CouchDB struct {
 	address  string
 	username string
 	password string
+
+	IgnoreReadyChecks bool
 }
 
 // NewDB .
@@ -83,7 +85,9 @@ func (c *CouchDB) req(method, endpoint, contentType string, body []byte) (string
 	}
 
 	// validate that couch is ready, wait if it isn't
-	c.waitUntilReady()
+	if !c.IgnoreReadyChecks {
+		c.waitUntilReady()
+	}
 
 	// execute request
 	resp, err := client.Do(req)
@@ -118,6 +122,7 @@ var (
 func (c *CouchDB) waitUntilReady() {
 	checkReady.Do(func() {
 		readyMu.Lock()
+		defer readyMu.Unlock()
 
 		// +deployment not-required
 		for len(os.Getenv("STOP_REPLICATION")) == 0 {
@@ -132,8 +137,6 @@ func (c *CouchDB) waitUntilReady() {
 			log.L.Infof("Database replication in state %v. Allowing CouchDB requests now.", state)
 			break
 		}
-
-		readyMu.Unlock()
 	})
 
 	readyMu.Lock()
