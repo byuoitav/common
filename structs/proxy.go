@@ -6,14 +6,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
 )
 
 // BuildCommandURL builds the full address for a command based off it's the microservice and endpoint.
-// If the device is gated, the host of the url will be the gateway's address
+// If the device is proxied, the host of the url will be the proxy's address
 func (d *Device) BuildCommandURL(commandID string) (string, *nerr.E) {
-	log.L.Infof("building url for command %s on %s", commandID, d.ID)
 	findCommand := func(id string, commands []Command) *Command {
 		for i := range commands {
 			if id == commands[i].ID {
@@ -32,7 +30,6 @@ func (d *Device) BuildCommandURL(commandID string) (string, *nerr.E) {
 	if err != nil {
 		return "", nerr.Translate(err).Addf("unable to build command address")
 	}
-
 	// match the first command
 	for reg, proxy := range d.Proxy {
 		r, err := regexp.Compile(reg)
