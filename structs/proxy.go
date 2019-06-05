@@ -10,7 +10,7 @@ import (
 )
 
 // BuildCommandURL builds the full address for a command based off it's the microservice and endpoint.
-// If the device is gated, the host of the url will be the gateway's address
+// If the device is proxied, the host of the url will be the proxy's address
 func (d *Device) BuildCommandURL(commandID string) (string, *nerr.E) {
 	findCommand := func(id string, commands []Command) *Command {
 		for i := range commands {
