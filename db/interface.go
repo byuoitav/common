@@ -24,6 +24,7 @@ type DB interface {
 	GetRoom(id string) (structs.Room, error)
 	UpdateRoom(id string, room structs.Room) (structs.Room, error)
 	DeleteRoom(id string) error
+	GetRoomAttachments(room string) ([]string, error)
 
 	// device
 	CreateDevice(device structs.Device) (structs.Device, error)
