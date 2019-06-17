@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/structs"
 )
@@ -358,22 +360,26 @@ func (c *CouchDB) GetRoomsByRoomConfiguration(configID string) ([]structs.Room, 
 
 // GetRoomAttachments gets the attachments in a room
 func (c *CouchDB) GetRoomAttachments(room string) ([]string, error) {
-	//log.L.Infof(room)
+	log.L.Infof(room)
 	var roomAttachments roomAttachmentResponse
 
 	//re := regexp.MustCompile(`[A-Za-z|\d|\/\/|:|.|-]*\.jpg`)
 
-	err := c.MakeRequest("GET", fmt.Sprintf("%s/%v/attachments", ROOMS, room), "", nil, &roomAttachments)
+	err := c.MakeRequest("GET", fmt.Sprintf("%s/%v", ROOM_ATTACHMENTS, room), "", nil, &roomAttachments)
 	if err != nil {
 		return []string{}, errors.New(fmt.Sprintf("failed to get room %s: %s", room, err))
 	}
-	//log.L.Infof("what about here\n %v", roomAttachments)
+	log.L.Infof("what about here\n %v", roomAttachments)
 	var toReturn []string
 	for k := range roomAttachments.Attachments {
 		toReturn = append(toReturn, k)
-		//log.L.Infof(k)
+		log.L.Infof(k)
 	}
 
-	//	log.L.Infof(toReturn)
+	for _, s := range toReturn {
+		log.L.Infof(s)
+	}
+
+	sort.Strings(toReturn)
 	return toReturn, nil
 }

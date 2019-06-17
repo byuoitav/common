@@ -18,6 +18,7 @@ import (
 const (
 	BUILDINGS           = "buildings"
 	ROOMS               = "rooms"
+	ROOM_ATTACHMENTS    = "room_attachments"
 	DEVICES             = "devices"
 	DEVICE_STATES       = "device-state"
 	DEVICE_TYPES        = "device_types"
