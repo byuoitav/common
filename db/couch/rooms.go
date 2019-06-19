@@ -393,5 +393,7 @@ func (c *CouchDB) GetRoomAttachments(room string) ([]string, error) {
 		toReturn[i] = u.String()
 		//toReturn[i] = "https://couchdb-stg.avs.byu.edu:5984/room_attachments/" + room + "/" + toReturn[i]
 	}
+
+	log.L.Infof("This is the data now: ", toReturn)
 	return toReturn, nil
 }
