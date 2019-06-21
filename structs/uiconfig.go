@@ -17,7 +17,7 @@ type Preset struct {
 	Name                    string   `json:"name"`
 	Icon                    string   `json:"icon"`
 	Displays                []string `json:"displays"`
-	ShareableDisplays       []string `json:"shareableDisplays"`
+	ShareablePresets        []string `json:"shareablePresets"`
 	AudioDevices            []string `json:"audioDevices"`
 	Inputs                  []string `json:"inputs"`
 	IndependentAudioDevices []string `json:"independentAudioDevices,omitempty"`
