@@ -21,6 +21,7 @@ type Preset struct {
 	AudioDevices            []string `json:"audioDevices"`
 	Inputs                  []string `json:"inputs"`
 	IndependentAudioDevices []string `json:"independentAudioDevices,omitempty"`
+	VolumeMatches           []string `json:"volumeMatches,omitempty"`
 	Commands                Commands `json:"commands,omitempty"`
 }
 
