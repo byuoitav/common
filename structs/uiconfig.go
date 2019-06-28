@@ -14,14 +14,17 @@ type UIConfig struct {
 
 // Preset - a representation of what is controlled by this preset.
 type Preset struct {
-	Name                    string   `json:"name"`
-	Icon                    string   `json:"icon"`
-	Displays                []string `json:"displays"`
-	ShareableDisplays       []string `json:"shareableDisplays"`
-	AudioDevices            []string `json:"audioDevices"`
-	Inputs                  []string `json:"inputs"`
-	IndependentAudioDevices []string `json:"independentAudioDevices,omitempty"`
-	Commands                Commands `json:"commands,omitempty"`
+	Name                    string              `json:"name"`
+	Icon                    string              `json:"icon"`
+	Displays                []string            `json:"displays"`
+	ShareablePresets        []string            `json:"shareablePresets"`
+	ShareableDisplays       []string            `json:"shareableDisplays"`
+	AudioDevices            []string            `json:"audioDevices"`
+	Inputs                  []string            `json:"inputs"`
+	IndependentAudioDevices []string            `json:"independentAudioDevices,omitempty"`
+	AudioGroups             map[string][]string `json:"audioGroups,omitempty"`
+	VolumeMatches           []string            `json:"volumeMatches,omitempty"`
+	Commands                Commands            `json:"commands,omitempty"`
 }
 
 // Panel - a representation of a touchpanel and which preset it has.
