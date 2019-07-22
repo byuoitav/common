@@ -98,6 +98,13 @@ type DB interface {
 	GetAttributeGroup(groupID string) (structs.Group, error)
 	GetAllAttributeGroups() ([]structs.Group, error)
 
+	/* Deployment Info Functions  */
+	GetDeploymentInfo(serviceID string) (structs.FullConfig, error)
+	GetDeviceDeploymentInfo(deviceType string) (structs.DeviceDeploymentConfig, error)
+	GetServiceInfo(serviceID string) (structs.ServiceConfigWrapper, error)
+	GetServiceAttachment(service, designation string) ([]byte, error)
+	GetServiceZip(service, designation string) ([]byte, error)
+
 	// for device-monitoring service
 	// GetDMActions(deviceID string) ([]*actions.Actions, error)
 
