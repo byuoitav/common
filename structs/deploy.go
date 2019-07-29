@@ -25,7 +25,8 @@ type DeviceDeploymentConfig struct {
 type DesignationDeploymentConfig struct {
 	EnvironmentVariables map[string]string      `json:"environment-values,omitempty"`
 	DockerInfo           map[string]interface{} `json:"docker-info,omitempty"`
-	Services             []string               `json:"docker-services,omitempty"`
+	DockerServices       []string               `json:"docker-services,omitempty"`
+	Services             []string               `json:"services,omitempty"`
 }
 
 // ServiceConfigWrapper .
