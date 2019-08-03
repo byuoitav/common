@@ -146,6 +146,7 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 		log.L.Debugf("Checking CAS")
 		// if they aren't currently authenticated, redirect to the authentication page
 		if !cas.IsAuthenticated(r) {
+			log.L.Info("\n\n\n\n WE'RE GOING TO CAS NOW!!! \n\n\n\n")
 			log.L.Debugf("\n\nRedirecting to CAS, not currently authenticated.\n\n")
 			c.RedirectToLogin(w, r)
 			return
