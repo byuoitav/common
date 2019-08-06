@@ -16,5 +16,5 @@ func (c *CouchDB) GetLabConfig(roomID string) (structs.LabConfig, error) {
 		return config, fmt.Errorf("Error while getting Lab Config from DB for room %s: %s", roomID, err)
 	}
 
-	return structs.LabConfig{}, nil
+	return config, nil
 }
