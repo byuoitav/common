@@ -146,12 +146,11 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 		log.L.Debugf("Checking CAS")
 		// if they aren't currently authenticated, redirect to the authentication page
 		if !cas.IsAuthenticated(r) {
-			log.L.Info("\n\n\n\n WE'RE GOING TO CAS NOW!!! \n\n\n\n")
-			log.L.Debugf("\n\nRedirecting to CAS, not currently authenticated.\n\n")
+			log.L.Debugf("Redirecting to CAS, not currently authenticated.")
 			c.RedirectToLogin(w, r)
 			return
 		}
-		log.L.Debugf("\n\nAuthenticated via CAS, issuing JWT.\n\n")
+		log.L.Debugf("Authenticated via CAS, issuing JWT.")
 		user := cas.Username(r)
 
 		//otherwise we need to issue a jwt token to the user, as this is the second time they've been here, and they've already authenticated with CAS
