@@ -54,6 +54,9 @@ type DB interface {
 	DeleteUIConfig(id string) error
 	GetUIAttachment(ui, attachment string) (string, []byte, error)
 
+	// lab configs
+	GetLabConfig(roomID string) (structs.LabConfig, error)
+
 	/* bulk functions */
 	GetAllBuildings() ([]structs.Building, error)
 	GetAllRooms() ([]structs.Room, error)

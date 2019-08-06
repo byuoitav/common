@@ -32,6 +32,7 @@ const (
 	CLOSURE_CODES       = "ClosureCodes"
 	TAGS                = "Tags"
 	DMPSLIST            = "dmps"
+	LAB_CONFIGS         = "lab-attendance-config"
 
 	deviceMonitoring = "device-monitoring"
 	MENUTREE         = "MenuTree"
