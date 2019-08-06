@@ -11,7 +11,7 @@ import (
 	"github.com/byuoitav/common/jsonhttp"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/endpoint-authorization-controller/base"
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 )
 
@@ -142,6 +142,14 @@ func checkPassedAuthCheck(r *http.Request) bool {
 func generateContext(r *http.Request, clientToken *jwt.Token, username string) context.Context {
 	ctx := context.WithValue(r.Context(), "client", clientToken)
 	ctx = context.WithValue(ctx, "user", username)
+	ctx = context.WithValue(ctx, "passed-auth-check", "true")
+
+	//Get the user groups
+	return ctx
+}
+
+func generateContextNoToken(r *http.Request, username string) context.Context {
+	ctx := context.WithValue(r.Context(), "user", username)
 	ctx = context.WithValue(ctx, "passed-auth-check", "true")
 
 	//Get the user groups

@@ -129,6 +129,13 @@ type attributeQueryResponse struct {
 	Warning  string           `json:"warning"`
 }
 
+type roomAttachmentResponse struct {
+	ID           string                 `json:"_id"`
+	Rev          string                 `json:"_rev,omitempty"`
+	LinkedImages []string               `json:"linkedImages"`
+	Attachments  map[string]interface{} `json:"_attachments"`
+}
+
 // type jobs struct {
 // Rev string `json:"_rev,omitempty"`
 // *structs.Jobs

@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/byuoitav/common/log"
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-cas/cas"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"gopkg.in/cas.v2"
 )
 
 var JWTConfig middleware.JWTConfig
@@ -55,6 +55,27 @@ func init() {
 	the user will also be available in the context
 	groups, ok := context.Request().Context().Value("user").(string)
 */
+// func AuthenticateCASUser(next http.Handler) http.Handler {
+// 	u, _ := url.Parse("https://cas.byu.edu/cas")
+// 	c := cas.NewClient(&cas.Options{
+// 		URL: u,
+// 	})
+
+// 	return c.HandleFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		if !cas.IsAuthenticated(r) {
+// 			cas.RedirectToLogin(w, r)
+// 			return
+// 		}
+
+// 		user := cas.Username(r)
+// 		log.L.Debugf("Authenticated via CAS: %s", user)
+
+// 		ctx := generateContextNoToken(r, user)
+// 		next.ServeHTTP(w, r.WithContext(ctx))
+// 		return
+// 	})
+// }
+
 func AuthenticateCASUser(next http.Handler) http.Handler {
 	url, _ := url.Parse("https://cas.byu.edu/cas")
 	c := cas.NewClient(&cas.Options{
@@ -125,11 +146,11 @@ func AuthenticateCASUser(next http.Handler) http.Handler {
 		log.L.Debugf("Checking CAS")
 		// if they aren't currently authenticated, redirect to the authentication page
 		if !cas.IsAuthenticated(r) {
-			log.L.Debugf("Redirecting to CAS, not currently authenticated.")
+			log.L.Debugf("\n\nRedirecting to CAS, not currently authenticated.\n\n")
 			c.RedirectToLogin(w, r)
 			return
 		}
-		log.L.Debugf("Authenticated via CAS, issuing JWT.")
+		log.L.Debugf("\n\nAuthenticated via CAS, issuing JWT.\n\n")
 		user := cas.Username(r)
 
 		//otherwise we need to issue a jwt token to the user, as this is the second time they've been here, and they've already authenticated with CAS
