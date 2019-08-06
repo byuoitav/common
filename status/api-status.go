@@ -34,3 +34,8 @@ type Battery struct {
 type ActiveInput struct {
 	ActiveInput string `json:"active_input,omitempty"`
 }
+
+// Error .
+type Error struct {
+	Error string `json:"error"`
+}

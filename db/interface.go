@@ -54,6 +54,9 @@ type DB interface {
 	DeleteUIConfig(id string) error
 	GetUIAttachment(ui, attachment string) (string, []byte, error)
 
+	// lab configs
+	GetLabConfig(roomID string) (structs.LabConfig, error)
+
 	/* bulk functions */
 	GetAllBuildings() ([]structs.Building, error)
 	GetAllRooms() ([]structs.Room, error)
@@ -98,6 +101,13 @@ type DB interface {
 	GetAttributeGroup(groupID string) (structs.Group, error)
 	GetAllAttributeGroups() ([]structs.Group, error)
 
+	/* Deployment Info Functions  */
+	GetDeploymentInfo(serviceID string) (structs.FullConfig, error)
+	GetDeviceDeploymentInfo(deviceType string) (structs.DeviceDeploymentConfig, error)
+	GetServiceInfo(serviceID string) (structs.ServiceConfigWrapper, error)
+	GetServiceAttachment(service, designation string) ([]byte, error)
+	GetServiceZip(service, designation string) ([]byte, error)
+
 	// for device-monitoring service
 	// GetDMActions(deviceID string) ([]*actions.Actions, error)
 
@@ -117,14 +127,14 @@ func init() {
 	address = os.Getenv("DB_ADDRESS")
 	username = os.Getenv("DB_USERNAME")
 	password = os.Getenv("DB_PASSWORD")
-
-	if len(address) == 0 {
-		log.L.Errorf("DB_ADDRESS is not set. Failing...")
-	}
 }
 
 // GetDB returns the instance of the database to use.
 func GetDB() DB {
+	if len(address) == 0 {
+		log.L.Errorf("DB_ADDRESS is not set.")
+	}
+
 	// TODO add logic to "pick" which db to create
 	if database == nil {
 		database = couch.NewDB(address, username, password)

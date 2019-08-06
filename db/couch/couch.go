@@ -15,6 +15,7 @@ import (
 	"github.com/byuoitav/common/log"
 )
 
+/* Consts */
 const (
 	BUILDINGS           = "buildings"
 	ROOMS               = "rooms"
@@ -31,10 +32,14 @@ const (
 	CLOSURE_CODES       = "ClosureCodes"
 	TAGS                = "Tags"
 	DMPSLIST            = "dmps"
+	LAB_CONFIGS         = "lab-attendance-config"
 
 	deviceMonitoring = "device-monitoring"
 	MENUTREE         = "MenuTree"
 	ATTRIBUTES       = "attributes"
+
+	DEPLOY = "deployment-information"
+	CAMPUS = "campus-deployment-info"
 )
 
 // CouchDB .
