@@ -60,9 +60,10 @@ type AudioConfiguration struct {
 
 // IOConfiguration - a representation of an input or output device.
 type IOConfiguration struct {
-	Name        string  `json:"name"`
-	Icon        string  `json:"icon"`
-	Displayname *string `json:"displayname,omitempty"`
+	Name        string            `json:"name"`
+	Icon        string            `json:"icon"`
+	Displayname *string           `json:"displayname,omitempty"`
+	SubInputs   []IOConfiguration `json:"subInputs,omitempty"`
 }
 
 // PseudoInput - a fake input I guess
