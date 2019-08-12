@@ -88,6 +88,9 @@ func (m *Map) Do(key interface{}, work Work) error {
 			timer := time.NewTimer(m.ttl)
 
 			for {
+				// delay before the next command is sent
+				time.Sleep(m.delay)
+
 				// reset the buffer by reading everything currently in it
 				bytes, err := conn.EmptyReadBuffer(m.ttl)
 				if err != nil {
@@ -100,9 +103,6 @@ func (m *Map) Do(key interface{}, work Work) error {
 
 				// reset the deadlines
 				conn.netconn().SetDeadline(time.Time{})
-
-				// delay before the next command is sent
-				time.Sleep(m.delay)
 
 				select {
 				case req := <-reqs:
