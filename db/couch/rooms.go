@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -376,10 +377,23 @@ func (c *CouchDB) GetRoomAttachments(room string) ([]string, error) {
 		log.L.Infof(k)
 	}
 
-	for _, s := range toReturn {
-		log.L.Infof(s)
-	}
+	// for _, s := range toReturn {
+	// 	log.L.Infof(s)
+	// }
 
 	sort.Strings(toReturn)
+	for i := range toReturn {
+		u := &url.URL{}
+		err := u.UnmarshalBinary([]byte("https://couchdb-stg.avs.byu.edu:5984/room_attachments/" + room + "/" + toReturn[i]))
+		{
+			if err != nil {
+				log.L.Infof("There was a problem getting the image URLs", err)
+			}
+		}
+		toReturn[i] = u.String()
+		//toReturn[i] = "https://couchdb-stg.avs.byu.edu:5984/room_attachments/" + room + "/" + toReturn[i]
+	}
+
+	log.L.Infof("This is the data now: ", toReturn)
 	return toReturn, nil
 }
