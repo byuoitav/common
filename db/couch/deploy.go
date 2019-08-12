@@ -89,7 +89,7 @@ func (c *CouchDB) GetServiceAttachment(service, designation string) ([]byte, err
 
 // GetServiceZip .
 func (c *CouchDB) GetServiceZip(service, designation string) ([]byte, error) {
-	url := fmt.Sprintf("%v/%v/%v/%v", c.address, DEPLOY, service, fmt.Sprintf("%v-%v.zip", service, designation))
+	url := fmt.Sprintf("%v/%v/%v/%v", c.address, DEPLOY, service, fmt.Sprintf("%v.tar.gz", designation))
 
 	// start building the request
 	req, err := http.NewRequest(http.MethodGet, url, nil)
