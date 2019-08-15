@@ -10,6 +10,7 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
+// GetDevice .
 func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
 	return *device.Device, err
@@ -78,6 +79,7 @@ func (c *CouchDB) getDevicesByQuery(query IDPrefixQuery, includeType bool) ([]de
 	return toReturn, nil
 }
 
+// GetAllDevices .
 func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	var toReturn []structs.Device
 
@@ -100,6 +102,7 @@ func (c *CouchDB) GetAllDevices() ([]structs.Device, error) {
 	return toReturn, nil
 }
 
+// GetDevicesByRoom .
 func (c *CouchDB) GetDevicesByRoom(roomID string) ([]structs.Device, error) {
 	var toReturn []structs.Device
 
@@ -153,6 +156,8 @@ However in addition, if the port includes devices those devices must be valid de
 If a device is passed into the fuction with a valid 'rev' field, the current device with that ID will be overwritten.
 `rev` must be omitted to create a new device.
 */
+
+// CreateDevice .
 func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	var toReturn structs.Device
 
@@ -168,7 +173,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	_, err = c.GetRoom(roomID)
 	if err != nil {
 		if _, ok := err.(*NotFound); ok {
-			return toReturn, fmt.Errorf("unable to create device %s: room %s doesn't exist.", toAdd.ID, roomID)
+			return toReturn, fmt.Errorf("unable to create device %s: room %s doesn't exist", toAdd.ID, roomID)
 		}
 
 		return toReturn, fmt.Errorf("unable to validate device %s is in a real room: %s", toAdd.ID, err)
@@ -226,6 +231,7 @@ func (c *CouchDB) CreateDevice(toAdd structs.Device) (structs.Device, error) {
 	return toReturn, nil
 }
 
+// DeleteDevice .
 func (c *CouchDB) DeleteDevice(id string) error {
 	// get the device to delete
 	device, err := c.getDevice(id)
@@ -245,6 +251,8 @@ func (c *CouchDB) DeleteDevice(id string) error {
 // TODO make this actually update, as opposed to deleting/creating.
 //	 this way you don't have to post up a full document
 // 	 probably need to do this for all of the update functions
+
+// UpdateDevice .
 func (c *CouchDB) UpdateDevice(id string, device structs.Device) (structs.Device, error) {
 	var toReturn structs.Device
 
@@ -312,6 +320,7 @@ func (c *CouchDB) checkPort(p structs.Port, device structs.Device) error {
 	return nil
 }
 
+// GetDevicesByRoomAndRole .
 func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device, error) {
 	toReturn := []structs.Device{}
 
@@ -331,6 +340,7 @@ func (c *CouchDB) GetDevicesByRoomAndRole(roomID, role string) ([]structs.Device
 	return toReturn, nil
 }
 
+// GetDevicesByRoomAndType .
 func (c *CouchDB) GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Device, error) {
 	toReturn := []structs.Device{}
 
@@ -351,6 +361,8 @@ func (c *CouchDB) GetDevicesByRoomAndType(roomID, typeID string) ([]structs.Devi
 }
 
 // TODO could actually use a query to be faster
+
+// GetDevicesByType .
 func (c *CouchDB) GetDevicesByType(deviceType string) ([]structs.Device, error) {
 	var toReturn []structs.Device
 
@@ -370,6 +382,7 @@ func (c *CouchDB) GetDevicesByType(deviceType string) ([]structs.Device, error) 
 	return toReturn, nil
 }
 
+// GetDevicesByRoleAndTypeAndDesignation .
 func (c *CouchDB) GetDevicesByRoleAndTypeAndDesignation(role, deviceType, designation string) ([]structs.Device, *nerr.E) {
 
 	devs, err := c.GetDevicesByRoleAndType(role, deviceType)
@@ -409,6 +422,8 @@ func (c *CouchDB) GetDevicesByRoleAndTypeAndDesignation(role, deviceType, design
 }
 
 // TODO a real query would probably be faster again
+
+// GetDevicesByRoleAndType .
 func (c *CouchDB) GetDevicesByRoleAndType(role, deviceType string) ([]structs.Device, *nerr.E) {
 	var toReturn []structs.Device
 
