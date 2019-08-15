@@ -35,6 +35,7 @@ func init() {
 	L.Info(color.HiYellowString("Zap Logger Started"))
 
 	// look for log level env var
+	// +deploy not_required
 	level := os.Getenv("LOG_LEVEL")
 	if len(level) > 0 {
 		SetLevel(level)
