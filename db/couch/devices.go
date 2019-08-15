@@ -10,9 +10,17 @@ import (
 	"github.com/byuoitav/common/structs"
 )
 
+// GetDevice .
 func (c *CouchDB) GetDevice(id string) (structs.Device, error) {
 	device, err := c.getDevice(id)
-	return *device.Device, err
+	switch {
+	case err != nil:
+		return structs.Device{}, err
+	case device.Device == nil:
+		return structs.Device{}, fmt.Errorf("device not found")
+	default:
+		return *device.Device, err
+	}
 }
 
 func (c *CouchDB) getDevice(id string) (device, error) {
