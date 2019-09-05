@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/byuoitav/cas"
 	"github.com/byuoitav/common/log"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/go-cas/cas"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
