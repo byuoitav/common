@@ -33,6 +33,7 @@ const (
 	TAGS                = "Tags"
 	DMPSLIST            = "dmps"
 	LAB_CONFIGS         = "lab-attendance-config"
+	SCHEDULING_CONFIGS  = "scheduling-configs"
 
 	deviceMonitoring = "device-monitoring"
 	MENUTREE         = "MenuTree"
