@@ -41,6 +41,7 @@ type Commands struct {
 	PowerOff       []ConfigCommand `json:"powerOff,omitempty"`
 	InputSame      []ConfigCommand `json:"inputSame,omitempty"`
 	InputDifferent []ConfigCommand `json:"inputDifferent,omitempty"`
+	Delay          int             `json:"json:delay,omitempty"`
 }
 
 // ConfigCommand - ...I dunno, ask Danny.
