@@ -41,7 +41,6 @@ type Commands struct {
 	PowerOff       []ConfigCommand `json:"powerOff,omitempty"`
 	InputSame      []ConfigCommand `json:"inputSame,omitempty"`
 	InputDifferent []ConfigCommand `json:"inputDifferent,omitempty"`
-	Delay          int             `json:"json:delay,omitempty"`
 }
 
 // ConfigCommand - ...I dunno, ask Danny.
@@ -50,6 +49,7 @@ type ConfigCommand struct {
 	Port     int                    `json:"port"`
 	Endpoint string                 `json:"endpoint"`
 	Body     map[string]interface{} `json:"body"`
+	Delay          int             `json:"json:delay"`
 }
 
 // AudioConfiguration - a representation of how the audio is configured when using multiple displays.
