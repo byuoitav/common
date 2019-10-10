@@ -57,6 +57,9 @@ type DB interface {
 	// lab configs
 	GetLabConfig(roomID string) (structs.LabConfig, error)
 
+	// schedule configs
+	GetScheduleConfig(roomID string) (structs.ScheduleConfig, error)
+
 	/* bulk functions */
 	GetAllBuildings() ([]structs.Building, error)
 	GetAllRooms() ([]structs.Room, error)
