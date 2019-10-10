@@ -2,6 +2,7 @@ package couch
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,7 +15,14 @@ import (
 // GetUIConfig returns a UIConfig file from the database.
 func (c *CouchDB) GetUIConfig(roomID string) (structs.UIConfig, error) {
 	config, err := c.getUIConfig(roomID)
-	return *config.UIConfig, err
+	switch {
+	case err != nil:
+		return structs.UIConfig{}, err
+	case config.UIConfig == nil:
+		return structs.UIConfig{}, errors.New("idk how this happened")
+	}
+
+	return *config.UIConfig, nil
 }
 
 func (c *CouchDB) getUIConfig(roomID string) (uiconfig, error) {
