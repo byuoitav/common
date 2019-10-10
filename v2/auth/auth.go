@@ -17,6 +17,7 @@ import (
 
 var internalPermissionCache = make(map[string]base.Response)
 
+// cacheLock syncs access to interalPermissionCache
 var cacheLock sync.RWMutex
 
 //bypass - :0
@@ -98,8 +99,9 @@ func CheckRolesForUser(user string, accessKey string, role string, resourceID st
 }
 
 func checkCacheForAuth(user string, accessKey string, role string, resourceID string, resourceType string) bool {
-	cacheLock.RLock()
-	defer cacheLock.RUnlock()
+	cacheLock.Lock()
+	defer cacheLock.Unlock()
+
 	if oneResponse, ok := internalPermissionCache[user]; ok {
 		//this user has something cached - check there first
 		log.L.Debugf("User %v has cached permissions", user)
