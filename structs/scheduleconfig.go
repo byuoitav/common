@@ -12,4 +12,5 @@ type ScheduleConfig struct {
 	BookNow         bool   `json:"allowbooknow"`
 	ShowHelp        bool   `json:"showhelp"`
 	CalendarType    string `json:"calendar-type"`
+	CalendarName    string `json:"calendar-name"`
 }
