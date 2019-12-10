@@ -44,6 +44,9 @@ func (c *CouchDB) getRoom(id string) (room, error) {
 	}
 
 	// get room configuration
+	if toReturn.Configuration == nil {
+		return toReturn, errors.New(fmt.Sprintf("room configuration nil %s for room %s: %s", toReturn.Configuration, id, err))
+	}
 	toReturn.Configuration, err = c.GetRoomConfiguration(toReturn.Configuration.ID)
 	if err != nil {
 		return toReturn, errors.New(fmt.Sprintf("failed to get room configuration %s for room %s: %s", toReturn.Configuration.ID, id, err))
