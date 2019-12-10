@@ -10,6 +10,13 @@ import (
 
 func (c *CouchDB) GetRoomConfiguration(id string) (structs.RoomConfiguration, error) {
 	rc, err := c.getRoomConfiguration(id)
+	switch {
+	case err != nil:
+		return structs.RoomConfiguration{}, err
+	case rc.RoomConfiguration == nil:
+		return structs.RoomConfiguration{}, fmt.Errorf("no room configuration %q found", id)
+	}
+
 	return *rc.RoomConfiguration, err
 }
 
