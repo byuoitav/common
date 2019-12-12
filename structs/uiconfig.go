@@ -25,6 +25,7 @@ type Preset struct {
 	AudioGroups             map[string][]string `json:"audioGroups,omitempty"`
 	VolumeMatches           []string            `json:"volumeMatches,omitempty"`
 	Commands                Commands            `json:"commands,omitempty"`
+	Screens                 []string            `json:"screens"`
 }
 
 // Panel - a representation of a touchpanel and which preset it has.
