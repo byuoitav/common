@@ -22,6 +22,8 @@ type StaticDevice struct {
 	LastStateReceived       time.Time        `json:"last-state-received,omitempty"`
 	LastHeartbeat           time.Time        `json:"last-heartbeat,omitempty"`
 	LastUserInput           time.Time        `json:"last-user-input,omitempty"`
+	LastHealthSuccess       time.Time        `json:"last-health-success,omitempty"`
+	//TODO CALEB I think this is where I put the new field
 
 	DeviceType  string `json:"device-type,omitempty"`
 	DeviceClass string `json:"device-class,omitempty"`
@@ -151,6 +153,9 @@ func CompareDevices(base, new StaticDevice) (diff StaticDevice, merged StaticDev
 	}
 	if new.UpdateTimes["last-state-received"].After(base.UpdateTimes["last-state-received"]) {
 		diff.LastStateReceived, merged.LastStateReceived, changes = compareTime(base.LastStateReceived, new.LastStateReceived, changes)
+	}
+	if new.UpdateTimes["last-health-success"].After(base.UpdateTimes["last-health"]) {
+		diff.LastHealthSuccess, merged.LastHealthSuccess, changes = compareTime(base.LastHealthSuccess, new.LastHealthSuccess, changes)
 	}
 	if new.UpdateTimes["power"].After(base.UpdateTimes["power"]) {
 		diff.Power, merged.Power, changes = compareString(base.Power, new.Power, changes)
