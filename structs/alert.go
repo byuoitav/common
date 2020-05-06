@@ -4,95 +4,108 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
-	"github.com/byuoitav/common/v2/events"
 )
 
-// RoomIssue .
+// RoomIssue defines information regarding issues in rooms on campus
 type RoomIssue struct {
-	RoomIssueID string `json:"id,omitempty"`
-
-	events.BasicRoomInfo
-
-	RoomTags []string `json:"room-tags,omitempty"`
-
-	AlertTypes      []AlertType     `json:"alert-types,omitempty"`
-	AlertDevices    []string        `json:"alert-devices,omitempty"`
-	AlertCategories []AlertCategory `json:"alert-categories,omitempty"`
-	AlertSeverities []AlertSeverity `json:"alert-severities,omitempty"`
-	AlertCount      int             `json:"alert-count"`
-
-	ActiveAlertTypes      []AlertType     `json:"active-alert-types,omitempty"`
-	ActiveAlertDevices    []string        `json:"active-alert-devices,omitempty"`
-	ActiveAlertCategories []AlertCategory `json:"active-alert-categories,omitempty"`
-	ActiveAlertSeverities []AlertSeverity `json:"active-alert-severities,omitempty"`
-	AlertActiveCount      int             `json:"active-alert-count"`
-
-	SystemType string `json:"system-type,omitempty"`
-
-	Source string `json:"-"`
-
-	Alerts []Alert `json:"alerts,omitempty"`
-
-	//Editable fields
-	IssueTags []string `json:"issue-tags,omitempty"`
-
-	IncidentID []string `json:"incident-id,omitempty"`
-
-	Notes string `json:"notes,omitempty"`
-
-	RoomIssueResponses []RoomIssueResponse `json:"responses,omitempty"`
-
-	//resolution fields
-	Resolved       bool           `json:"resolved"`
-	ResolutionInfo ResolutionInfo `json:"resolution-info,omitempty"`
-
-	//notes-log isn't editable
-	NotesLog []string `json:"notes-log,omitempty"`
+	ID               string     `json:"id"`
+	RoomID           string     `json:"roomID"`
+	Start            time.Time  `json:"start"`
+	End              time.Time  `json:"end"`
+	Severity         int        `json:"severity"`
+	OpenAlertCount   int        `json:"openAlertCount"`
+	ClosedAlertCount int        `json:"closedAlertCount"`
+	Alerts           []Alert    `json:"alerts"`
+	Resolution       Resolution `json:"resolution"`
+	Events           []Event    `json:"events"`
 }
 
-//RoomIssueResponse represents information about a tech being dispatched on a room issue
-type RoomIssueResponse struct {
-	Responders    []Person  `json:"responders,omitempty"`
-	HelpSentAt    time.Time `json:"help-sent-at,omitempty"`
-	HelpArrivedAt time.Time `json:"help-arrived-at,omitempty"`
+// Resolution - how a room issue was resolved
+type Resolution struct {
+	Code  int    `json:"code"`
+	Notes string `json:"notes"`
+}
+
+// EventType - an enum for different types of events
+type EventType int
+
+const (
+	eventTypeAlertStart EventType = iota + 1
+	eventTypeAlertEnd
+	eventTypeNote
+	eventTypePersonSent
+	eventTypePersonArrived
+	eventTypeChangedSeverity
+	eventTypeAcknowledged
+)
+
+// Event - the basic event interface
+type Event interface {
+	Type() EventType
+	At() time.Time
+	String() string
+}
+
+// EventCommon - the information that all events have in common
+type EventCommon struct {
+	Type EventType `json:"type"`
+	At   time.Time `json:"at"`
+}
+
+// EventAlert - information for alert related events
+type EventAlert struct {
+	EventCommon
+
+	AlertID string `json:"alertID"`
+}
+
+// EventNote - info for note related events
+type EventNote struct {
+	EventCommon
+
+	Note string `json:"note"`
+}
+
+// EventPerson - info about human interaction events
+type EventPerson struct {
+	EventCommon
+
+	PersonID   string `json:"personID"`
+	PersonName string `json:"personName"`
+	PersonLink string `json:"personLink"`
+}
+
+// EventChangedSeverity - info about severity changing events
+type EventChangedSeverity struct {
+	EventCommon
+
+	From int `json:"from"`
+	To   int `json:"to"`
+}
+
+// EventAcknowledged - info about acknowledging room issues
+type EventAcknowledged struct {
+	EventCommon
+
+	PersonID   string `json:"personID"`
+	PersonName string `json:"personName"`
+	PersonLink string `json:"personLink"`
 }
 
 // Alert is a struct that contains the information regarding an alerting event.
 type Alert struct {
-	events.BasicDeviceInfo
-
-	AlertID string `json:"id,omitempty,omitempty"`
-
-	Type     AlertType     `json:"type,omitempty"`
-	Category AlertCategory `json:"category,omitempty"`
-	Severity AlertSeverity `json:"severity,omitempty"`
-
-	Message    string      `json:"message,omitempty"`
-	MessageLog []string    `json:"message-log,omitempty"`
-	Data       interface{} `json:"data,omitempty"`
-	SystemType string      `json:"system-type,omitempty"`
-
-	AlertStartTime      time.Time `json:"start-time,omitempty"`
-	AlertEndTime        time.Time `json:"end-time,omitempty"`
-	AlertLastUpdateTime time.Time `json:"update-time,omitempty"`
-
-	Active bool `json:"active"`
-
-	AlertTags  []string `json:"alert-tags,omitempty"`
-	DeviceTags []string `json:"device-tags,omitempty"`
-	RoomTags   []string `json:"room-tags,omitempty"`
-
-	Requester string `json:"requester,omitempty"`
-
-	Source string `json:"-"`
-
-	ManualResolve bool `json:"manual-resolve"`
+	ID          string    `json:"id"`
+	RoomIssueID string    `json:"roomIssueID"`
+	DeviceID    string    `json:"deviceID"`
+	Start       time.Time `json:"start"`
+	End         time.Time `json:"end"`
+	AlertType   string    `json:"alertType"`
+	MessageLog  []string  `json:"messageLog"`
 }
 
 // TimeToResolve .
 func (a Alert) TimeToResolve() string {
-	diff := a.AlertEndTime.Sub(a.AlertStartTime)
+	diff := a.End.Sub(a.Start)
 	str := diff.Truncate(time.Second).String()
 	ret := strings.Builder{}
 
@@ -236,38 +249,4 @@ func AddToCategory(list []AlertCategory, toAdd ...AlertCategory) []AlertCategory
 	}
 
 	return list
-}
-
-func (r *RoomIssue) CalculateAggregateInfo() {
-	r.AlertTypes = []AlertType{}
-	r.ActiveAlertTypes = []AlertType{}
-
-	r.AlertCategories = []AlertCategory{}
-	r.ActiveAlertCategories = []AlertCategory{}
-
-	r.AlertSeverities = []AlertSeverity{}
-	r.ActiveAlertSeverities = []AlertSeverity{}
-
-	r.AlertDevices = []string{}
-	r.ActiveAlertDevices = []string{}
-
-	activeCount := 0
-
-	for i := range r.Alerts {
-		//active alert stuff
-		if r.Alerts[i].Active {
-			activeCount++
-			r.ActiveAlertDevices = AddToTags(r.ActiveAlertDevices, r.Alerts[i].DeviceID)
-			r.ActiveAlertTypes = AddToType(r.ActiveAlertTypes, r.Alerts[i].Type)
-			r.ActiveAlertCategories = AddToCategory(r.ActiveAlertCategories, r.Alerts[i].Category)
-			r.ActiveAlertSeverities = AddToSeverity(r.ActiveAlertSeverities, r.Alerts[i].Severity)
-		}
-
-		r.AlertDevices = AddToTags(r.AlertDevices, r.Alerts[i].DeviceID)
-		r.AlertTypes = AddToType(r.AlertTypes, r.Alerts[i].Type)
-		r.AlertCategories = AddToCategory(r.AlertCategories, r.Alerts[i].Category)
-		r.AlertSeverities = AddToSeverity(r.AlertSeverities, r.Alerts[i].Severity)
-	}
-	r.AlertActiveCount = activeCount
-	r.AlertCount = len(r.Alerts)
 }
