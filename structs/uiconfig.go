@@ -25,6 +25,8 @@ type Preset struct {
 	AudioGroups             map[string][]string `json:"audioGroups,omitempty"`
 	VolumeMatches           []string            `json:"volumeMatches,omitempty"`
 	Commands                Commands            `json:"commands,omitempty"`
+	Screens                 []string            `json:"screens"`
+	Cameras                 []Camera            `json:"cameras"`
 }
 
 // Panel - a representation of a touchpanel and which preset it has.
@@ -82,4 +84,25 @@ type Template struct {
 	Description string   `json:"description"`
 	UIConfig    UIConfig `json:"uiconfig"`
 	BaseTypes   []string `json:"base_types"`
+}
+
+type Camera struct {
+	DisplayName string `json:"displayName"`
+
+	TiltUp      string `json:"tiltUp"`
+	TiltDown    string `json:"tiltDown"`
+	PanLeft     string `json:"panLeft"`
+	PanRight    string `json:"panRight"`
+	PanTiltStop string `json:"panTiltStop"`
+
+	ZoomIn   string `json:"zoomIn"`
+	ZoomOut  string `json:"zoomOut"`
+	ZoomStop string `json:"zoomStop"`
+
+	Presets []CameraPreset `json:"presets"`
+}
+
+type CameraPreset struct {
+	DisplayName string `json:"displayName"`
+	SetPreset   string `json:"setPreset"`
 }
