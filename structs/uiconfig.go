@@ -27,6 +27,7 @@ type Preset struct {
 	Commands                Commands            `json:"commands,omitempty"`
 	Screens                 []string            `json:"screens"`
 	Cameras                 []Camera            `json:"cameras"`
+	Recording               Recording           `json:"recording"`
 }
 
 // Panel - a representation of a touchpanel and which preset it has.
@@ -105,4 +106,9 @@ type Camera struct {
 type CameraPreset struct {
 	DisplayName string `json:"displayName"`
 	SetPreset   string `json:"setPreset"`
+}
+
+type Recording struct {
+	Start string `json:"start"`
+	Stop  string `json:"stop"`
 }
