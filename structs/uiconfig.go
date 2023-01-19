@@ -109,6 +109,7 @@ type CameraPreset struct {
 }
 
 type Recording struct {
-	Start string `json:"start"`
-	Stop  string `json:"stop"`
+	Start   string `json:"start"`
+	Stop    string `json:"stop"`
+	MaxTime int    `json:"maxTime"`
 }
