@@ -188,7 +188,7 @@ func (c *CouchDB) GetAllUIConfigs() ([]structs.UIConfig, error) {
 	var toReturn []structs.UIConfig
 	var query IDPrefixQuery
 	query.Selector.ID.GT = "\x00"
-	query.Limit = 1000
+	query.Limit = 2048
 
 	b, err := json.Marshal(query)
 	if err != nil {
